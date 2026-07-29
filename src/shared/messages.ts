@@ -11,6 +11,8 @@ export const messages = {
     overlaysHeading: 'Overlays',
     overlayUrlCopy: '🔗',
     overlayUrlCopied: '✅',
+    updateAvailable: (version: string) => `A new version (${version}) is available.`,
+    updateAvailableLink: 'View release',
     positioningHeading: 'Positioning',
     editModeExit: 'Exit edit mode',
     editModeEnter: 'Move overlays (edit mode)',

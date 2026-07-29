@@ -4,7 +4,8 @@ import {
   type AnyOverlaySettings,
   type AppConfig,
   type ConnectionStatus,
-  type OverlayId
+  type OverlayId,
+  type UpdateStatus
 } from '../../../shared/types'
 import { messages } from '../../../shared/messages'
 import { OverlaySettingsPanel } from './OverlaySettingsPanel'
@@ -16,6 +17,7 @@ export default function App() {
   const [connection, setConnection] = useState<ConnectionStatus>({ connected: false })
   const [settings, setSettings] = useState<Partial<Record<OverlayId, AnyOverlaySettings>>>({})
   const [copiedOverlayId, setCopiedOverlayId] = useState<OverlayId | null>(null)
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null)
 
   useEffect(() => {
     window.overlayApi.getConfig().then(setConfig)
@@ -25,13 +27,16 @@ export default function App() {
     // the worker can connect immediately, and the one-off broadcast would
     // be missed before this listener is registered
     window.overlayApi.getConnectionStatus().then(setConnection)
+    window.overlayApi.getUpdateStatus().then(setUpdateStatus)
 
     const unsubConfig = window.overlayApi.onConfigUpdated(setConfig)
     const unsubConn = window.overlayApi.onConnectionStatus(setConnection)
+    const unsubUpdate = window.overlayApi.onUpdateStatus(setUpdateStatus)
 
     return () => {
       unsubConfig()
       unsubConn()
+      unsubUpdate()
     }
   }, [])
 
@@ -77,6 +82,18 @@ export default function App() {
 
   return (
     <div className="app">
+      {updateStatus?.available && (
+        <div className="update-banner">
+          <span>{m.updateAvailable(updateStatus.latestVersion ?? '')}</span>
+          <button
+            type="button"
+            className="update-banner-link"
+            onClick={() => updateStatus.url && window.overlayApi.openReleasePage(updateStatus.url)}
+          >
+            {m.updateAvailableLink}
+          </button>
+        </div>
+      )}
       <header>
         <h1>{m.appTitle}</h1>
         <span className={`status ${connection.connected ? 'ok' : 'off'}`}>

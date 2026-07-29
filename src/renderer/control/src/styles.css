@@ -13,6 +13,35 @@ body {
   padding: 20px;
 }
 
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  background: #2b3a55;
+  border: 1px solid #3a5580;
+  font-size: 13px;
+}
+
+.update-banner-link {
+  background: none;
+  border: 1px solid #5c93ff;
+  color: #5c93ff;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.update-banner-link:hover {
+  background: #3a7dff;
+  color: white;
+}
+
 header {
   display: flex;
   align-items: center;

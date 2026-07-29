@@ -84,6 +84,18 @@ export interface ConnectionStatus {
   connected: boolean
 }
 
+// --- Update check ---------------------------------------------------------
+
+// Result of comparing the running app version against the latest GitHub
+// release (see updateChecker.ts). Purely informational - no auto-download/
+// install, just a banner + link in the Control Center.
+export interface UpdateStatus {
+  available: boolean
+  currentVersion: string
+  latestVersion?: string
+  url?: string
+}
+
 // --- Standings ----------------------------------------------------------
 
 export interface DriverStanding {
@@ -326,5 +338,8 @@ export const IPC = {
   OVERLAY_SETTINGS_SET: 'overlay-settings:set',
   DRIVER_STATS_GET_ALL: 'driver-stats:get-all',
   CONNECTION_STATUS_GET: 'connection-status:get',
-  CLIPBOARD_WRITE: 'clipboard:write'
+  CLIPBOARD_WRITE: 'clipboard:write',
+  UPDATE_STATUS_GET: 'update-status:get',
+  UPDATE_STATUS: 'update-status',
+  UPDATE_OPEN_RELEASE: 'update-status:open-release'
 } as const

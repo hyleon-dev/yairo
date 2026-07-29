@@ -1,10 +1,11 @@
-import {app, ipcMain, BrowserWindow, clipboard} from 'electron'
+import {app, ipcMain, BrowserWindow, clipboard, shell} from 'electron'
 import {WindowManager} from './windowManager'
 import {IrsdkService} from './irsdkService'
 import {ConfigStore} from './configStore'
 import {OverlayServer} from './overlayServer'
 import {OverlaySettingsStore} from './overlaySettingsStore'
 import {DriverStatsStore} from './driverStatsStore'
+import {checkForUpdate} from './updateChecker'
 import {
   IPC,
   overlaySettingsChannel,
@@ -13,7 +14,8 @@ import {
   type OverlayId,
   type OverlayBounds,
   type RelativeOverlaySettings,
-  type StandingsOverlaySettings
+  type StandingsOverlaySettings,
+  type UpdateStatus
 } from '../shared/types'
 
 const windowManager = new WindowManager()
@@ -24,6 +26,7 @@ const overlaySettingsStore = new OverlaySettingsStore()
 const driverStatsStore = new DriverStatsStore()
 
 let connectionStatus: ConnectionStatus = {connected: false}
+let updateStatus: UpdateStatus = {available: false, currentVersion: app.getVersion()}
 
 function broadcastToOverlays(channel: string, payload: unknown): void {
   for (const win of windowManager.getAllOverlayWindows()) {
@@ -110,6 +113,16 @@ function registerIpcHandlers(): void {
   // Control Center's "copy overlay URL" button - writes to the OS clipboard
   ipcMain.handle(IPC.CLIPBOARD_WRITE, (_evt, text: string) => {
     clipboard.writeText(text)
+  })
+
+  // Query the result of the startup update check (see checkForUpdate() below)
+  ipcMain.handle(IPC.UPDATE_STATUS_GET, () => updateStatus)
+
+  // Control Center's update banner link - only ever a release URL under our
+  // own repo (comes from the GitHub API response, see updateChecker.ts),
+  // but validated again here before handing it to the OS.
+  ipcMain.handle(IPC.UPDATE_OPEN_RELEASE, (_evt, url: string) => {
+    if (url.startsWith('https://github.com/hyleon-dev/yairo/')) shell.openExternal(url)
   })
 
   ipcMain.handle(
@@ -199,6 +212,14 @@ app.whenReady().then(() => {
   irsdk.start()
   overlayServer.start()
   seedOverlaySettings()
+
+  // Non-blocking: only updates the banner once/if the GitHub API responds.
+  checkForUpdate(app.getVersion()).then((status) => {
+    updateStatus = status
+    if (windowManager.controlWindow && !windowManager.controlWindow.isDestroyed()) {
+      windowManager.controlWindow.webContents.send(IPC.UPDATE_STATUS, updateStatus)
+    }
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

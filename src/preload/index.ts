@@ -10,7 +10,8 @@ import type {
   RelativeData,
   StandingsData,
   TelemetryData,
-  TrackMapData
+  TrackMapData,
+  UpdateStatus
 } from '../shared/types'
 
 const api = {
@@ -20,6 +21,10 @@ const api = {
   getDriverStats: (): Promise<DriverStatsData> => ipcRenderer.invoke(IPC.DRIVER_STATS_GET_ALL),
 
   getConnectionStatus: (): Promise<ConnectionStatus> => ipcRenderer.invoke(IPC.CONNECTION_STATUS_GET),
+
+  getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke(IPC.UPDATE_STATUS_GET),
+
+  openReleasePage: (url: string): Promise<void> => ipcRenderer.invoke(IPC.UPDATE_OPEN_RELEASE, url),
 
   // --- actions from the Control Center ---
   setOverlay: (id: OverlayId, patch: Partial<{ enabled: boolean; bounds: OverlayBounds }>) =>
@@ -77,6 +82,12 @@ const api = {
     const listener = (_e: Electron.IpcRendererEvent, status: ConnectionStatus) => cb(status)
     ipcRenderer.on(IPC.CONNECTION_STATUS, listener)
     return () => ipcRenderer.removeListener(IPC.CONNECTION_STATUS, listener)
+  },
+
+  onUpdateStatus: (cb: (status: UpdateStatus) => void) => {
+    const listener = (_e: Electron.IpcRendererEvent, status: UpdateStatus) => cb(status)
+    ipcRenderer.on(IPC.UPDATE_STATUS, listener)
+    return () => ipcRenderer.removeListener(IPC.UPDATE_STATUS, listener)
   },
 
   onConfigUpdated: (cb: (config: AppConfig) => void) => {
