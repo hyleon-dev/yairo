@@ -20,6 +20,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Uses the annotated tag's message as the release title, if there is
+      # one (git tag -a v1.2.0 -m "My Title") - falls back to the tag name
+      # itself for plain/lightweight tags.
+      - name: Extract release title from tag message
+        id: tag
+        shell: bash
+        run: |
+          subject=$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")
+          echo "title=${subject:-$GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -46,5 +56,6 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
+          name: ${{ steps.tag.outputs.title }}
           generate_release_notes: true
           files: dist/*.exe
