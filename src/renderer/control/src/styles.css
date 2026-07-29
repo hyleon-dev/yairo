@@ -92,6 +92,12 @@ h2 {
   border-bottom: 1px solid #2a2d33;
 }
 
+.overlay-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
 .overlay-list label {
   display: flex;
   align-items: center;

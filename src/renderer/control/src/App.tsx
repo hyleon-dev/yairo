@@ -107,17 +107,20 @@ export default function App() {
           {config.overlays.map((overlay) => (
 
             <li key={overlay.id}>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={overlay.enabled}
-                  onChange={(e) => toggleOverlay(overlay.id, e.target.checked)}
-                />
-                {overlay.name}
-              </label>
-              <button type="button" className="overlay-url-btn" onClick={() => handleCopyUrl(overlay.id)}>
-                {copiedOverlayId === overlay.id ? m.overlayUrlCopied : m.overlayUrlCopy}
-              </button>
+              <div className="overlay-item-header">
+                <label>
+                  <input
+                      type="checkbox"
+                      checked={overlay.enabled}
+                      onChange={(e) => toggleOverlay(overlay.id, e.target.checked)}
+                  />
+                  {overlay.name}
+                </label>
+                <button type="button" className="overlay-url-btn" onClick={() => handleCopyUrl(overlay.id)}>
+                  {copiedOverlayId === overlay.id ? m.overlayUrlCopied : m.overlayUrlCopy}
+                </button>
+              </div>
+
               <OverlaySettingsPanel
                 overlay={overlay}
                 settings={settings[overlay.id]}
