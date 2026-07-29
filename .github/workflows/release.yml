@@ -19,16 +19,53 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # A shallow fetch (the default) makes actions/checkout resolve tags
+          # as lightweight refs, dropping the annotated tag's own message
+          # object (see https://github.com/actions/checkout/issues/290) -
+          # needed in full here so the title-extraction step below actually
+          # sees "tag", not "commit".
+          fetch-depth: 0
 
       # Uses the annotated tag's message as the release title, if there is
       # one (git tag -a v1.2.0 -m "My Title") - falls back to the tag name
-      # itself for plain/lightweight tags.
+      # itself for plain/lightweight tags. Important: a lightweight tag ref
+      # points directly at the commit, so "%(contents)" on it would return
+      # that COMMIT's message, not "nothing" - cat-file -t distinguishes an
+      # actual tag object ("tag") from a lightweight tag ("commit") first.
       - name: Extract release title from tag message
         id: tag
         shell: bash
         run: |
-          subject=$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")
+          if [ "$(git cat-file -t "$GITHUB_REF_NAME")" = "tag" ]; then
+            subject=$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")
+          fi
           echo "title=${subject:-$GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      # We commit directly to master (no PRs), so GitHub's own
+      # generate_release_notes feature (PR-based) would come up empty -
+      # build the changelog straight from commit messages since the
+      # previous tag instead.
+      - name: Build changelog from commits since last tag
+        id: changelog
+        shell: bash
+        run: |
+          previous_tag=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || echo "")
+          range="${previous_tag:+$previous_tag..}$GITHUB_REF_NAME"
+
+          delimiter="CHANGELOG_${{ github.run_id }}"
+          {
+            echo "changelog<<$delimiter"
+            # Only prefix with "- " if the message doesn't already start
+            # with one - some commit messages here already do.
+            git log "$range" --no-merges --pretty=format:'%s' | while IFS= read -r subject || [ -n "$subject" ]; do
+              case "$subject" in
+                -*) printf '%s\n' "$subject" ;;
+                *) printf '- %s\n' "$subject" ;;
+              esac
+            done
+            echo "$delimiter"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -57,5 +94,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ steps.tag.outputs.title }}
-          generate_release_notes: true
+          body: ${{ steps.changelog.outputs.changelog }}
           files: dist/*.exe
