@@ -11,7 +11,7 @@
     "dev:debug": "electron-vite dev --inspect --sourcemap",
     "dump-sdk": "cross-env ELECTRON_RUN_AS_NODE=1 electron scripts/dump-sdk-data.js",
     "build": "electron-vite build",
-    "build:win": "electron-vite build && electron-builder --win",
+    "build:win": "electron-vite build && electron-builder --win --publish never",
     "postinstall": "electron-builder install-app-deps",
     "build-trackmaps": "node scripts/build-trackmap-registry.js"
   },
