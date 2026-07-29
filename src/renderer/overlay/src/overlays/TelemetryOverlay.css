@@ -1,0 +1,112 @@
+.card.telemetry {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  text-align: right;
+}
+
+.telemetry-main {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  flex: 1;
+  gap: 20px;
+}
+
+.telemetry-numbers {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pedal-bars {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.pedal-bar-track {
+  height: 10px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.pedal-bar-fill {
+  height: 100%;
+  border-radius: 0 3px 3px 0;
+  transition: width 60ms linear;
+}
+
+.pedal-bar-fill--clutch {
+  background: #3a7dff;
+}
+.pedal-bar-fill--brake {
+  background: #e74c3c;
+}
+.pedal-bar-fill--throttle {
+  background: #58d68d;
+}
+
+.rpm,
+.gear {
+  font-size: 13px;
+  color: #ddd;
+}
+
+.rpm {
+  text-align: center;
+}
+
+.rev-leds {
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.rev-led {
+  width: 34px;
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rev-led--lit.rev-led--normal {
+  background: #2ecc71;
+  box-shadow: 0 0 4px rgba(46, 204, 113, 0.7);
+}
+.rev-led--lit.rev-led--shift {
+  background: #3a7dff;
+  box-shadow: 0 0 4px rgba(58, 125, 255, 0.7);
+}
+.rev-led--lit.rev-led--last {
+  background: #e74c3c;
+  box-shadow: 0 0 4px rgba(231, 76, 60, 0.7);
+}
+
+.rev-leds--blink {
+  animation: rev-leds-blink 0.3s linear infinite;
+}
+
+/* Explicit stops (instead of steps()) so both the lit and dark phase each
+   hold for a clearly visible chunk of the cycle - steps(1) collapsed the
+   dark phase into a single, effectively unrenderable frame (see history). */
+@keyframes rev-leds-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  99% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,69 @@
+.trackmap {
+  background: rgba(10, 10, 14, 0.35);
+  border-radius: 8px;
+  overflow: hidden;
+  backdrop-filter: blur(6px);
+  /* Matches the 1920x1080 viewBox shared by every track in trackmaps/data.json. */
+  width: 360px;
+  height: 202px;
+}
+
+.trackmap-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.trackmap-outline {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.35);
+  /* Matches the stroke width the reference asset format itself is drawn at. */
+  stroke-width: 30;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.trackmap-start-finish {
+  /*
+  Fill color comes from the marker asset's own embedded <style>, only opacity is set here.
+  It reads as a track marking rather than competing visually with the driver dots.
+  */
+  opacity: 0.85;
+}
+
+.trackmap-marker {
+  /*
+  fill comes as an inline style from TrackMapOverlay.tsx
+  (driver.classColorHex, taken directly from the SDK/Driver.CarClassColor),
+  hence only stroke rings as a status indicator here.
+  */
+  stroke: rgba(0, 0, 0, 0.55);
+  stroke-width: 4;
+}
+.trackmap-marker--pit {
+  opacity: 0.75;
+  filter: brightness(0.75);
+}
+
+.trackmap--fallback {
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px;
+}
+.trackmap--fallback .trackmap-svg {
+  width: 180px;
+  height: 180px;
+}
+.trackmap-outline--fallback {
+  stroke-dasharray: 6 6;
+  stroke-width: 3;
+}
+.trackmap-fallback-label {
+  font-size: 9px;
+  color: #6b6b80;
+  text-align: center;
+  max-width: 190px;
+}

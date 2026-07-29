@@ -1,0 +1,47 @@
+{
+  "name": "yairo",
+  "version": "0.1.0",
+  "description": "Yet Another iRacing Overlay",
+  "main": "out/main/index.js",
+  "author": "hyLeon",
+  "private": true,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "dev:mock": "cross-env IRSDK_MOCK=1 electron-vite dev",
+    "dev:debug": "electron-vite dev --inspect --sourcemap",
+    "dump-sdk": "cross-env ELECTRON_RUN_AS_NODE=1 electron scripts/dump-sdk-data.js",
+    "build": "electron-vite build",
+    "build:win": "electron-vite build && electron-builder --win",
+    "postinstall": "electron-builder install-app-deps",
+    "build-trackmaps": "node scripts/build-trackmap-registry.js"
+  },
+  "dependencies": {
+    "irsdk-node": "^4.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ws": "^8.21.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/ws": "^8.18.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "cross-env": "^10.1.0",
+    "electron": "42.3.3",
+    "electron-builder": "^24.13.3",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.5.4"
+  },
+  "build": {
+    "appId": "de.hyleon.yairo",
+    "productName": "Yet Another iRacing Overlay",
+    "files": [
+      "out/**/*",
+      "resources/icon.png"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    }
+  }
+}

@@ -1,0 +1,118 @@
+.relative {
+  background: rgba(10, 10, 14, 0.85);
+  border: 1px solid rgba(232, 64, 26, 0.35);
+  border-radius: 8px;
+  overflow: hidden;
+  backdrop-filter: blur(6px);
+  color: #e8e8f0;
+  min-width: 260px;
+  font-size: 12px;
+}
+
+/* grid-template-columns comes as an inline style from RelativeOverlay.tsx
+   (gridTemplate()) - depends on whether iRating/SR are currently enabled,
+   so no fixed column count here. */
+.relative .col-labels {
+  display: grid;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #6b6b80;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.rel-row {
+  display: grid;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.rel-row:last-child {
+  border-bottom: none;
+}
+
+/* The player is the focus of this view - clearly highlighted */
+.rel-row--player {
+  background: rgba(232, 64, 26, 0.16);
+  border-left: 2px solid #e8401a;
+  font-weight: 700;
+}
+
+/* Fills missing driver slots (see RelativeOverlay.tsx), so the window
+   doesn't shrink when fewer drivers are on track than configured -
+   deliberately faint/empty rather than mimicking a real row. */
+.rel-row--placeholder {
+  color: #3a3a48;
+}
+
+.col-pos {
+  text-align: center;
+  font-weight: 700;
+  color: #e8401a;
+  /* Gradient (background) comes as an inline style from sdkColors.ts,
+     derived from the car class color provided by the SDK - deliberately
+     limited to this (first) column. */
+}
+.col-num {
+  color: #9090a0;
+}
+
+/* The gradient in col-pos should reach the left row edge and the full row
+   height (not just within its own grid cell, which would be inset from the
+   edge by the row padding), but must NOT bleed into col-num - a negative
+   margin "pulls" the cell out to the edge, and equal padding keeps the
+   visible content in the same place as before. */
+.rel-row .col-pos {
+  margin: -5px 0 -5px -12px;
+  padding: 5px 0 5px 12px;
+}
+.col-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 150px;
+}
+.col-lap {
+  text-align: right;
+  color: #9090a0;
+}
+.col-stint {
+  text-align: right;
+  color: #9090a0;
+}
+.col-irating {
+  text-align: right;
+  color: #c0c0cc;
+  font-size: 11px;
+}
+.col-sr {
+  /* Color/background/border come as inline styles from sdkColors.ts,
+     derived from the license color provided by the SDK. */
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  line-height: 1.4;
+}
+
+.rel-row .col-gap {
+  text-align: right;
+  color: #e0e0e0;
+  font-size: 11px;
+}
+.rel-row--player .col-gap {
+  color: #e8401a;
+}
+
+/* Drivers on a different lap than the player (ahead or behind) - the gap
+   value stays a pure track distance, only the lap display is highlighted so
+   it isn't mistaken for "same lap". */
+.rel-row--lapped .col-lap {
+  color: #e8b93a;
+  font-weight: 700;
+}

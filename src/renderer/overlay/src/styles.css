@@ -1,0 +1,59 @@
+/* Applies to ALL overlay windows - overlay-specific styles live next to
+   their component, see overlays/<Name>Overlay.css. */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  user-select: none;
+}
+
+.overlay-root {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+/* Never let flex parent compress this, otherwise useReportContentSize() would measure
+an already-squeezed size that's too small instead of actually needed one. */
+.overlay-content {
+  flex-shrink: 0;
+}
+
+/* Fully click-through during live operation (controlled by Electron via
+   setIgnoreMouseEvents). Additionally draggable via OS drag in edit mode. */
+.overlay-root.edit-mode {
+  outline: 2px dashed #3a7dff;
+  background: rgba(58, 125, 255, 0.08);
+  -webkit-app-region: drag;
+  cursor: move;
+}
+
+.edit-label {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: 10px;
+  color: #3a7dff;
+  -webkit-app-region: no-drag;
+}
+
+/* Placeholder text while an overlay is still waiting for data */
+.waiting {
+  font-size: 13px;
+  color: #999;
+  background: rgba(20, 20, 24, 0.5);
+  padding: 8px 14px;
+  border-radius: 8px;
+}

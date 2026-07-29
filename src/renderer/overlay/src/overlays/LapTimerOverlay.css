@@ -1,0 +1,89 @@
+.lap-timer {
+  background: rgba(10, 10, 14, 0.82);
+  border: 1px solid rgba(232, 64, 26, 0.4);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 200px;
+  backdrop-filter: blur(6px);
+  color: #e8e8f0;
+}
+
+.lap-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.lap-label {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: #6b6b80;
+}
+.lap-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e8401a;
+}
+
+.time-current {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.delta {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+.delta--fast {
+  background: rgba(46, 204, 113, 0.2);
+  color: #2ecc71;
+}
+.delta--slow {
+  background: rgba(231, 76, 60, 0.2);
+  color: #e74c3c;
+}
+
+.times-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.time-block {
+  display: flex;
+  flex-direction: column;
+}
+.time-label {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #6b6b80;
+  margin-bottom: 1px;
+}
+.time-val {
+  font-size: 13px;
+}
+.time-val--best {
+  color: #b266ff;
+}
+
+.fuel-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #9090a0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  padding-top: 6px;
+}
+.fuel-row .fuel-val {
+  flex: 1;
+}
+.fuel-row .incidents {
+  color: #e8401a;
+}
