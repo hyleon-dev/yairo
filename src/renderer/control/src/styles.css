@@ -2,6 +2,12 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
   font-family: 'Segoe UI', system-ui, sans-serif;
@@ -9,8 +15,33 @@ body {
   color: #eee;
 }
 
+/* Footer (edit button + version) stays pinned to the window bottom, only
+   the content above it scrolls if the overlay list grows too tall. */
 .app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
   padding: 20px;
+}
+
+.app-footer {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 20px;
+  border-top: 1px solid #2a2d33;
+}
+
+.app-version {
+  font-size: 11px;
+  color: #666;
 }
 
 .update-banner {

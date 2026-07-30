@@ -94,69 +94,70 @@ export default function App() {
 
   return (
     <div className="app">
-      {updateStatus?.available && (
-        <div className="update-banner">
-          <span>{m.updateAvailable(updateStatus.latestVersion ?? '')}</span>
-          <button
-            type="button"
-            className="update-banner-link"
-            onClick={() => updateStatus.url && window.overlayApi.openReleasePage(updateStatus.url)}
-          >
-            {m.updateAvailableLink}
-          </button>
-        </div>
-      )}
-      <header>
-        <h1>{m.appTitle}</h1>
-        <span className={`status ${connection.connected ? 'ok' : 'off'}`}>
-          {connection.connected ? m.connected : m.disconnected}
-        </span>
-      </header>
+      <div className="app-content">
+        {updateStatus?.available && (
+          <div className="update-banner">
+            <span>{m.updateAvailable(updateStatus.latestVersion ?? '')}</span>
+            <button
+              type="button"
+              className="update-banner-link"
+              onClick={() => updateStatus.url && window.overlayApi.openReleasePage(updateStatus.url)}
+            >
+              {m.updateAvailableLink}
+            </button>
+          </div>
+        )}
+        <header>
+          <h1>{m.appTitle}</h1>
+          <span className={`status ${connection.connected ? 'ok' : 'off'}`}>
+            {connection.connected ? m.connected : m.disconnected}
+          </span>
+        </header>
 
-      <section>
-        <h2>{m.overlaysHeading}</h2>
-        <ul className="overlay-list">
-          {config.overlays.map((overlay) => (
+        <section>
+          <h2>{m.overlaysHeading}</h2>
+          <ul className="overlay-list">
+            {config.overlays.map((overlay) => (
 
-            <li key={overlay.id}>
-              <div className="overlay-item-header">
-                <label>
-                  <input
-                      type="checkbox"
-                      checked={overlay.enabled}
-                      onChange={(e) => toggleOverlay(overlay.id, e.target.checked)}
-                  />
-                  {overlay.name}
-                </label>
-                <button type="button" className="overlay-url-btn" onClick={() => handleCopyUrl(overlay.id)}>
-                  {copiedOverlayId === overlay.id ? m.overlayUrlCopied : m.overlayUrlCopy}
-                </button>
-                {screenshotsEnabled && (
-                  <button type="button" className="overlay-url-btn" onClick={() => handleScreenshot(overlay.id)}>
-                    {screenshotOverlayId?.id === overlay.id
-                      ? screenshotOverlayId.ok
-                        ? m.overlayScreenshotSaved
-                        : m.overlayScreenshotError
-                      : m.overlayScreenshot}
+              <li key={overlay.id}>
+                <div className="overlay-item-header">
+                  <label>
+                    <input
+                        type="checkbox"
+                        checked={overlay.enabled}
+                        onChange={(e) => toggleOverlay(overlay.id, e.target.checked)}
+                    />
+                    {overlay.name}
+                  </label>
+                  <button type="button" className="overlay-url-btn" onClick={() => handleCopyUrl(overlay.id)}>
+                    {copiedOverlayId === overlay.id ? m.overlayUrlCopied : m.overlayUrlCopy}
                   </button>
-                )}
-              </div>
+                  {screenshotsEnabled && (
+                    <button type="button" className="overlay-url-btn" onClick={() => handleScreenshot(overlay.id)}>
+                      {screenshotOverlayId?.id === overlay.id
+                        ? screenshotOverlayId.ok
+                          ? m.overlayScreenshotSaved
+                          : m.overlayScreenshotError
+                        : m.overlayScreenshot}
+                    </button>
+                  )}
+                </div>
 
-              <OverlaySettingsPanel
-                overlay={overlay}
-                settings={settings[overlay.id]}
-                onChange={(patch) => updateOverlaySettings(overlay.id, patch)}
-              />
-            </li>
-          ))}
-        </ul>
-      </section>
+                <OverlaySettingsPanel
+                  overlay={overlay}
+                  settings={settings[overlay.id]}
+                  onChange={(patch) => updateOverlaySettings(overlay.id, patch)}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
 
-      <section>
-        <h2>{m.positioningHeading}</h2>
+      <footer className="app-footer">
         <button onClick={toggleEditMode}>{config.editMode ? m.editModeExit : m.editModeEnter}</button>
-        <p className="hint">{m.editModeHint}</p>
-      </section>
+        {updateStatus && <span className="app-version">{m.versionLabel(updateStatus.currentVersion)}</span>}
+      </footer>
     </div>
   )
 }

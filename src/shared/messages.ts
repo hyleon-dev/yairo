@@ -19,8 +19,8 @@ export const messages = {
     positioningHeading: 'Positioning',
     editModeExit: 'Exit edit mode',
     editModeEnter: 'Move overlays (edit mode)',
-    editModeHint:
-        'In edit mode the overlays are clickable and can be dragged around. Turn it back off afterwards so they stay click-through in the game.'
+    editModeHint: 'In edit mode the overlays are clickable and can be dragged around. Turn it back off afterwards so they stay click-through in the game.',
+    versionLabel: (version: string) => `v${version}`
   },
   overlayApp: {
     waitingForSession: 'Waiting for session…',
