@@ -96,7 +96,8 @@ export const messages = {
   incidents: {
     driver: 'Driver',
     team: 'Team',
-    limit: 'Limit'
+    limit: 'Limit',
+    unlimited: '∞'
   },
   tires: {
     tempUnit: '°C'

@@ -16,6 +16,7 @@ function parseLimit(limit: string): number | null {
 
 function fmtLimit(limit: string): string {
   if (!limit) return '–'
+  if (limit.toLowerCase() === 'unlimited') return m.unlimited
   const parsed = parseLimit(limit)
   return parsed !== null ? `${parsed}x` : limit
 }
