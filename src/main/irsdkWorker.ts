@@ -73,6 +73,48 @@ if (useFakeSdk) {
   console.log('[irsdk] IRSDK_MOCK=1 - using FakeIRacingSDK instead of the real iRacing connection')
 }
 
+// Screenshot/README mode: keeps using real telemetry,
+// but swaps every other driver's name for a random fake one, so no real.
+// Own car keeps its real name.
+const anonymizeNames = process.env.ANONYMIZE_DRIVER_NAMES === '1'
+if (anonymizeNames) {
+  console.log('[irsdk] ANONYMIZE_DRIVER_NAMES=1 - replacing other drivers\' names with random fake ones')
+}
+
+const ANON_FIRST_NAMES = [
+  'Alex', 'Jordan', 'Sam', 'Casey', 'Morgan', 'Taylor', 'Riley', 'Jamie', 'Drew', 'Cameron',
+  'Avery', 'Reese', 'Skyler', 'Quinn', 'Rowan', 'Blake', 'Emerson', 'Hayden', 'Parker', 'Sawyer'
+]
+const ANON_LAST_NAMES = [
+  'Turner', 'Bishop', 'Cole', 'Reed', 'Hayes', 'Foster', 'Price', 'Sloane', 'Vance', 'Marsh',
+  'Kerr', 'Doyle', 'Lang', 'Brady', 'Nash', 'Voss', 'Kane', 'Rhodes', 'Pierce', 'Wade'
+]
+
+const fakeNameByCarIdx = new Map<number, string>()
+const usedFakeNames = new Set<string>()
+
+function fakeNameFor(carIdx: number): string {
+  const cached = fakeNameByCarIdx.get(carIdx)
+  if (cached) return cached
+
+  let name = ''
+  for (let attempts = 0; attempts < 20; attempts++) {
+    const first = ANON_FIRST_NAMES[Math.floor(Math.random() * ANON_FIRST_NAMES.length)]
+    const last = ANON_LAST_NAMES[Math.floor(Math.random() * ANON_LAST_NAMES.length)]
+    name = `${first} ${last}`
+    if (!usedFakeNames.has(name)) break
+  }
+
+  usedFakeNames.add(name)
+  fakeNameByCarIdx.set(carIdx, name)
+  return name
+}
+
+function displayDriverName(carIdx: number, ownCarIdx: number, realName: string): string {
+  if (!anonymizeNames || carIdx === ownCarIdx) return realName
+  return fakeNameFor(carIdx)
+}
+
 const sdk: IrsdkLike = useFakeSdk ? new FakeIRacingSDK() : new IRacingSDK({ autoEnableTelemetry: true })
 sdk.startSDK()
 
@@ -525,7 +567,7 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
       position,
       hasLivePosition,
       carNumber: driver?.CarNumber ?? '?',
-      driverName: driver?.UserName ?? `Driver #${carIdx}`,
+      driverName: displayDriverName(carIdx, rawPlayerCarIdx, driver?.UserName ?? `Driver #${carIdx}`),
       lapsCompleted,
       stintLaps: stintLaps(carIdx, lapsCompleted),
       lapDistPct: lapDistPct[carIdx] ?? 0,
@@ -784,7 +826,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
         carIdx,
         position: classPositions.get(carIdx) ?? 0,
         carNumber: driver.CarNumber,
-        driverName: driver.TeamName,
+        driverName: displayDriverName(carIdx, rawPlayerCarIdx, driver.TeamName),
         lap: laps[carIdx] ?? 0,
         stintLaps: stintLaps(carIdx, laps[carIdx] ?? 0),
         lapDistPct: lapDistPct[carIdx] ?? 0,
@@ -893,7 +935,7 @@ function buildTrackMap(raw: TelemetryVarList): TrackMapData {
     drivers.push({
       carIdx,
       carNumber: driver.CarNumber,
-      driverName: driver.UserName,
+      driverName: displayDriverName(carIdx, rawPlayerCarIdx, driver.UserName),
       classColorHex: sdkColorHex(driver.CarClassColor),
       lapDistPct: lapDistPct[carIdx] ?? 0,
       surface,

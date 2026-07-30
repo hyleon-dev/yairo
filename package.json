@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "electron-vite dev",
     "dev:mock": "cross-env IRSDK_MOCK=1 electron-vite dev",
+    "dev:anon": "cross-env ANONYMIZE_DRIVER_NAMES=1 electron-vite dev",
     "dev:debug": "electron-vite dev --inspect --sourcemap",
     "dump-sdk": "cross-env ELECTRON_RUN_AS_NODE=1 electron scripts/dump-sdk-data.js",
     "build": "electron-vite build",
