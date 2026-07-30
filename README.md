@@ -10,8 +10,18 @@ No cloud, everything free, everything open-source.
 ### 🏁 Standings
 ![standings.png](media/standings.png)
 
+#### ⚠️ Stint Laps
+iRacing does not provide this info. It is calculated internally from tracked laps. 
+But when the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits, 
+it is not tracked and the stint laps will continue to rise when you reconnect and start YAiRO.
+
 ### 📊 Relative
 ![relative.png](media/relative.png)
+
+#### ⚠️ Stint Laps
+iRacing does not provide this info. It is calculated internally from tracked laps.
+But when the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits,
+it is not tracked and the stint laps will continue to rise when you reconnect and start YAiRO.
 
 ### 🏎️ Telemetry
 ![telemetry.png](media/telemetry.png)
@@ -22,7 +32,7 @@ WIP
 ### ⏱️ Lap Timer
 ![lap-timer.png](media/lap-timer.png)
 
-### ⚠️ Incidents
+### ❌ Incidents
 WIP
 
 ### 🗺️ Trackmap

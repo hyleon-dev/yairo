@@ -129,6 +129,15 @@ export default function App() {
                     />
                     {overlay.name}
                   </label>
+                  {m.overlayHints[overlay.id] && (
+                    <span className="info-hint">
+                      <button type="button" className="info-hint-btn" aria-label="Info">
+                        ℹ️
+                      </button>
+                      <textarea className="info-hint-popup">{m.overlayHints[overlay.id]}</textarea>
+                    </span>
+                  )}
+                  <div className="overlay-spacer"></div>
                   <button type="button" className="overlay-url-btn" onClick={() => handleCopyUrl(overlay.id)}>
                     {copiedOverlayId === overlay.id ? m.overlayUrlCopied : m.overlayUrlCopy}
                   </button>

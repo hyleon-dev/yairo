@@ -1,6 +1,11 @@
+import type { OverlayId } from './types'
 
 // Central collection of all user-facing UI text, components import
 // strings from here instead of hardcoding them inline.
+
+const stintLapsHint = 'Stint Laps:\niRacing does not provide this info. It is calculated internally from tracked laps. ' +
+    'But when the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits, ' +
+    'it is not tracked and the stint laps will continue to rise when you reconnect and start YAiRO.'
 
 export const messages = {
   control: {
@@ -9,6 +14,12 @@ export const messages = {
     connected: '● iRacing connected',
     disconnected: '○ iRacing not active',
     overlaysHeading: 'Overlays',
+    // Only overlays with an entry here get the info ('i') button next to
+    // their name in the Control Center. Undefined = no hint yet, no button.
+    overlayHints: {
+      standings: stintLapsHint,
+      relative: stintLapsHint
+    } as Partial<Record<OverlayId, string>>,
     overlayUrlCopy: '🔗',
     overlayUrlCopied: '✅',
     overlayScreenshot: '📷',
