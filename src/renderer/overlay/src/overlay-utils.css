@@ -1,10 +1,12 @@
 
 .card {
   text-align: center;
-  background: rgba(20, 20, 24, 0.55);
-  border-radius: 10px;
+  background: rgba(10, 10, 14, 0.85);
+  border: 1px solid rgba(232, 64, 26, 0.35);
+  border-radius: 8px;
   padding: 12px 20px;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(6px);
+  color: #e8e8f0;
 }
 
 .big-number {
@@ -19,6 +21,6 @@
 
 .unit {
   font-size: 12px;
-  color: #bbb;
+  color: #9090a0;
   margin-bottom: 6px;
 }
