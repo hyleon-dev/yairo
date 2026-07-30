@@ -1,0 +1,55 @@
+.tires-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 12px 20px;
+}
+
+.tire-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tire-cell--left {
+  flex-direction: row;
+}
+
+.tire-cell--right {
+  flex-direction: row-reverse;
+}
+
+.tire-gauge {
+  width: 40px;
+  height: 62px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.tire-gauge-bg {
+  fill: rgba(0, 0, 0, 0.45);
+}
+
+.tire-gauge-outline {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 3;
+}
+
+.tire-wear-text {
+  font-size: 14px;
+  font-weight: 700;
+  fill: #fff;
+  /* Dark outline keeps the number legible over both the bright green fill and the dark background. */
+  paint-order: stroke fill;
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 3px;
+}
+
+.tire-temp {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e8e8ee;
+  min-width: 38px;
+  text-align: center;
+}
