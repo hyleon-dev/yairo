@@ -14,7 +14,7 @@ No cloud, everything free, everything open-source.
 ![relative.png](media/relative.png)
 
 ### 🏎️ Telemetry
-WIP
+![telemetry.png](media/telemetry.png)
 
 ### ⛽ Fuel
 WIP
