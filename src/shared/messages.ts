@@ -66,7 +66,8 @@ export const messages = {
     showIRating: 'Show iRating',
     showSafetyRating: 'Show Safety Rating',
     showStint: 'Show stint laps',
-    showWearPct: 'Show wear %'
+    showWearPct: 'Show wear %',
+    showRpmNumber: 'Show RPM number'
   },
   lapTimer: {
     lapLabel: 'LAP',

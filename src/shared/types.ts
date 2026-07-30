@@ -304,8 +304,13 @@ export interface TiresOverlaySettings extends BaseOverlaySettings {
   showWearPct: boolean
 }
 
+export interface TelemetryOverlaySettings extends BaseOverlaySettings {
+  /** Shows the numeric RPM readout next to the shift-light LED bar. */
+  showRpmNumber: boolean
+}
+
 export type OverlaySettingsMap = {
-  telemetry: BaseOverlaySettings
+  telemetry: TelemetryOverlaySettings
   fuel: BaseOverlaySettings
   'lap-timer': BaseOverlaySettings
   incidents: BaseOverlaySettings
@@ -318,7 +323,7 @@ export type OverlaySettingsMap = {
 export type AnyOverlaySettings = OverlaySettingsMap[OverlayId]
 
 export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
-  telemetry: { scale: 1 },
+  telemetry: { scale: 1, showRpmNumber: true },
   fuel: { scale: 1 },
   'lap-timer': { scale: 1 },
   incidents: { scale: 1 },

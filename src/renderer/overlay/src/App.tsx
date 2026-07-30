@@ -6,6 +6,7 @@ import type {
   StandingsData,
   StandingsOverlaySettings,
   TelemetryData,
+  TelemetryOverlaySettings,
   TiresOverlaySettings,
   TrackMapData
 } from '../../../shared/types'
@@ -95,7 +96,7 @@ function renderOverlayContent(
 
   switch (id) {
     case 'telemetry':
-      return <TelemetryOverlay data={telemetry} />
+      return <TelemetryOverlay data={telemetry} settings={settings as TelemetryOverlaySettings} />
     case 'fuel':
       return <FuelOverlay data={telemetry} />
     case 'lap-timer':

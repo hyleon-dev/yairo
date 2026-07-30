@@ -1,4 +1,4 @@
-import type { TelemetryData } from '../../../../shared/types'
+import type { TelemetryData, TelemetryOverlaySettings } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import '../overlay-utils.css'
 import './TelemetryOverlay.css'
@@ -52,14 +52,12 @@ function PedalBar({ pct, colorClass }: { pct: number; colorClass: string }) {
   )
 }
 
-export function TelemetryOverlay({ data }: { data: TelemetryData }) {
+export function TelemetryOverlay({ data, settings }: { data: TelemetryData; settings: TelemetryOverlaySettings }) {
   return (
     <div className="card telemetry">
       <div className="rev-bar">
         <RevLedBar data={data} />
-        <div className="rpm">
-          {fmtRPM(data.rpm)}
-        </div>
+        {settings.showRpmNumber && <div className="rpm">{fmtRPM(data.rpm)}</div>}
       </div>
       <div className="telemetry-main">
         <div className="pedal-bars">
