@@ -110,6 +110,11 @@ export class WindowManager {
     return Array.from(this.overlayWindows.values())
   }
 
+  // Same as getAllOverlayWindows(), but keeps the id association
+  getAllOverlayEntries(): Array<{ id: OverlayId; window: BrowserWindow }> {
+    return Array.from(this.overlayWindows.entries()).map(([id, window]) => ({ id, window }))
+  }
+
   // Globally controls whether overlays let mouse clicks through (live) or
   // capture them (edit mode, for dragging/resizing).
   setEditMode(enabled: boolean): void {

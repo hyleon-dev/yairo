@@ -34,6 +34,7 @@ yarn-error.log*
 # Project-specific
 resources/trackmap-assets/
 sdk-dump.json
+media/*/
 
 # Helper
 .claude

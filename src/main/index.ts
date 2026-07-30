@@ -1,4 +1,6 @@
-import {app, ipcMain, BrowserWindow, clipboard, shell} from 'electron'
+import {app, ipcMain, BrowserWindow, clipboard, shell, globalShortcut, Notification} from 'electron'
+import {mkdirSync, writeFileSync} from 'fs'
+import {dirname, join} from 'path'
 import {WindowManager} from './windowManager'
 import {IrsdkService} from './irsdkService'
 import {ConfigStore} from './configStore'
@@ -15,7 +17,8 @@ import {
   type OverlayBounds,
   type RelativeOverlaySettings,
   type StandingsOverlaySettings,
-  type UpdateStatus
+  type UpdateStatus,
+  type OverlayScreenshotResult
 } from '../shared/types'
 
 const windowManager = new WindowManager()
@@ -27,6 +30,49 @@ const driverStatsStore = new DriverStatsStore()
 
 let connectionStatus: ConnectionStatus = {connected: false}
 let updateStatus: UpdateStatus = {available: false, currentVersion: app.getVersion()}
+
+// Shows the per-overlay screenshot button in the Control Center (when enabled).
+// Off by default so the button doesn't clutter normal use.
+const screenshotsEnabled = process.env.OVERLAY_SCREENSHOTS === '1'
+if (screenshotsEnabled) {
+  console.log('[main] OVERLAY_SCREENSHOTS=1 - overlay screenshot buttons enabled')
+}
+
+const SCREENSHOTS_DIR = join(process.cwd(), 'media')
+const ALL_OVERLAYS_SHORTCUT = 'CommandOrControl+Space'
+
+function timestampForFilename(): string {
+  return new Date().toISOString().replace(/[:.]/g, '-')
+}
+
+async function captureOverlayToFile(win: BrowserWindow, filePath: string): Promise<boolean> {
+  try {
+    const image = await win.webContents.capturePage()
+    mkdirSync(dirname(filePath), {recursive: true})
+    writeFileSync(filePath, image.toPNG())
+    return true
+  } catch (err) {
+    console.error('Failed to capture overlay screenshot:', err)
+    return false
+  }
+}
+
+// Global-hotkey: Capture screenshots of all visible overlays at once
+async function captureAllOverlayScreenshots(): Promise<void> {
+  const entries = windowManager.getAllOverlayEntries().filter(({window}) => !window.isDestroyed())
+  if (entries.length === 0) return
+
+  const batchDir = join(SCREENSHOTS_DIR, timestampForFilename())
+  let successCount = 0
+  for (const {id, window} of entries) {
+    if (await captureOverlayToFile(window, join(batchDir, `${id}.png`))) successCount++
+  }
+
+  new Notification({
+    title: 'YAiRO',
+    body: `${successCount}/${entries.length} overlay screenshots saved`
+  }).show()
+}
 
 function broadcastToOverlays(channel: string, payload: unknown): void {
   for (const win of windowManager.getAllOverlayWindows()) {
@@ -125,6 +171,21 @@ function registerIpcHandlers(): void {
     if (url.startsWith('https://github.com/hyleon-dev/yairo/')) shell.openExternal(url)
   })
 
+  ipcMain.handle(IPC.OVERLAY_SCREENSHOTS_ENABLED_GET, () => screenshotsEnabled)
+
+  // Control Center's per-overlay "Screenshot" button
+  ipcMain.handle(IPC.OVERLAY_SCREENSHOT, async (_evt, id: OverlayId): Promise<OverlayScreenshotResult> => {
+    if (!screenshotsEnabled) return {success: false}
+
+    const win = windowManager.getOverlayWindow(id)
+    if (!win || win.isDestroyed()) return {success: false}
+
+    const path = join(SCREENSHOTS_DIR, `${id}-${timestampForFilename()}.png`)
+    const success = await captureOverlayToFile(win, path)
+    if (success) shell.showItemInFolder(path)
+    return success ? {success: true, path} : {success: false}
+  })
+
   ipcMain.handle(
       IPC.OVERLAY_SETTINGS_SET,
       (_evt, id: OverlayId, patch: Partial<AnyOverlaySettings>) => {
@@ -213,6 +274,16 @@ app.whenReady().then(() => {
   overlayServer.start()
   seedOverlaySettings()
 
+  // Only use system-wide hotkey while screenshot mode is on
+  if (screenshotsEnabled) {
+    const registered = globalShortcut.register(ALL_OVERLAYS_SHORTCUT, () => {
+      captureAllOverlayScreenshots()
+    })
+    if (!registered) {
+      console.error(`[main] Failed to register global shortcut ${ALL_OVERLAYS_SHORTCUT} - already in use?`)
+    }
+  }
+
   // Non-blocking: only updates the banner once/if the GitHub API responds.
   checkForUpdate(app.getVersion()).then((status) => {
     updateStatus = status
@@ -226,6 +297,10 @@ app.whenReady().then(() => {
       windowManager.createControlWindow()
     }
   })
+})
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll()
 })
 
 app.on('window-all-closed', () => {

@@ -8,13 +8,13 @@
   "scripts": {
     "dev": "electron-vite dev",
     "dev:mock": "cross-env IRSDK_MOCK=1 electron-vite dev",
-    "dev:anon": "cross-env ANONYMIZE_DRIVER_NAMES=1 electron-vite dev",
+    "dev:document": "cross-env ANONYMIZE_DRIVER_NAMES=1 OVERLAY_SCREENSHOTS=1 electron-vite dev",
     "dev:debug": "electron-vite dev --inspect --sourcemap",
     "dump-sdk": "cross-env ELECTRON_RUN_AS_NODE=1 electron scripts/dump-sdk-data.js",
+    "build-trackmaps": "node scripts/build-trackmap-registry.js",
     "build": "electron-vite build",
     "build:win": "electron-vite build && electron-builder --win --publish never",
-    "postinstall": "electron-builder install-app-deps",
-    "build-trackmaps": "node scripts/build-trackmap-registry.js"
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "irsdk-node": "^4.4.0",

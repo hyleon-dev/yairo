@@ -17,7 +17,9 @@ export default function App() {
   const [connection, setConnection] = useState<ConnectionStatus>({ connected: false })
   const [settings, setSettings] = useState<Partial<Record<OverlayId, AnyOverlaySettings>>>({})
   const [copiedOverlayId, setCopiedOverlayId] = useState<OverlayId | null>(null)
+  const [screenshotOverlayId, setScreenshotOverlayId] = useState<{ id: OverlayId; ok: boolean } | null>(null)
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null)
+  const [screenshotsEnabled, setScreenshotsEnabled] = useState(false)
 
   useEffect(() => {
     window.overlayApi.getConfig().then(setConfig)
@@ -28,6 +30,9 @@ export default function App() {
     // be missed before this listener is registered
     window.overlayApi.getConnectionStatus().then(setConnection)
     window.overlayApi.getUpdateStatus().then(setUpdateStatus)
+    // Set once via OVERLAY_SCREENSHOTS=1 env var at app start (see main/index.ts),
+    // doesn't change at runtime, so no subscription needed.
+    window.overlayApi.getScreenshotsEnabled().then(setScreenshotsEnabled)
 
     const unsubConfig = window.overlayApi.onConfigUpdated(setConfig)
     const unsubConn = window.overlayApi.onConnectionStatus(setConnection)
@@ -80,6 +85,13 @@ export default function App() {
     setTimeout(() => setCopiedOverlayId((cur) => (cur === id ? null : cur)), 1500)
   }
 
+  const handleScreenshot = (id: OverlayId) => {
+    window.overlayApi.takeOverlayScreenshot(id).then((result) => {
+      setScreenshotOverlayId({ id, ok: result.success })
+      setTimeout(() => setScreenshotOverlayId((cur) => (cur?.id === id ? null : cur)), 1500)
+    })
+  }
+
   return (
     <div className="app">
       {updateStatus?.available && (
@@ -119,6 +131,15 @@ export default function App() {
                 <button type="button" className="overlay-url-btn" onClick={() => handleCopyUrl(overlay.id)}>
                   {copiedOverlayId === overlay.id ? m.overlayUrlCopied : m.overlayUrlCopy}
                 </button>
+                {screenshotsEnabled && (
+                  <button type="button" className="overlay-url-btn" onClick={() => handleScreenshot(overlay.id)}>
+                    {screenshotOverlayId?.id === overlay.id
+                      ? screenshotOverlayId.ok
+                        ? m.overlayScreenshotSaved
+                        : m.overlayScreenshotError
+                      : m.overlayScreenshot}
+                  </button>
+                )}
               </div>
 
               <OverlaySettingsPanel

@@ -96,6 +96,14 @@ export interface UpdateStatus {
   url?: string
 }
 
+// --- Overlay screenshots ---------------------------------------------------
+
+// Result of the Control Center's "Screenshot" button per overlay.
+export interface OverlayScreenshotResult {
+  success: boolean
+  path?: string
+}
+
 // --- Standings ----------------------------------------------------------
 
 export interface DriverStanding {
@@ -341,5 +349,7 @@ export const IPC = {
   CLIPBOARD_WRITE: 'clipboard:write',
   UPDATE_STATUS_GET: 'update-status:get',
   UPDATE_STATUS: 'update-status',
-  UPDATE_OPEN_RELEASE: 'update-status:open-release'
+  UPDATE_OPEN_RELEASE: 'update-status:open-release',
+  OVERLAY_SCREENSHOT: 'overlay:screenshot',
+  OVERLAY_SCREENSHOTS_ENABLED_GET: 'overlay:screenshots-enabled-get'
 } as const

@@ -7,6 +7,7 @@ import type {
   DriverStatsData,
   OverlayBounds,
   OverlayId,
+  OverlayScreenshotResult,
   RelativeData,
   StandingsData,
   TelemetryData,
@@ -25,6 +26,11 @@ const api = {
   getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke(IPC.UPDATE_STATUS_GET),
 
   openReleasePage: (url: string): Promise<void> => ipcRenderer.invoke(IPC.UPDATE_OPEN_RELEASE, url),
+
+  getScreenshotsEnabled: (): Promise<boolean> => ipcRenderer.invoke(IPC.OVERLAY_SCREENSHOTS_ENABLED_GET),
+
+  takeOverlayScreenshot: (id: OverlayId): Promise<OverlayScreenshotResult> =>
+    ipcRenderer.invoke(IPC.OVERLAY_SCREENSHOT, id),
 
   // --- actions from the Control Center ---
   setOverlay: (id: OverlayId, patch: Partial<{ enabled: boolean; bounds: OverlayBounds }>) =>
