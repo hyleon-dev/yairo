@@ -28,6 +28,9 @@ WIP
 ### 🗺️ Trackmap
 WIP
 
+### 🛞 Tires
+![tires.png](media/tires.png)
+
 ## Planned features
 
 - **More Overlays** - Weather, Flags, Radar (as far as possible), Delta bar, ...
