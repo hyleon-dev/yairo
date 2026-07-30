@@ -3,7 +3,8 @@ import type {
   OverlayConfig,
   RelativeOverlaySettings,
   StandingsOverlaySettings,
-  StintOverlaySettings
+  StintOverlaySettings,
+  TiresOverlaySettings
 } from '../../../shared/types'
 import { messages } from '../../../shared/messages'
 
@@ -42,6 +43,10 @@ export function OverlaySettingsPanel({ overlay, settings, onChange }: Props) {
 
       {overlay.id === 'standings' && (
         <StandingsSettings settings={settings as StandingsOverlaySettings} onChange={onChange} />
+      )}
+
+      {overlay.id === 'tires' && (
+        <TiresSettings settings={settings as TiresOverlaySettings} onChange={onChange} />
       )}
     </div>
   )
@@ -161,6 +166,25 @@ function DriverRatingSettings({
 
 // Stint length is toggleable independently in both Standings AND Relative,
 // same pattern as DriverRatingSettings.
+function TiresSettings({
+  settings,
+  onChange
+}: {
+  settings: TiresOverlaySettings
+  onChange: (patch: Partial<AnyOverlaySettings>) => void
+}) {
+  return (
+    <label className="setting-row">
+      <span>{m.showWearPct}</span>
+      <input
+        type="checkbox"
+        checked={settings.showWearPct}
+        onChange={(e) => onChange({ showWearPct: e.target.checked })}
+      />
+    </label>
+  )
+}
+
 function StintSettings({
   settings,
   onChange

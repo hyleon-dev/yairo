@@ -19,6 +19,8 @@ import type {
   StandingsClass,
   StandingsData,
   TelemetryData,
+  TireWheelData,
+  TiresData,
   TrackMapData,
   TrackMapDriver,
   TrackSurfaceStatus
@@ -269,6 +271,37 @@ function stintLaps(carIdx: number, lapsCompleted: number): number {
   return Math.max(0, lapsCompleted - (lastPitLapByCarIdx.get(carIdx) ?? 0))
 }
 
+const ZERO_WHEEL: TireWheelData = { wearPct: 0, tempC: 0, tempUnit: 'C' }
+const ZERO_TIRES: TiresData = { lf: ZERO_WHEEL, rf: ZERO_WHEEL, lr: ZERO_WHEEL, rr: ZERO_WHEEL }
+
+// Wear/temp are only exposed by the SDK for our own car,
+// and each corner comes as 3 separate zones (inner/middle/outer).
+// Averaged here into one value per corner.
+function buildTireWheel(raw: TelemetryVarList, prefix: 'LF' | 'RF' | 'LR' | 'RR'): TireWheelData {
+  const wearL = raw[`${prefix}wearL`]?.value?.[0] ?? 0
+  const wearM = raw[`${prefix}wearM`]?.value?.[0] ?? 0
+  const wearR = raw[`${prefix}wearR`]?.value?.[0] ?? 0
+  const tempL = raw[`${prefix}tempCL`]?.value?.[0] ?? 0
+  const tempM = raw[`${prefix}tempCM`]?.value?.[0] ?? 0
+  const tempR = raw[`${prefix}tempCR`]?.value?.[0] ?? 0
+  const tempUnit = raw[`${prefix}tempCL`]?.unit ?? 'C'
+
+  return {
+    wearPct: ((wearL + wearM + wearR) / 3) * 100, // SDK gives 0..1 despite its "%" unit label
+    tempC: (tempL + tempM + tempR) / 3,
+    tempUnit: tempUnit
+  }
+}
+
+function buildTires(raw: TelemetryVarList): TiresData {
+  return {
+    lf: buildTireWheel(raw, 'LF'),
+    rf: buildTireWheel(raw, 'RF'),
+    lr: buildTireWheel(raw, 'LR'),
+    rr: buildTireWheel(raw, 'RR')
+  }
+}
+
 const NO_TELEMETRY: TelemetryData = {
   speedKph: 0,
   rpm: 0,
@@ -294,7 +327,8 @@ const NO_TELEMETRY: TelemetryData = {
   fuelEstimate: null,
   currentDriverIncidentCount: -1,
   teamIncidentCount: -1,
-  incidentLimit: ''
+  incidentLimit: '',
+  tires: ZERO_TIRES
 }
 
 // iRacing provides neither consumption-per-lap nor a range estimate
@@ -442,7 +476,8 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
       fuelEstimate: buildFuelEstimate(fuelLevelL, lap),
       currentDriverIncidentCount,
       teamIncidentCount,
-      incidentLimit
+      incidentLimit,
+      tires: buildTires(raw)
     }
   }
 
@@ -489,7 +524,8 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
     fuelEstimate: null,
     currentDriverIncidentCount,
     teamIncidentCount,
-    incidentLimit
+    incidentLimit,
+    tires: ZERO_TIRES
   }
 }
 

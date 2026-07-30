@@ -53,6 +53,25 @@ export interface TelemetryData {
   // Raw string from WeekendInfo.WeekendOptions.IncidentLimit, e.g. "17x" or "unlimited".
   // Empty string if the SDK hasn't provided anything yet.
   incidentLimit: string
+  // Only meaningful while actually driving (own car), see isSpectatingOther.
+  tires: TiresData
+}
+
+// --- Tires ------------------------------------------------------------
+
+// One corner of the car. wearPct/tempC are each averaged across the SDK's
+// three measurement zones (inner/middle/outer) per tire.
+export interface TireWheelData {
+  wearPct: number // 0..100, percent tread remaining. 0 = worn through/flat.
+  tempC: number
+  tempUnit: string
+}
+
+export interface TiresData {
+  lf: TireWheelData
+  rf: TireWheelData
+  lr: TireWheelData
+  rr: TireWheelData
 }
 
 // A consumption projection for one scenario (last lap or average of the last 5 laps).
@@ -233,6 +252,7 @@ export type OverlayId =
   | 'standings'
   | 'relative'
   | 'trackmap'
+  | 'tires'
 
 export interface OverlayBounds {
   x: number
@@ -279,6 +299,11 @@ export interface StandingsOverlaySettings extends BaseOverlaySettings, DriverRat
   topCount: number // These leading drivers (P1, P2, ...) are always shown.
 }
 
+export interface TiresOverlaySettings extends BaseOverlaySettings {
+  /** Shows the wear percentage number inside each tire gauge. */
+  showWearPct: boolean
+}
+
 export type OverlaySettingsMap = {
   telemetry: BaseOverlaySettings
   fuel: BaseOverlaySettings
@@ -287,6 +312,7 @@ export type OverlaySettingsMap = {
   standings: StandingsOverlaySettings
   relative: RelativeOverlaySettings
   trackmap: BaseOverlaySettings
+  tires: TiresOverlaySettings
 }
 
 export type AnyOverlaySettings = OverlaySettingsMap[OverlayId]
@@ -313,7 +339,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     showSafetyRating: true,
     showStint: true
   },
-  trackmap: { scale: 1 }
+  trackmap: { scale: 1 },
+  tires: { scale: 1, showWearPct: true }
 }
 
 // Main -> renderer broadcast channel for a single overlay's settings, one channel per overlay id

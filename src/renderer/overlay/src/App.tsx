@@ -6,6 +6,7 @@ import type {
   StandingsData,
   StandingsOverlaySettings,
   TelemetryData,
+  TiresOverlaySettings,
   TrackMapData
 } from '../../../shared/types'
 import { messages } from '../../../shared/messages'
@@ -18,6 +19,7 @@ import { IncidentsOverlay } from './overlays/IncidentsOverlay'
 import { StandingsOverlay } from './overlays/StandingsOverlay'
 import { RelativeOverlay } from './overlays/RelativeOverlay'
 import { TrackMapOverlay } from './overlays/TrackMapOverlay'
+import { TiresOverlay } from './overlays/TiresOverlay'
 
 const m = messages.overlayApp
 
@@ -86,8 +88,8 @@ function renderOverlayContent(
     return <div className="waiting">{m.noActiveCar}</div>
   }
 
-  // Fuel level isn't available when spectating others (not players) cars.
-  if (id === 'fuel' && telemetry.isSpectatingOther) {
+  // Fuel level and tire wear/temp aren't available when spectating others (not our own) cars.
+  if ((id === 'fuel' || id === 'tires') && telemetry.isSpectatingOther) {
     return <div className="waiting">{m.notAvailableSpectating}</div>
   }
 
@@ -100,6 +102,8 @@ function renderOverlayContent(
       return <LapTimerOverlay data={telemetry} />
     case 'incidents':
       return <IncidentsOverlay data={telemetry} />
+    case 'tires':
+      return <TiresOverlay data={telemetry} settings={settings as TiresOverlaySettings} />
     default:
       return null
   }

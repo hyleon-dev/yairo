@@ -101,6 +101,7 @@ export class FakeIRacingSDK {
   private simTimeSec = 0
   private lastTickAt = Date.now()
   private fuelLevel = 65 // L, typical GT3 tank
+  private tireWearPct = 100 // simplified: same wear across all 3 zones per corner
 
   startSDK(): boolean {
     console.log('[irsdk-fake] fake SDK started - simulating a practice/race session at Monza')
@@ -130,6 +131,10 @@ export class FakeIRacingSDK {
     const player = this.drivers[PLAYER_CAR_IDX]
     const fuelBurnPerSec = 2.6 / player.basePaceSec // target: ~2.6 L/lap
     this.fuelLevel = Math.max(0, this.fuelLevel - fuelBurnPerSec * dtSec)
+    // Down to 0% (flat) within a few minutes, so the Tires overlay quickly cycles through
+    // its whole color range (green -> yellow -> dark -> flat/black) while testing.
+    const TIRE_WEAR_ZERO_AT_SEC = 240
+    this.tireWearPct = Math.max(0, 100 - (this.simTimeSec / TIRE_WEAR_ZERO_AT_SEC) * 100)
 
     for (const driver of this.drivers) {
       driver.lapDistPct += dtSec / driver.currentLapPaceSec
@@ -177,6 +182,10 @@ export class FakeIRacingSDK {
     const positions = this.computePositions()
     const currentLapTime = player.lapDistPct * player.currentLapPaceSec
 
+    const tireWearFrac = this.tireWearPct / 100 // SDK gives 0..1 despite its "%" unit label
+    // Front tires run a bit hotter than rear, varies slightly with track position - just for visual variety.
+    const baseTireTemp = 75 + 15 * Math.sin(player.lapDistPct * Math.PI * 4)
+
     const raw: Record<string, TelemetryVariable<unknown>> = {
       SessionTime: scalarVar(this.simTimeSec, 's'),
       SessionTimeRemain: scalarVar(Math.max(0, SESSION_DURATION_SEC - this.simTimeSec), 's'),
@@ -214,7 +223,33 @@ export class FakeIRacingSDK {
       CarIdxRPM: arrayVar(this.drivers.map((d, i) => (i === PLAYER_CAR_IDX ? rpm : 6000))),
       CarIdxGear: arrayVar(this.drivers.map((d, i) => (i === PLAYER_CAR_IDX ? gear : 4))),
       CarIdxPosition: arrayVar(positions),
-      CarIdxF2Time: arrayVar(this.computeGapsToLeader())
+      CarIdxF2Time: arrayVar(this.computeGapsToLeader()),
+
+      LFwearL: scalarVar(tireWearFrac),
+      LFwearM: scalarVar(tireWearFrac),
+      LFwearR: scalarVar(tireWearFrac),
+      RFwearL: scalarVar(tireWearFrac),
+      RFwearM: scalarVar(tireWearFrac),
+      RFwearR: scalarVar(tireWearFrac),
+      LRwearL: scalarVar(tireWearFrac),
+      LRwearM: scalarVar(tireWearFrac),
+      LRwearR: scalarVar(tireWearFrac),
+      RRwearL: scalarVar(tireWearFrac),
+      RRwearM: scalarVar(tireWearFrac),
+      RRwearR: scalarVar(tireWearFrac),
+
+      LFtempCL: scalarVar(baseTireTemp + 4),
+      LFtempCM: scalarVar(baseTireTemp + 6),
+      LFtempCR: scalarVar(baseTireTemp + 5),
+      RFtempCL: scalarVar(baseTireTemp + 7),
+      RFtempCM: scalarVar(baseTireTemp + 9),
+      RFtempCR: scalarVar(baseTireTemp + 8),
+      LRtempCL: scalarVar(baseTireTemp - 6),
+      LRtempCM: scalarVar(baseTireTemp - 4),
+      LRtempCR: scalarVar(baseTireTemp - 5),
+      RRtempCL: scalarVar(baseTireTemp - 3),
+      RRtempCM: scalarVar(baseTireTemp - 1),
+      RRtempCR: scalarVar(baseTireTemp - 2)
     }
 
     return raw as unknown as TelemetryVarList

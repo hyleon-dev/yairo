@@ -65,7 +65,8 @@ export const messages = {
     topCount: 'Top Drivers',
     showIRating: 'Show iRating',
     showSafetyRating: 'Show Safety Rating',
-    showStint: 'Show stint laps'
+    showStint: 'Show stint laps',
+    showWearPct: 'Show wear %'
   },
   lapTimer: {
     lapLabel: 'LAP',
@@ -96,5 +97,8 @@ export const messages = {
     driver: 'Driver',
     team: 'Team',
     limit: 'Limit'
+  },
+  tires: {
+    tempUnit: '°C'
   }
 } as const

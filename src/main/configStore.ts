@@ -47,6 +47,12 @@ const DEFAULT_CONFIG: AppConfig = {
       name: 'Track Map',
       enabled: false,
       bounds: { x: 780, y: 600, width: 360, height: 202 }
+    },
+    {
+      id: 'tires',
+      name: 'Tires',
+      enabled: false,
+      bounds: { x: 100, y: 650, width: 220, height: 200 }
     }
   ]
 }
