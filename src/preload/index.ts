@@ -43,8 +43,8 @@ const api = {
   setOverlayBounds: (id: OverlayId, bounds: OverlayBounds) =>
     ipcRenderer.invoke(IPC.OVERLAY_BOUNDS_SET, id, bounds),
 
-  setOverlayContentSize: (id: OverlayId, width: number, height: number) =>
-    ipcRenderer.invoke(IPC.OVERLAY_CONTENT_SIZE_SET, id, width, height),
+  setOverlayContentSize: (id: OverlayId, width: number, height: number, force?: boolean) =>
+    ipcRenderer.invoke(IPC.OVERLAY_CONTENT_SIZE_SET, id, width, height, force),
 
   getOverlaySettings: (id: OverlayId): Promise<AnyOverlaySettings> =>
     ipcRenderer.invoke(IPC.OVERLAY_SETTINGS_GET, id),

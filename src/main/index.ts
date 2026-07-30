@@ -141,10 +141,14 @@ function registerIpcHandlers(): void {
     return updated
   })
 
-  // Overlay reports its actual content size (auto-fit)
-  ipcMain.handle(IPC.OVERLAY_CONTENT_SIZE_SET, (_evt, id: OverlayId, width: number, height: number) => {
-    windowManager.setOverlayContentSize(id, width, height)
-  })
+  // Overlay reports its actual content size (auto-fit, or a forced resize
+  // after a scale change even in edit mode - see useReportContentSize.ts)
+  ipcMain.handle(
+    IPC.OVERLAY_CONTENT_SIZE_SET,
+    (_evt, id: OverlayId, width: number, height: number, force?: boolean) => {
+      windowManager.setOverlayContentSize(id, width, height, force)
+    }
+  )
 
   // Query/Change a single overlay's settings
   // Saved immediately on change

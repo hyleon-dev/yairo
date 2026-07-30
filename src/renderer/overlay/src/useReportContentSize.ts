@@ -5,12 +5,13 @@ import type { OverlayId } from '../../../shared/types'
 // Standings with many drivers), this hook measures the natural size of the
 // rendered content and reports it to windowManager.setOverlayContentSize().
 //
-// Only relevant for the Electron overlay windows (window.overlayApi) and
-// only during live operation: in edit mode the user controls size via drag,
-// otherwise the window would keep snapping back to the content size.
-export function useReportContentSize(overlayId: OverlayId, editMode: boolean) {
+// Only relevant for the Electron overlay windows (window.overlayApi).
+export function useReportContentSize(overlayId: OverlayId, editMode: boolean, scale: number) {
   const ref = useRef<HTMLDivElement>(null)
 
+  // Continuous auto-fit, live operation only: in edit mode the user controls
+  // size via drag, reporting every observed size change here would fight
+  // that and the window would keep snapping back to the content size.
   useEffect(() => {
     if (!window.overlayApi || editMode || !ref.current) return
 
@@ -30,6 +31,18 @@ export function useReportContentSize(overlayId: OverlayId, editMode: boolean) {
 
     return () => observer.disconnect()
   }, [overlayId, editMode])
+
+  // Changing the scale setting changes the content's actual rendered size
+  // (CSS zoom) even while in edit mode - without this, the drag/resize area
+  // (the window itself) stays at its old size and visibly drifts out of sync
+  // with the now-scaled content. Unlike the continuous observer above, this
+  // is a one-off resize tied to the scale value itself, not to every layout
+  // change, so it doesn't fight manual dragging in edit mode.
+  useEffect(() => {
+    if (!window.overlayApi || !ref.current) return
+    const rect = ref.current.getBoundingClientRect()
+    window.overlayApi.setOverlayContentSize(overlayId, Math.ceil(rect.width), Math.ceil(rect.height), true)
+  }, [overlayId, scale])
 
   return ref
 }

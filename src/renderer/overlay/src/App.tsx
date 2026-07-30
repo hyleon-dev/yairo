@@ -31,7 +31,7 @@ function useOverlayId(): OverlayId {
 export default function App() {
   const overlayId = useOverlayId()
   const { telemetry, standings, relative, trackMap, editMode, settings } = useOverlayBridge(overlayId)
-  const contentRef = useReportContentSize(overlayId, editMode)
+  const contentRef = useReportContentSize(overlayId, editMode, settings.scale)
 
   return (
     <div className={`overlay-root ${editMode ? 'edit-mode' : ''}`}>

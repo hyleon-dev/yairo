@@ -134,10 +134,15 @@ export class WindowManager {
 
   // Resizes an overlay window to the actual rendered size of its content,
   // so e.g. Standings with many drivers isn't cut off.
-  // Only in live mode, in edit mode the user controls size via drag.
-  setOverlayContentSize(id: OverlayId, width: number, height: number): void {
+  // Normally only in live mode, in edit mode the user controls size via drag
+  // - `force` overrides that for a scale change (see useReportContentSize.ts):
+  // changing the scale setting changes the content's actual rendered size
+  // even while in edit mode, so the drag/resize area needs to follow along
+  // live, otherwise it drifts out of sync with the visibly (re-)scaled content.
+  setOverlayContentSize(id: OverlayId, width: number, height: number, force = false): void {
     const win = this.overlayWindows.get(id)
-    if (!win || win.isDestroyed() || win.isResizable()) return
+    if (!win || win.isDestroyed()) return
+    if (win.isResizable() && !force) return
 
     const bounds = win.getBounds()
     if (bounds.width === width && bounds.height === height) return
