@@ -41,6 +41,9 @@ WIP
 ### 🛞 Tires
 ![tires.png](media/tires.png)
 
+### 🏁 Flags
+TODO
+
 ## Planned features
 
 - **More Overlays** - Weather, Flags, Radar (as far as possible), Delta bar, ...
