@@ -1,4 +1,5 @@
 import type { Driver, DriverInfo, SessionList, TelemetryVariable, TelemetryVarList, WeekendInfo } from 'irsdk-node'
+import { FLAG_BITS } from '../shared/types'
 
 // Simulated race session for local dev without iRacing running (see
 // "npm run dev:mock", IRSDK_MOCK=1 in irsdkWorker.ts). Mirrors only the SDK
@@ -38,6 +39,22 @@ const DRIVER_NAMES = [
   'Ben Harris',
   'Mia Schulz'
 ]
+
+// Cycles through the flags every FLAG_CYCLE_INTERVAL_SEC seconds.
+const FLAG_CYCLE = [
+  0,
+  FLAG_BITS.green,
+  FLAG_BITS.yellow,
+  FLAG_BITS.yellowWaving,
+  FLAG_BITS.blue,
+  FLAG_BITS.white,
+  FLAG_BITS.checkered,
+  FLAG_BITS.black,
+  FLAG_BITS.repair,
+  FLAG_BITS.caution,
+  FLAG_BITS.cautionWaving
+]
+const FLAG_CYCLE_INTERVAL_SEC = 6
 
 interface FakeDriverState {
   carIdx: number
@@ -224,6 +241,7 @@ export class FakeIRacingSDK {
       CarIdxGear: arrayVar(this.drivers.map((d, i) => (i === PLAYER_CAR_IDX ? gear : 4))),
       CarIdxPosition: arrayVar(positions),
       CarIdxF2Time: arrayVar(this.computeGapsToLeader()),
+      SessionFlags: scalarVar(FLAG_CYCLE[Math.floor(this.simTimeSec / FLAG_CYCLE_INTERVAL_SEC) % FLAG_CYCLE.length]),
 
       LFwearL: scalarVar(tireWearFrac),
       LFwearM: scalarVar(tireWearFrac),

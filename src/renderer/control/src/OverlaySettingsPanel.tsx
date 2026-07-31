@@ -1,5 +1,6 @@
 import type {
   AnyOverlaySettings,
+  FlagsOverlaySettings,
   OverlayConfig,
   RelativeOverlaySettings,
   StandingsOverlaySettings,
@@ -52,6 +53,10 @@ export function OverlaySettingsPanel({ overlay, settings, onChange }: Props) {
 
       {overlay.id === 'telemetry' && (
         <TelemetrySettings settings={settings as TelemetryOverlaySettings} onChange={onChange} />
+      )}
+
+      {overlay.id === 'flags' && (
+        <FlagsSettings settings={settings as FlagsOverlaySettings} onChange={onChange} />
       )}
     </div>
   )
@@ -202,6 +207,25 @@ function TelemetrySettings({
         type="checkbox"
         checked={settings.showRpmNumber}
         onChange={(e) => onChange({ showRpmNumber: e.target.checked })}
+      />
+    </label>
+  )
+}
+
+function FlagsSettings({
+  settings,
+  onChange
+}: {
+  settings: FlagsOverlaySettings
+  onChange: (patch: Partial<AnyOverlaySettings>) => void
+}) {
+  return (
+    <label className="setting-row">
+      <span>{m.showLabel}</span>
+      <input
+        type="checkbox"
+        checked={settings.showLabel}
+        onChange={(e) => onChange({ showLabel: e.target.checked })}
       />
     </label>
   )

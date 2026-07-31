@@ -248,6 +248,9 @@ function registerIrsdkEvents(): void {
   irsdk.on('trackmap', (data) => {
     broadcastToOverlays(IPC.TRACKMAP_UPDATE, data)
   })
+  irsdk.on('flags', (data) => {
+    broadcastToOverlays(IPC.FLAGS_UPDATE, data)
+  })
   irsdk.on('connected', () => {
     // Check on every (re)connect whether the old driver history has already expired.
     driverStatsStore.expireIfStale()

@@ -6,6 +6,7 @@ import {
   type AnyOverlaySettings,
   type AppConfig,
   type ConnectionStatus,
+  type FlagsData,
   type OverlayId,
   type RelativeData,
   type StandingsData,
@@ -18,6 +19,7 @@ export interface OverlayBridgeState {
   standings: StandingsData | null
   relative: RelativeData | null
   trackMap: TrackMapData | null
+  flags: FlagsData | null
   editMode: boolean
   settings: AnyOverlaySettings
 }
@@ -31,17 +33,18 @@ export function useOverlayBridge(overlayId: OverlayId): OverlayBridgeState {
   const [standings, setStandings] = useState<StandingsData | null>(null)
   const [relative, setRelative] = useState<RelativeData | null>(null)
   const [trackMap, setTrackMap] = useState<TrackMapData | null>(null)
+  const [flags, setFlags] = useState<FlagsData | null>(null)
   const [editMode, setEditMode] = useState(false)
   const [settings, setSettings] = useState<AnyOverlaySettings>(DEFAULT_OVERLAY_SETTINGS[overlayId])
 
   useEffect(() => {
-    const setters = { setTelemetry, setStandings, setRelative, setTrackMap, setEditMode, setSettings }
+    const setters = { setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings }
     return window.overlayApi
       ? subscribeViaElectron(overlayId, setters)
       : subscribeViaWebSocket(overlayId, setters)
   }, [overlayId])
 
-  return { telemetry, standings, relative, trackMap, editMode, settings }
+  return { telemetry, standings, relative, trackMap, flags, editMode, settings }
 }
 
 interface Setters {
@@ -49,18 +52,20 @@ interface Setters {
   setStandings: (d: StandingsData | null) => void
   setRelative: (d: RelativeData | null) => void
   setTrackMap: (d: TrackMapData | null) => void
+  setFlags: (d: FlagsData | null) => void
   setEditMode: (v: boolean) => void
   setSettings: (s: AnyOverlaySettings) => void
 }
 
 function subscribeViaElectron(
   overlayId: OverlayId,
-  { setTelemetry, setStandings, setRelative, setTrackMap, setEditMode, setSettings }: Setters
+  { setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings }: Setters
 ): () => void {
   const unsubTelemetry = window.overlayApi.onTelemetry(setTelemetry)
   const unsubStandings = window.overlayApi.onStandings(setStandings)
   const unsubRelative = window.overlayApi.onRelative(setRelative)
   const unsubTrackMap = window.overlayApi.onTrackMap(setTrackMap)
+  const unsubFlags = window.overlayApi.onFlags(setFlags)
   const unsubConfig = window.overlayApi.onConfigUpdated((cfg: AppConfig) => setEditMode(cfg.editMode))
   const unsubSettings = window.overlayApi.onOverlaySettings(overlayId, setSettings)
   const unsubConnection = window.overlayApi.onConnectionStatus((status: ConnectionStatus) => {
@@ -69,6 +74,7 @@ function subscribeViaElectron(
       setStandings(null)
       setRelative(null)
       setTrackMap(null)
+      setFlags(null)
     }
   })
 
@@ -80,6 +86,7 @@ function subscribeViaElectron(
     unsubStandings()
     unsubRelative()
     unsubTrackMap()
+    unsubFlags()
     unsubConfig()
     unsubSettings()
     unsubConnection()
@@ -88,7 +95,7 @@ function subscribeViaElectron(
 
 function subscribeViaWebSocket(
     overlayId: OverlayId,
-    {setTelemetry, setStandings, setRelative, setTrackMap, setEditMode, setSettings}: Setters
+    {setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings}: Setters
 ): () => void {
   // No edit mode/dragging in the browser
   setEditMode(false)
@@ -111,12 +118,16 @@ function subscribeViaWebSocket(
       case IPC.TRACKMAP_UPDATE:
         setTrackMap(payload as TrackMapData)
         break
+      case IPC.FLAGS_UPDATE:
+        setFlags(payload as FlagsData)
+        break
       case IPC.CONNECTION_STATUS:
         if (!(payload as ConnectionStatus).connected) {
           setTelemetry(null)
           setStandings(null)
           setRelative(null)
           setTrackMap(null)
+          setFlags(null)
         }
         break
       case settingsChannel:

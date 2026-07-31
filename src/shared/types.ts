@@ -212,6 +212,31 @@ export interface TrackMapData {
   drivers: TrackMapDriver[]
 }
 
+// --- Flags ------------------------------------------------------------
+
+// Mirrors the relevant bits of irsdk_Flags
+// (see @irsdk-node/types/dist/types/defines.d.ts, GlobalFlags enum)
+export const FLAG_BITS = {
+  checkered: 0x00000001,
+  white: 0x00000002,
+  green: 0x00000004,
+  yellow: 0x00000008,
+  red: 0x00000010,
+  blue: 0x00000020,
+  yellowWaving: 0x00000100,
+  greenHeld: 0x00000400,
+  caution: 0x00004000,
+  cautionWaving: 0x00008000,
+  black: 0x00010000,
+  disqualify: 0x00020000,
+  furled: 0x00080000,
+  repair: 0x00100000
+} as const
+
+export interface FlagsData {
+  flags: number // raw SessionFlags bitmask, decode with FLAG_BITS
+}
+
 // --- Driver Stats (persistent driver history, keyed by iRacing CustID) ----
 //
 // iRacing itself doesn't expose an average/median lap time per driver - so
@@ -253,6 +278,7 @@ export type OverlayId =
   | 'relative'
   | 'trackmap'
   | 'tires'
+  | 'flags'
 
 export interface OverlayBounds {
   x: number
@@ -309,6 +335,11 @@ export interface TelemetryOverlaySettings extends BaseOverlaySettings {
   showRpmNumber: boolean
 }
 
+export interface FlagsOverlaySettings extends BaseOverlaySettings {
+  /** Shows the flag name (e.g. "CAUTION") below the LED grid. */
+  showLabel: boolean
+}
+
 export type OverlaySettingsMap = {
   telemetry: TelemetryOverlaySettings
   fuel: BaseOverlaySettings
@@ -318,6 +349,7 @@ export type OverlaySettingsMap = {
   relative: RelativeOverlaySettings
   trackmap: BaseOverlaySettings
   tires: TiresOverlaySettings
+  flags: FlagsOverlaySettings
 }
 
 export type AnyOverlaySettings = OverlaySettingsMap[OverlayId]
@@ -345,7 +377,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     showStint: true
   },
   trackmap: { scale: 1 },
-  tires: { scale: 1, showWearPct: true }
+  tires: { scale: 1, showWearPct: true },
+  flags: { scale: 1, showLabel: false }
 }
 
 // Main -> renderer broadcast channel for a single overlay's settings, one channel per overlay id
@@ -365,6 +398,7 @@ export const IPC = {
   STANDINGS_UPDATE: 'standings:update',
   RELATIVE_UPDATE: 'relative:update',
   TRACKMAP_UPDATE: 'trackmap:update',
+  FLAGS_UPDATE: 'flags:update',
   CONNECTION_STATUS: 'connection:status',
   CONFIG_UPDATED: 'config:updated',
 

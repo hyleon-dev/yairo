@@ -12,6 +12,7 @@ import { FakeIRacingSDK } from './irsdkFake'
 import type {
   DriverLapCompletedEvent,
   DriverStanding,
+  FlagsData,
   FuelEstimate,
   FuelLapEstimate,
   RelativeData,
@@ -166,6 +167,7 @@ function publishTelemetry(): void {
   post({ type: 'standings', data: buildStandings(raw) })
   post({ type: 'relative', data: buildRelative(raw) })
   post({ type: 'trackmap', data: buildTrackMap(raw) })
+  post({ type: 'flags', data: buildFlags(raw) })
 
   const lapCompletions = checkLapCompletions(raw)
   if (lapCompletions.length > 0) post({ type: 'lap-completed', events: lapCompletions })
@@ -984,6 +986,11 @@ function buildTrackMap(raw: TelemetryVarList): TrackMapData {
     trackName: weekendInfo?.TrackDisplayName ?? '',
     drivers
   }
+}
+
+// Session-wide flags.
+function buildFlags(raw: TelemetryVarList): FlagsData {
+  return { flags: raw.SessionFlags?.value?.[0] ?? 0 }
 }
 
 loop()

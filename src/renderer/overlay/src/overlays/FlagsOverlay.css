@@ -1,0 +1,68 @@
+
+.card.flags {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.flags-grid {
+  /* when editing, change value in .tsx too! */
+  --grid-size: 12;
+  
+  display: grid;
+  grid-template-columns: repeat(var(--grid-size), 16px);
+  grid-template-rows: repeat(var(--grid-size), 16px);
+  gap: 3px;
+}
+
+.flags-led {
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  transition: background-color 120ms linear, box-shadow 120ms linear, border-color 120ms linear;
+}
+
+.flags-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #9090a0;
+}
+
+.flags--alert {
+  border-color: rgba(231, 76, 60, 0.8);
+  box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+}
+
+/* No flag active: hide everything (panel background/border + the unlit LEDs)
+   without changing the panel's size, so it's still there to grab in edit mode. */
+.flags--idle {
+  background: transparent;
+  border-color: transparent;
+}
+
+.flags--idle .flags-led {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+/* Same blink style/timing as .rev-leds--blink in TelemetryOverlay.css. */
+.flags-grid--blink {
+  animation: flags-grid-blink 0.8s linear infinite;
+}
+
+@keyframes flags-grid-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  99% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 1;
+  }
+}

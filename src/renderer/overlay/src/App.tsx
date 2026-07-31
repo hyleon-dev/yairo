@@ -1,5 +1,7 @@
 import type {
   AnyOverlaySettings,
+  FlagsData,
+  FlagsOverlaySettings,
   OverlayId,
   RelativeData,
   RelativeOverlaySettings,
@@ -21,6 +23,7 @@ import { StandingsOverlay } from './overlays/StandingsOverlay'
 import { RelativeOverlay } from './overlays/RelativeOverlay'
 import { TrackMapOverlay } from './overlays/TrackMapOverlay'
 import { TiresOverlay } from './overlays/TiresOverlay'
+import { FlagsOverlay } from './overlays/FlagsOverlay'
 
 const m = messages.overlayApp
 
@@ -31,7 +34,7 @@ function useOverlayId(): OverlayId {
 
 export default function App() {
   const overlayId = useOverlayId()
-  const { telemetry, standings, relative, trackMap, editMode, settings } = useOverlayBridge(overlayId)
+  const { telemetry, standings, relative, trackMap, flags, editMode, settings } = useOverlayBridge(overlayId)
   const contentRef = useReportContentSize(overlayId, editMode, settings.scale)
 
   return (
@@ -42,7 +45,7 @@ export default function App() {
         // that's what lets the ResizeObserver in useReportContentSize pick up a scale change.
       }
       <div ref={contentRef} className="overlay-content" style={{ zoom: settings.scale }}>
-        {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, settings)}
+        {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, flags, settings)}
       </div>
     </div>
   )
@@ -56,6 +59,7 @@ function renderOverlayContent(
   standings: StandingsData | null,
   relative: RelativeData | null,
   trackMap: TrackMapData | null,
+  flags: FlagsData | null,
   settings: AnyOverlaySettings
 ) {
   if (id === 'standings') {
@@ -77,6 +81,13 @@ function renderOverlayContent(
       return <div className="waiting">{m.waitingForSession}</div>
     }
     return <TrackMapOverlay data={trackMap} />
+  }
+
+  if (id === 'flags') {
+    if (!flags) {
+      return <div className="waiting">{m.waitingForSession}</div>
+    }
+    return <FlagsOverlay data={flags} settings={settings as FlagsOverlaySettings} />
   }
 
   if (!telemetry) {

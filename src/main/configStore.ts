@@ -53,6 +53,12 @@ const DEFAULT_CONFIG: AppConfig = {
       name: 'Tires',
       enabled: false,
       bounds: { x: 100, y: 650, width: 220, height: 200 }
+    },
+    {
+      id: 'flags',
+      name: 'Flags',
+      enabled: false,
+      bounds: { x: 1000, y: 100, width: 200, height: 200 }
     }
   ]
 }

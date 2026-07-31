@@ -78,7 +78,8 @@ export const messages = {
     showSafetyRating: 'Show Safety Rating',
     showStint: 'Show stint laps',
     showWearPct: 'Show wear %',
-    showRpmNumber: 'Show RPM number'
+    showRpmNumber: 'Show RPM number',
+    showLabel: 'Show flag name'
   },
   lapTimer: {
     lapLabel: 'LAP',
@@ -113,5 +114,17 @@ export const messages = {
   },
   tires: {
     tempUnit: '°C'
+  },
+  flags: {
+    none: 'NO FLAG',
+    green: 'GREEN',
+    yellow: 'YELLOW',
+    red: 'RED',
+    white: 'WHITE',
+    blue: 'BLUE',
+    checkered: 'CHECKERED',
+    black: 'BLACK',
+    repair: 'REPAIR',
+    caution: 'CAUTION'
   }
 } as const

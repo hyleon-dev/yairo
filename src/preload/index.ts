@@ -5,6 +5,7 @@ import type {
   AppConfig,
   ConnectionStatus,
   DriverStatsData,
+  FlagsData,
   OverlayBounds,
   OverlayId,
   OverlayScreenshotResult,
@@ -82,6 +83,12 @@ const api = {
     const listener = (_e: Electron.IpcRendererEvent, data: TrackMapData) => cb(data)
     ipcRenderer.on(IPC.TRACKMAP_UPDATE, listener)
     return () => ipcRenderer.removeListener(IPC.TRACKMAP_UPDATE, listener)
+  },
+
+  onFlags: (cb: (data: FlagsData) => void) => {
+    const listener = (_e: Electron.IpcRendererEvent, data: FlagsData) => cb(data)
+    ipcRenderer.on(IPC.FLAGS_UPDATE, listener)
+    return () => ipcRenderer.removeListener(IPC.FLAGS_UPDATE, listener)
   },
 
   onConnectionStatus: (cb: (status: ConnectionStatus) => void) => {

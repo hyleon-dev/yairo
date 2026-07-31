@@ -1,5 +1,6 @@
 import type {
   DriverLapCompletedEvent,
+  FlagsData,
   RelativeData,
   StandingsData,
   TelemetryData,
@@ -15,6 +16,7 @@ export type IrsdkWorkerMessage =
     | { type: 'standings'; data: StandingsData }
     | { type: 'relative'; data: RelativeData }
     | { type: 'trackmap'; data: TrackMapData }
+    | { type: 'flags'; data: FlagsData }
     // One or more drivers completed a lap since the last tick (see
     // checkLapCompletions() in irsdkWorker.ts);
     // only sent when something actually happened (not every tick).

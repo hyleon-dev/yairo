@@ -3,6 +3,7 @@ import { join } from 'path'
 import { Worker } from 'worker_threads'
 import type {
   DriverLapCompletedEvent,
+  FlagsData,
   RelativeData,
   StandingsData,
   TelemetryData,
@@ -15,6 +16,7 @@ interface IrsdkServiceEvents {
   standings: (data: StandingsData) => void
   relative: (data: RelativeData) => void
   trackmap: (data: TrackMapData) => void
+  flags: (data: FlagsData) => void
   connected: () => void
   disconnected: () => void
   lapCompleted: (events: DriverLapCompletedEvent[]) => void
@@ -60,6 +62,9 @@ export class IrsdkService extends EventEmitter {
           break
         case 'trackmap':
           this.emit('trackmap', message.data)
+          break
+        case 'flags':
+          this.emit('flags', message.data)
           break
         case 'lap-completed':
           this.emit('lapCompleted', message.events)
