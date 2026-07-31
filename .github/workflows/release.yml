@@ -27,6 +27,15 @@ jobs:
           # sees "tag", not "commit".
           fetch-depth: 0
 
+      # fetch-depth: 0 alone isn't enough: actions/checkout still creates the
+      # local refs/tags/<name> ref pointing directly at the tag's peeled
+      # commit SHA (not the annotated tag object).
+      # A real "fetch --tags" re-resolves the ref to the actual tag object -
+      # --force is required to overwrite  the (wrong) local ref that checkout
+      # already created.
+      - name: Re-fetch tags as real tag objects
+        run: git fetch --tags --force origin
+
       # Uses the annotated tag's message as the release title, if there is
       # one (git tag -a v1.2.0 -m "My Title") - falls back to the tag name
       # itself for plain/lightweight tags. Important: a lightweight tag ref
