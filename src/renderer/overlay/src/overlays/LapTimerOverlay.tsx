@@ -5,7 +5,7 @@ import './LapTimerOverlay.css'
 const m = messages.lapTimer
 
 function fmtTime(secs: number): string {
-  if (secs < 0) return '--:--.---'
+  if (secs <= 0) return '--:--.---'
   const m = Math.floor(secs / 60)
   const s = secs % 60
   return `${m}:${s.toFixed(3).padStart(6, '0')}`
@@ -47,15 +47,6 @@ export function LapTimerOverlay({ data }: { data: TelemetryData }) {
           <span className="time-label">{m.bestLap}</span>
           <span className="time-val time-val--best">{fmtTime(data.lapBestTime)}</span>
         </div>
-      </div>
-
-      <div className="fuel-row">
-        <span className="fuel-icon">⛽</span>
-        <span className="fuel-val">{data.isSpectatingOther ? '–' : `${data.fuelLevelL.toFixed(1)} L`}</span>
-        {
-          // iRacing doesn't expose other drivers' incidents (-1 = not available).
-        }
-        <span className="incidents">⚠ {data.incidentCount < 0 ? '–' : `${data.incidentCount}x`}</span>
       </div>
     </div>
   )

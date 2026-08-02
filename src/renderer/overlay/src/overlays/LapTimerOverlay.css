@@ -71,19 +71,3 @@
 .time-val--best {
   color: #b266ff;
 }
-
-.fuel-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: #9090a0;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  padding-top: 6px;
-}
-.fuel-row .fuel-val {
-  flex: 1;
-}
-.fuel-row .incidents {
-  color: #e8401a;
-}
