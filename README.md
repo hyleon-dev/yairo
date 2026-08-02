@@ -7,42 +7,91 @@ No cloud, everything free, everything open-source.
 
 ## Features
 
-### 🏁 Standings
+### 🥇 Standings
 ![standings.png](media/standings.png)
+- Session info
+- Multi-Class support
+- Choose top cars to be displayed
+- Choose cars around you to be displayed
+- Car info:
+  - Class-position
+  - Number
+  - Name
+  - iRating and Safety Rating (can also be hidden)
+  - Lap of cars
+  - [Stint laps¹](#-stint-laps)
+  - Gap to leader
+  - Best lap
 
-#### ⚠️ Stint Laps
-iRacing does not provide this info. It is calculated internally from tracked laps. 
-But when the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits, 
-it is not tracked and the stint laps will continue to rise when you reconnect and start YAiRO.
-
-### 📊 Relative
+### ↔️ Relative
 ![relative.png](media/relative.png)
+- Multi-Class support
+- Choose cars around you to be displayed
+- Car info:
+  - Class-position
+  - Number
+  - Name
+  - iRating and Safety Rating (can also be hidden)
+  - Lap of cars
+  - [Stint laps¹](#-stint-laps)
+  - Gap to you
 
-#### ⚠️ Stint Laps
-iRacing does not provide this info. It is calculated internally from tracked laps.
-But when the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits,
-it is not tracked and the stint laps will continue to rise when you reconnect and start YAiRO.
-
-### 🏎️ Telemetry
+### 📊 Telemetry
 ![telemetry.png](media/telemetry.png)
+- Rev bar
+- RPM as number (can also be hidden)
+- Input bars for clutch, brake and throttle
+- Speed
+- Gear
 
 ### ⛽ Fuel
-WIP
+TODO document
 
 ### ⏱️ Lap Timer
 ![lap-timer.png](media/lap-timer.png)
+- Current lap
+- Current lap time
+- Last lap time
+- Best lap time
+- Estimated Laps
+- Incidents
 
 ### ❌ Incidents
-WIP
+TODO document
 
 ### 🗺️ Trackmap
 ![trackmap.png](media/trackmap.png)
+- Multi-Class support
+- Cars on track
+- Cars in pit
+- Start/Finish line
+- Track direction
 
 ### 🛞 Tires
 ![tires.png](media/tires.png)
+- Tire wear
+  - as graphic and number (can be hidden)
+- Tire temperature
 
 ### 🏁 Flags
 ![flags.png](media/flags.png)
+- Flags:
+  - Black flag
+  - Meatball flag
+  - Red flag
+  - Checkered flag
+  - Blue flag
+  - Yellow flag
+  - Red-Yellow (caution) flag
+  - White flag
+  - Green flag
+
+## Notes
+
+### ⚠️ Stint Laps
+iRacing does not provide this info. It is calculated internally from tracked laps.
+But when the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits,
+it is not tracked and the stint laps will continue to rise when you reconnect and start YAiRO.
 
 ## Planned features
 
