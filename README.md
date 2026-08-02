@@ -36,7 +36,7 @@ WIP
 WIP
 
 ### 🗺️ Trackmap
-WIP
+![trackmap.png](media/trackmap.png)
 
 ### 🛞 Tires
 ![tires.png](media/tires.png)
