@@ -91,6 +91,23 @@ function DriverRow({
   )
 }
 
+function ColumnLabels({ settings, template }: { settings: StandingsOverlaySettings; template: string }) {
+  return (
+    <div className="col-labels" style={{ gridTemplateColumns: template }}>
+      <span className="col-pos">{m.columnPosition}</span>
+      <span className="col-num">{m.columnNumber}</span>
+      <span className="col-name">{m.columnDriver}</span>
+      {settings.showIRating && <span className="col-irating">{m.columnIRating}</span>}
+      {settings.showSafetyRating && <span className="col-sr">{m.columnSafetyRating}</span>}
+      <span className="col-lap">{m.columnLap}</span>
+      {settings.showStint && <span className="col-stint">{m.columnStint}</span>}
+      <span className="col-gap">{m.columnGap}</span>
+      {settings.showAvgLapTime && <span className="col-avg">{m.columnAvgLap}</span>}
+      {settings.showBestLapTime && <span className="col-best">{m.columnBest}</span>}
+    </div>
+  )
+}
+
 function ClassBlock({ cls, settings }: { cls: StandingsClass; settings: StandingsOverlaySettings }) {
   const template = gridTemplate(settings)
 
@@ -101,18 +118,7 @@ function ClassBlock({ cls, settings }: { cls: StandingsClass; settings: Standing
         <span className="class-meta">{m.classMeta(cls.driverCount, cls.strengthOfField)}</span>
       </div>
 
-      <div className="col-labels" style={{ gridTemplateColumns: template }}>
-        <span className="col-pos">{m.columnPosition}</span>
-        <span className="col-num">{m.columnNumber}</span>
-        <span className="col-name">{m.columnDriver}</span>
-        {settings.showIRating && <span className="col-irating">{m.columnIRating}</span>}
-        {settings.showSafetyRating && <span className="col-sr">{m.columnSafetyRating}</span>}
-        <span className="col-lap">{m.columnLap}</span>
-        {settings.showStint && <span className="col-stint">{m.columnStint}</span>}
-        <span className="col-gap">{m.columnGap}</span>
-        {settings.showAvgLapTime && <span className="col-avg">{m.columnAvgLap}</span>}
-        {settings.showBestLapTime && <span className="col-best">{m.columnBest}</span>}
-      </div>
+      <ColumnLabels settings={settings} template={template} />
 
       <div className="drivers">
         {cls.drivers.map((d, i) => {
@@ -132,6 +138,49 @@ function ClassBlock({ cls, settings }: { cls: StandingsClass; settings: Standing
   )
 }
 
+function PlaceholderRow({
+  position,
+  settings,
+  template
+}: {
+  position: number
+  settings: StandingsOverlaySettings
+  template: string
+}) {
+  return (
+    <div className="driver-row driver-row--placeholder" style={{ gridTemplateColumns: template }}>
+      <span className="col-pos">{position}</span>
+      <span className="col-num">–</span>
+      <span className="col-name">–</span>
+      {settings.showIRating && <span className="col-irating">–</span>}
+      {settings.showSafetyRating && <span className="col-sr">–</span>}
+      <span className="col-lap">–</span>
+      {settings.showStint && <span className="col-stint">–</span>}
+      <span className="col-gap">–</span>
+      {settings.showAvgLapTime && <span className="col-avg">–</span>}
+      {settings.showBestLapTime && <span className="col-best">–</span>}
+    </div>
+  )
+}
+
+// Shown only when there's no class data at all:
+// Fills the configured top slots with empty rows.
+// Must NOT kick in once real (even partial) data exists.
+function EmptyClassBlock({ settings }: { settings: StandingsOverlaySettings }) {
+  const template = gridTemplate(settings)
+
+  return (
+    <div className="standings-class">
+      <ColumnLabels settings={settings} template={template} />
+      <div className="drivers">
+        {Array.from({ length: Math.max(0, settings.topCount) }, (_, i) => (
+          <PlaceholderRow key={i} position={i + 1} settings={settings} template={template} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function StandingsOverlay({ data, settings }: { data: StandingsData; settings: StandingsOverlaySettings }) {
   return (
     <div className="standings">
@@ -144,9 +193,11 @@ export function StandingsOverlay({ data, settings }: { data: StandingsData; sett
         <span className="header-track"><span className="header-data-name">{m.gripLabel}</span> {fmtGrip(data.grip)}</span>
       </div>
 
-      {data.classes.map((cls) => (
-        <ClassBlock key={cls.classId} cls={cls} settings={settings} />
-      ))}
+      {data.classes.length === 0 ? (
+        <EmptyClassBlock settings={settings} />
+      ) : (
+        data.classes.map((cls) => <ClassBlock key={cls.classId} cls={cls} settings={settings} />)
+      )}
     </div>
   )
 }

@@ -76,7 +76,12 @@ export function TrackMapOverlay({ data }: { data: TrackMapData }) {
             />
           ))}
         </svg>
-        <div className="trackmap-fallback-label">{m.noMapAvailable(data.trackName, data.trackId)}</div>
+        {
+          // trackId -1 = no session data yet (see App.tsx's EMPTY_TRACKMAP).
+        }
+        {data.trackId >= 0 && (
+          <div className="trackmap-fallback-label">{m.noMapAvailable(data.trackName, data.trackId)}</div>
+        )}
       </div>
     )
   }

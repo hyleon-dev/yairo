@@ -12,7 +12,6 @@ import type {
   TiresOverlaySettings,
   TrackMapData
 } from '../../../shared/types'
-import { messages } from '../../../shared/messages'
 import { useOverlayBridge } from './useOverlayBridge'
 import { useReportContentSize } from './useReportContentSize'
 import { TelemetryOverlay } from './overlays/TelemetryOverlay'
@@ -25,7 +24,58 @@ import { TrackMapOverlay } from './overlays/TrackMapOverlay'
 import { TiresOverlay } from './overlays/TiresOverlay'
 import { FlagsOverlay } from './overlays/FlagsOverlay'
 
-const m = messages.overlayApp
+// Fallback data shown before the first message for this overlay has arrived.
+const EMPTY_WHEEL = { wearPct: 0, tempC: 0, tempUnit: 'C' }
+
+const EMPTY_TELEMETRY: TelemetryData = {
+  speedKph: 0,
+  rpm: 0,
+  rpmIdle: 0,
+  rpmSLFirst: 0,
+  rpmSLShift: 0,
+  rpmSLLast: 0,
+  rpmSLBlink: 0,
+  gear: 0,
+  throttlePct: 0,
+  brakePct: 0,
+  clutchPct: 0,
+  fuelLevelL: 0,
+  lap: 0,
+  lapDistPct: 0,
+  isOnTrack: false,
+  lapCurrentTime: -1,
+  lapLastTime: -1,
+  lapBestTime: -1,
+  lapDeltaToBest: 0,
+  isSpectatingOther: false,
+  fuelEstimate: null,
+  incidentCount: 0,
+  currentDriverIncidentCount: -1,
+  teamIncidentCount: -1,
+  incidentLimit: '-',
+  tires: { lf: EMPTY_WHEEL, rf: EMPTY_WHEEL, lr: EMPTY_WHEEL, rr: EMPTY_WHEEL }
+}
+
+const EMPTY_STANDINGS: StandingsData = {
+  trackName: '-',
+  sessionType: '-',
+  remainingTimeSecs: 0,
+  airTemp: 0,
+  airTempUnit: 'C',
+  trackTemp: 0,
+  trackTempUnit: 'C',
+  grip: '-',
+  classes: []
+}
+
+const EMPTY_RELATIVE: RelativeData = { drivers: [] }
+
+// trackId -1 = sentinel for "no session data yet", distinct from a real but
+// uncalibrated trackId (see TrackMapOverlay.tsx, which only shows its "no
+// map available" hint for trackId >= 0).
+const EMPTY_TRACKMAP: TrackMapData = { trackId: -1, trackName: '-', drivers: [] }
+
+const EMPTY_FLAGS: FlagsData = { flags: 0 }
 
 function useOverlayId(): OverlayId {
   const params = new URLSearchParams(window.location.search)
@@ -63,59 +113,37 @@ function renderOverlayContent(
   settings: AnyOverlaySettings
 ) {
   if (id === 'standings') {
-    if (!standings || standings.classes.length === 0) {
-      return <div className="waiting">{m.waitingForSession}</div>
-    }
-    return <StandingsOverlay data={standings} settings={settings as StandingsOverlaySettings} />
+    return <StandingsOverlay data={standings ?? EMPTY_STANDINGS} settings={settings as StandingsOverlaySettings} />
   }
 
   if (id === 'relative') {
-    if (!relative || relative.drivers.length === 0) {
-      return <div className="waiting">{m.waitingForSession}</div>
-    }
-    return <RelativeOverlay data={relative} settings={settings as RelativeOverlaySettings} />
+    return <RelativeOverlay data={relative ?? EMPTY_RELATIVE} settings={settings as RelativeOverlaySettings} />
   }
 
   if (id === 'trackmap') {
-    if (!trackMap) {
-      return <div className="waiting">{m.waitingForSession}</div>
-    }
-    return <TrackMapOverlay data={trackMap} />
+    return <TrackMapOverlay data={trackMap ?? EMPTY_TRACKMAP} />
   }
 
   if (id === 'flags') {
-    if (!flags) {
-      return <div className="waiting">{m.waitingForSession}</div>
-    }
-    return <FlagsOverlay data={flags} settings={settings as FlagsOverlaySettings} />
+    return <FlagsOverlay data={flags ?? EMPTY_FLAGS} settings={settings as FlagsOverlaySettings} />
   }
 
-  if (!telemetry) {
-    return <div className="waiting">{m.waitingForIracing}</div>
-  }
-
-  // Telemetry/Fuel/Lap-Timer are tied to a car; when neither player car
-  // nor (while spectating) a watched car is present, this would just show zeros.
-  if (!telemetry.isOnTrack) {
-    return <div className="waiting">{m.noActiveCar}</div>
-  }
-
-  // Fuel level and tire wear/temp aren't available when spectating others (not our own) cars.
-  if ((id === 'fuel' || id === 'tires') && telemetry.isSpectatingOther) {
-    return <div className="waiting">{m.notAvailableSpectating}</div>
-  }
+  // Telemetry/Fuel/Lap-Timer/Incidents/Tires are tied to a car; without one
+  // (not connected yet, not in/watching a car, spectating without fuel/tire
+  // data) they fall back to zeroed/empty data instead of hiding the overlay.
+  const telemetryData = telemetry ?? EMPTY_TELEMETRY
 
   switch (id) {
     case 'telemetry':
-      return <TelemetryOverlay data={telemetry} settings={settings as TelemetryOverlaySettings} />
+      return <TelemetryOverlay data={telemetryData} settings={settings as TelemetryOverlaySettings} />
     case 'fuel':
-      return <FuelOverlay data={telemetry} />
+      return <FuelOverlay data={telemetryData} />
     case 'lap-timer':
-      return <LapTimerOverlay data={telemetry} />
+      return <LapTimerOverlay data={telemetryData} />
     case 'incidents':
-      return <IncidentsOverlay data={telemetry} />
+      return <IncidentsOverlay data={telemetryData} />
     case 'tires':
-      return <TiresOverlay data={telemetry} settings={settings as TiresOverlaySettings} />
+      return <TiresOverlay data={telemetryData} settings={settings as TiresOverlaySettings} />
     default:
       return null
   }

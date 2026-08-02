@@ -33,12 +33,6 @@ export const messages = {
     editModeHint: 'In edit mode the overlays are clickable and can be dragged around. Turn it back off afterwards so they stay click-through in the game.',
     versionLabel: (version: string) => `v${version}`
   },
-  overlayApp: {
-    waitingForSession: 'Waiting for session…',
-    waitingForIracing: 'Waiting for iRacing…',
-    noActiveCar: 'No active car (spectator/pit)',
-    notAvailableSpectating: 'Not available while spectating'
-  },
   standings: {
     columnPosition: 'P',
     columnNumber: '#',

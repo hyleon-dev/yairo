@@ -102,6 +102,15 @@
   background: rgba(232, 64, 26, 0.12);
 }
 
+/* Fills the configured top slots when there's no class data at all yet */
+.driver-row--placeholder {
+  color: #3a3a48;
+}
+.driver-row--placeholder .col-pos {
+  background: none;
+  color: #3a3a48;
+}
+
 .col-pos {
   text-align: center;
   font-weight: 700;

@@ -48,12 +48,3 @@ an already-squeezed size that's too small instead of actually needed one. */
   color: #3a7dff;
   -webkit-app-region: no-drag;
 }
-
-/* Placeholder text while an overlay is still waiting for data */
-.waiting {
-  font-size: 13px;
-  color: #999;
-  background: rgba(20, 20, 24, 0.5);
-  padding: 8px 14px;
-  border-radius: 8px;
-}
