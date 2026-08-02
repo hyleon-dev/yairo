@@ -80,6 +80,7 @@ export const messages = {
     showSafetyRating: 'Show Safety Rating',
     showStint: 'Show stint laps',
     showAvgLapTime: 'Show average lap time',
+    showBestLapTime: 'Show best lap time',
     showWearPct: 'Show wear %',
     showRpmNumber: 'Show RPM number',
     showLabel: 'Show flag name'

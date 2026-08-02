@@ -326,6 +326,10 @@ export interface AvgLapTimeOverlaySettings {
   showAvgLapTime: boolean
 }
 
+export interface BestLapTimeOverlaySettings {
+  showBestLapTime: boolean
+}
+
 export interface RelativeOverlaySettings
   extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings, AvgLapTimeOverlaySettings {
   driversAhead: number // How many drivers ahead of the player are shown.
@@ -333,7 +337,7 @@ export interface RelativeOverlaySettings
 }
 
 export interface StandingsOverlaySettings
-  extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings, AvgLapTimeOverlaySettings {
+  extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings, AvgLapTimeOverlaySettings, BestLapTimeOverlaySettings {
   driversAhead: number // How many drivers ahead of the player are shown.
   driversBehind: number // How many drivers behind the player are shown.
   topCount: number // These leading drivers (P1, P2, ...) are always shown.
@@ -381,7 +385,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     showIRating: true,
     showSafetyRating: true,
     showStint: true,
-    showAvgLapTime: true
+    showAvgLapTime: true,
+    showBestLapTime: true
   },
   relative: {
     scale: 1,
