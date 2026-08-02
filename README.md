@@ -42,7 +42,7 @@ WIP
 ![tires.png](media/tires.png)
 
 ### 🏁 Flags
-TODO
+![flags.png](media/flags.png)
 
 ## Planned features
 
