@@ -16,6 +16,7 @@ function gridTemplate(settings: StandingsOverlaySettings): string {
   cols.push('32px')
   if (settings.showStint) cols.push('40px')
   cols.push('70px', '80px')
+  if (settings.showAvgLapTime) cols.push('70px')
   return cols.join(' ')
 }
 
@@ -83,6 +84,7 @@ function DriverRow({
       <span className={`col-gap ${driver.position === 1 ? 'gap--leader' : ''}`}>
         {fmtGap(driver.gapToLeaderSec, driver.position)}
       </span>
+      {settings.showAvgLapTime && <span className="col-avg">{fmtLapTime(driver.avgLapTimeSec)}</span>}
       <span className={`col-best ${driver.isClassFastestLap ? 'col-best--fastest' : ''}`}>
         {fmtLapTime(driver.bestLapTime)}
       </span>
@@ -109,6 +111,7 @@ function ClassBlock({ cls, settings }: { cls: StandingsClass; settings: Standing
         <span className="col-lap">{m.columnLap}</span>
         {settings.showStint && <span className="col-stint">{m.columnStint}</span>}
         <span className="col-gap">{m.columnGap}</span>
+        {settings.showAvgLapTime && <span className="col-avg">{m.columnAvgLap}</span>}
         <span className="col-best">{m.columnBest}</span>
       </div>
 

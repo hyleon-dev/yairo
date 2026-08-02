@@ -144,6 +144,12 @@ export interface DriverStanding {
   licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
   licColorHex: string // License class color, taken directly from the SDK (Driver.LicColor) as a CSS hex code.
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
+  // Average of every lap time recorded for the CURRENT driver of this car
+  // during the current session.
+  // Not from the SDK: accumulated lap by lap in irsdkWorker.ts,
+  // keyed by Driver.UserID so a team driver swap doesn't mix drivers' laps.
+  // -1 if this driver hasn't completed a lap yet.
+  avgLapTimeSec: number
 }
 
 export interface StandingsClass {
@@ -185,6 +191,8 @@ export interface RelativeDriver {
   licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
   licColorHex: string // License class color, taken directly from the SDK (Driver.LicColor) as a CSS hex code.
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
+  // See DriverStanding.avgLapTimeSec.
+  avgLapTimeSec: number
 }
 
 export interface RelativeData {
@@ -314,12 +322,18 @@ export interface StintOverlaySettings {
   showStint: boolean
 }
 
-export interface RelativeOverlaySettings extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings {
+export interface AvgLapTimeOverlaySettings {
+  showAvgLapTime: boolean
+}
+
+export interface RelativeOverlaySettings
+  extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings, AvgLapTimeOverlaySettings {
   driversAhead: number // How many drivers ahead of the player are shown.
   driversBehind: number // How many drivers behind the player are shown.
 }
 
-export interface StandingsOverlaySettings extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings {
+export interface StandingsOverlaySettings
+  extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings, AvgLapTimeOverlaySettings {
   driversAhead: number // How many drivers ahead of the player are shown.
   driversBehind: number // How many drivers behind the player are shown.
   topCount: number // These leading drivers (P1, P2, ...) are always shown.
@@ -366,7 +380,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     topCount: 3,
     showIRating: true,
     showSafetyRating: true,
-    showStint: true
+    showStint: true,
+    showAvgLapTime: true
   },
   relative: {
     scale: 1,
@@ -374,7 +389,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     driversBehind: 3,
     showIRating: true,
     showSafetyRating: true,
-    showStint: true
+    showStint: true,
+    showAvgLapTime: false
   },
   trackmap: { scale: 1 },
   tires: { scale: 1, showWearPct: true },

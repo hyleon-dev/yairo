@@ -49,6 +49,7 @@ export const messages = {
     columnStint: 'Stint Laps',
     columnGap: 'Gap',
     columnBest: 'Best',
+    columnAvgLap: 'Avg',
     leader: 'LEADER',
     classMeta: (driverCount: number, strengthOfField: number) =>
       `${driverCount} Driver · SoF ${strengthOfField}`,
@@ -62,7 +63,8 @@ export const messages = {
     columnSafetyRating: 'SR',
     columnLap: 'Lap',
     columnStint: 'Stint Laps',
-    columnGap: 'Gap'
+    columnGap: 'Gap',
+    columnAvgLap: 'Avg'
   },
   trackmap: {
     noMapAvailable: (trackName: string, trackId: number) =>
@@ -77,6 +79,7 @@ export const messages = {
     showIRating: 'Show iRating',
     showSafetyRating: 'Show Safety Rating',
     showStint: 'Show stint laps',
+    showAvgLapTime: 'Show average lap time',
     showWearPct: 'Show wear %',
     showRpmNumber: 'Show RPM number',
     showLabel: 'Show flag name'

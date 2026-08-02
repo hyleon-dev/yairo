@@ -154,6 +154,11 @@
   color: #b266ff;
   font-weight: 700;
 }
+.col-avg {
+  text-align: right;
+  color: #9090a0;
+  font-size: 11px;
+}
 .col-irating {
   text-align: right;
   color: #c0c0cc;

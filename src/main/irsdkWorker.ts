@@ -191,6 +191,10 @@ function maybeSendSessionHeartbeat(raw: TelemetryVarList): void {
 
 const lastLapsCompletedByCarIdx = new Map<number, number>()
 
+// Sum/count of every lap time recorded this session, keyed by Driver.UserID.
+const lapTimeStatsByCustId = new Map<number, { sum: number; count: number }>()
+let lastLapStatsSessionNum: number | null = null
+
 // Tracks lap times of every driver.
 // When ever a new lap is completed, the lap time is recorded here.
 function checkLapCompletions(raw: TelemetryVarList): DriverLapCompletedEvent[] {
@@ -205,6 +209,13 @@ function checkLapCompletions(raw: TelemetryVarList): DriverLapCompletedEvent[] {
   const trackId = weekendInfo?.TrackID ?? -1
   const trackName = weekendInfo?.TrackDisplayName ?? ''
 
+  // Average lap time is scoped to the current session only, e.g. switching
+  // from Qualify to Race must not carry qualifying laps into the race average.
+  if (lastLapStatsSessionNum !== null && currentSessionNum !== lastLapStatsSessionNum) {
+    lapTimeStatsByCustId.clear()
+  }
+  lastLapStatsSessionNum = currentSessionNum
+
   const events: DriverLapCompletedEvent[] = []
 
   for (const driver of driverInfo?.Drivers ?? []) {
@@ -217,6 +228,11 @@ function checkLapCompletions(raw: TelemetryVarList): DriverLapCompletedEvent[] {
     if (previous !== undefined && current > previous) {
       const lapTimeSec = lastLapTimes[carIdx] ?? -1
       if (lapTimeSec > 0) {
+        const stats = lapTimeStatsByCustId.get(driver.UserID) ?? { sum: 0, count: 0 }
+        stats.sum += lapTimeSec
+        stats.count += 1
+        lapTimeStatsByCustId.set(driver.UserID, stats)
+
         events.push({
           custId: driver.UserID,
           driverName: driver.UserName,
@@ -237,6 +253,14 @@ function checkLapCompletions(raw: TelemetryVarList): DriverLapCompletedEvent[] {
   }
 
   return events
+}
+
+// -1 = no lap recorded yet for this driver this session (or no driver at all).
+function avgLapTimeSec(custId: number | undefined): number {
+  if (custId === undefined) return -1
+  const stats = lapTimeStatsByCustId.get(custId)
+  if (!stats || stats.count === 0) return -1
+  return stats.sum / stats.count
 }
 
 // irsdk_TrkLoc enum value for "sitting in own pit stall"
@@ -617,7 +641,8 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
       iRating: driver?.IRating ?? 0,
       licString: driver?.LicString ?? '',
       licColorHex: sdkColorHex(driver?.LicColor),
-      classColorHex: sdkColorHex(driver?.CarClassColor)
+      classColorHex: sdkColorHex(driver?.CarClassColor),
+      avgLapTimeSec: avgLapTimeSec(driver?.UserID)
     }
   })
 
@@ -714,6 +739,7 @@ interface StandingsRow {
   licString: string
   licColorHex: string
   classColorHex: string
+  avgLapTimeSec: number
 }
 
 // iRacing's official Strength-of-Field formula
@@ -777,7 +803,8 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
     iRating: row.iRating,
     licString: row.licString,
     licColorHex: row.licColorHex,
-    classColorHex: row.classColorHex
+    classColorHex: row.classColorHex,
+    avgLapTimeSec: row.avgLapTimeSec
   }))
 }
 
@@ -809,7 +836,8 @@ function buildTimeRanking(rows: StandingsRow[]): DriverStanding[] {
     iRating: row.iRating,
     licString: row.licString,
     licColorHex: row.licColorHex,
-    classColorHex: row.classColorHex
+    classColorHex: row.classColorHex,
+    avgLapTimeSec: row.avgLapTimeSec
   }))
 }
 
@@ -878,7 +906,8 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
         iRating: driver.IRating,
         licString: driver.LicString ?? '',
         licColorHex: sdkColorHex(driver.LicColor),
-        classColorHex: sdkColorHex(driver.CarClassColor)
+        classColorHex: sdkColorHex(driver.CarClassColor),
+        avgLapTimeSec: avgLapTimeSec(driver.UserID)
       }
     })
 
@@ -929,7 +958,8 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
     iRating: row.iRating,
     licString: row.licString,
     licColorHex: row.licColorHex,
-    classColorHex: row.classColorHex
+    classColorHex: row.classColorHex,
+    avgLapTimeSec: row.avgLapTimeSec
   }))
 
   return { drivers }

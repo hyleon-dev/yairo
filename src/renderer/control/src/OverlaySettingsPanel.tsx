@@ -1,5 +1,6 @@
 import type {
   AnyOverlaySettings,
+  AvgLapTimeOverlaySettings,
   FlagsOverlaySettings,
   OverlayConfig,
   RelativeOverlaySettings,
@@ -93,6 +94,7 @@ function RelativeSettings({
       </label>
       <DriverRatingSettings settings={settings} onChange={onChange} />
       <StintSettings settings={settings} onChange={onChange} />
+      <AvgLapTimeSettings settings={settings} onChange={onChange} />
     </>
   )
 }
@@ -138,6 +140,7 @@ function StandingsSettings({
       </label>
       <DriverRatingSettings settings={settings} onChange={onChange} />
       <StintSettings settings={settings} onChange={onChange} />
+      <AvgLapTimeSettings settings={settings} onChange={onChange} />
     </>
   )
 }
@@ -245,6 +248,25 @@ function StintSettings({
         type="checkbox"
         checked={settings.showStint}
         onChange={(e) => onChange({ showStint: e.target.checked })}
+      />
+    </label>
+  )
+}
+
+function AvgLapTimeSettings({
+  settings,
+  onChange
+}: {
+  settings: AvgLapTimeOverlaySettings
+  onChange: (patch: Partial<AnyOverlaySettings>) => void
+}) {
+  return (
+    <label className="setting-row">
+      <span>{m.showAvgLapTime}</span>
+      <input
+        type="checkbox"
+        checked={settings.showAvgLapTime}
+        onChange={(e) => onChange({ showAvgLapTime: e.target.checked })}
       />
     </label>
   )

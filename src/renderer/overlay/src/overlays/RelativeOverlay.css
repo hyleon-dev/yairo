@@ -108,6 +108,11 @@
 .rel-row--player .col-gap {
   color: #e8401a;
 }
+.col-avg {
+  text-align: right;
+  color: #9090a0;
+  font-size: 11px;
+}
 
 /* Drivers on a different lap than the player (ahead or behind) - the gap
    value stays a pure track distance, only the lap display is highlighted so

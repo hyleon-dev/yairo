@@ -15,6 +15,7 @@ function gridTemplate(settings: RelativeOverlaySettings): string {
   cols.push('32px')
   if (settings.showStint) cols.push('40px')
   cols.push('56px')
+  if (settings.showAvgLapTime) cols.push('70px')
   return cols.join(' ')
 }
 
@@ -27,6 +28,13 @@ function fmtGap(gap: number, isPlayer: boolean): string {
 function fmtLap(lap: number): string {
   if (lap === -1) return '–'
   return `L${lap}`
+}
+
+function fmtAvgLap(secs: number): string {
+  if (secs <= 0) return '–'
+  const m = Math.floor(secs / 60)
+  const s = (secs % 60).toFixed(3).padStart(6, '0')
+  return `${m}:${s}`
 }
 
 function DriverRow({
@@ -62,6 +70,7 @@ function DriverRow({
       <span className="col-lap">{fmtLap(driver.lap)}</span>
       {settings.showStint && <span className="col-stint">{driver.stintLaps}</span>}
       <span className="col-gap">{fmtGap(driver.gapToPlayerSec, driver.isPlayer)}</span>
+      {settings.showAvgLapTime && <span className="col-avg">{fmtAvgLap(driver.avgLapTimeSec)}</span>}
     </div>
   )
 }
@@ -82,6 +91,7 @@ function PlaceholderRow({ settings, template }: { settings: RelativeOverlaySetti
       <span className="col-lap">–</span>
       {settings.showStint && <span className="col-stint">–</span>}
       <span className="col-gap">–</span>
+      {settings.showAvgLapTime && <span className="col-avg">–</span>}
     </div>
   )
 }
@@ -106,6 +116,7 @@ export function RelativeOverlay({ data, settings }: { data: RelativeData; settin
         <span className="col-lap">{m.columnLap}</span>
         {settings.showStint && <span className="col-stint">{m.columnStint}</span>}
         <span className="col-gap">{m.columnGap}</span>
+        {settings.showAvgLapTime && <span className="col-avg">{m.columnAvgLap}</span>}
       </div>
 
       <div className="rel-drivers">
