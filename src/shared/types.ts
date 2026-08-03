@@ -306,6 +306,8 @@ export interface OverlayConfig {
 export interface AppConfig {
   overlays: OverlayConfig[]
   editMode: boolean
+  // null until the user has moved/resized the Control Center window once.
+  controlWindowBounds: OverlayBounds | null
 }
 
 export interface BaseOverlaySettings {

@@ -1,7 +1,7 @@
 import { app, BrowserWindow, screen } from 'electron'
 import { join } from 'path'
 import { is } from './utils'
-import type { OverlayConfig, OverlayId } from '../shared/types'
+import type { OverlayBounds, OverlayConfig, OverlayId } from '../shared/types'
 
 import icon from '../../resources/icon.png?asset'
 
@@ -13,10 +13,15 @@ export class WindowManager {
 
   // --- Control Center -----------------------------------------------
 
-  createControlWindow(): BrowserWindow {
+  createControlWindow(
+    bounds?: OverlayBounds | null,
+    onBoundsChanged?: (bounds: OverlayBounds) => void
+  ): BrowserWindow {
     const win = new BrowserWindow({
-      width: 480,
-      height: 640,
+      x: bounds?.x,
+      y: bounds?.y,
+      width: bounds?.width ?? 480,
+      height: bounds?.height ?? 640,
       title: 'iRacing Overlay - Control Center',
       autoHideMenuBar: true,
       icon,
@@ -36,6 +41,11 @@ export class WindowManager {
       // whole app (including all overlay windows), not just this one window.
       app.quit()
     })
+
+    // Persist position/size after a manual move/resize
+    const reportBounds = () => onBoundsChanged?.(win.getBounds())
+    win.on('moved', reportBounds)
+    win.on('resized', reportBounds)
 
     this.controlWindow = win
     return win

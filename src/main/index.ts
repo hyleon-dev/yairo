@@ -95,6 +95,12 @@ function onOverlayBoundsChanged(id: OverlayId, bounds: OverlayBounds): void {
   broadcastToAll(IPC.CONFIG_UPDATED, updated)
 }
 
+function createControlWindow(): void {
+  windowManager.createControlWindow(configStore.get().controlWindowBounds, (bounds) => {
+    configStore.setControlWindowBounds(bounds)
+  })
+}
+
 function createOverlaysFromConfig(): void {
   const {overlays} = configStore.get()
   for (const overlay of overlays) {
@@ -275,7 +281,7 @@ app.whenReady().then(() => {
   registerIpcHandlers()
   registerIrsdkEvents()
 
-  windowManager.createControlWindow()
+  createControlWindow()
   createOverlaysFromConfig()
   irsdk.start()
   overlayServer.start()
@@ -301,7 +307,7 @@ app.whenReady().then(() => {
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      windowManager.createControlWindow()
+      createControlWindow()
     }
   })
 })

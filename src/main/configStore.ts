@@ -5,6 +5,7 @@ import type { AppConfig, OverlayConfig } from '../shared/types'
 
 const DEFAULT_CONFIG: AppConfig = {
   editMode: false,
+  controlWindowBounds: null,
   overlays: [
     {
       id: 'telemetry',
@@ -103,6 +104,12 @@ export class ConfigStore {
     return this.config
   }
 
+  setControlWindowBounds(bounds: OverlayConfig['bounds']): AppConfig {
+    this.config = { ...this.config, controlWindowBounds: bounds }
+    this.persist()
+    return this.config
+  }
+
   private load(): AppConfig {
     try {
       if (existsSync(this.filePath)) {
@@ -110,6 +117,7 @@ export class ConfigStore {
         const saved = JSON.parse(raw) as Partial<AppConfig>
         return {
           editMode: saved.editMode ?? DEFAULT_CONFIG.editMode,
+          controlWindowBounds: saved.controlWindowBounds ?? DEFAULT_CONFIG.controlWindowBounds,
           overlays: mergeOverlays(saved.overlays)
         }
       }
