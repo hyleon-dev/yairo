@@ -7,7 +7,7 @@
   /* Brand / status colors */
   --color-primary: #3a7dff;
   --color-primary-hover: #5c93ff;
-  --color-accent: #e8401a;
+  --color-accent: #e8401a; /* Default value that will be overwritten by sdkColors.ts */
   --color-success: #2ecc71;
   --color-success-soft: #58d68d;
   --color-danger: #e74c3c;

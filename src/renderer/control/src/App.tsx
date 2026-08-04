@@ -7,11 +7,21 @@ import {
   type OverlayId,
   type UpdateStatus
 } from '../../../shared/types'
+import { hexToRgbTriplet } from '../../../shared/color'
 import { messages } from '../../../shared/messages'
 import { OverlaySettingsPanel } from './OverlaySettingsPanel'
+import { AccentColorPopup } from './AccentColorPopup'
 import {ToggleSwitch} from "./Elements";
 
 const m = messages.control
+
+// Live-applies an accent color to the Control Center's own CSS variables
+// (used both for a persisted config.accentColor and for the picker's preview
+// while the user is still choosing).
+function previewAccentColor(hex: string): void {
+  document.documentElement.style.setProperty('--color-accent', hex)
+  document.documentElement.style.setProperty('--color-accent-rgb', hexToRgbTriplet(hex))
+}
 
 export default function App() {
   const [config, setConfig] = useState<AppConfig | null>(null)
@@ -21,6 +31,7 @@ export default function App() {
   const [screenshotOverlayId, setScreenshotOverlayId] = useState<{ id: OverlayId; ok: boolean } | null>(null)
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null)
   const [screenshotsEnabled, setScreenshotsEnabled] = useState(false)
+  const [accentColorPickerOpen, setAccentColorPickerOpen] = useState(false)
 
   useEffect(() => {
     window.overlayApi.getConfig().then(setConfig)
@@ -62,6 +73,13 @@ export default function App() {
 
     return () => unsubs.forEach((unsub) => unsub())
   }, [config?.overlays.map((o) => o.id).join(',')])
+
+  // Applied live here (not just from the picker popup) so a color persisted
+  // in a previous session also takes effect on startup.
+  useEffect(() => {
+    if (!config) return
+    previewAccentColor(config.accentColor)
+  }, [config?.accentColor])
 
   if (!config) return <div className="app">{m.loading}</div>
 
@@ -162,9 +180,32 @@ export default function App() {
       </div>
 
       <footer className="app-footer">
-        <button onClick={toggleEditMode}>{config.editMode ? m.editModeExit : m.editModeEnter}</button>
+        <div className="app-footer-actions">
+          <button onClick={toggleEditMode}>{config.editMode ? m.editModeExit : m.editModeEnter}</button>
+          <button
+            type="button"
+            className="accent-color-btn"
+            onClick={() => setAccentColorPickerOpen(true)}
+            title={m.accentColorBtn}
+          >
+            <span className="accent-color-swatch" style={{ background: config.accentColor }} />
+            {m.accentColorBtn}
+          </button>
+        </div>
         {updateStatus && <span className="app-version">{m.versionLabel(updateStatus.currentVersion)}</span>}
       </footer>
+
+      {accentColorPickerOpen && (
+        <AccentColorPopup
+          initialColor={config.accentColor}
+          onPreview={(hex) => {
+            previewAccentColor(hex)
+            window.overlayApi.setAccentColor(hex)
+          }}
+          onSave={() => setAccentColorPickerOpen(false)}
+          onCancel={() => setAccentColorPickerOpen(false)}
+        />
+      )}
     </div>
   )
 }

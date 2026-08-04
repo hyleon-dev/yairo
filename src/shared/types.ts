@@ -308,7 +308,14 @@ export interface AppConfig {
   editMode: boolean
   // null until the user has moved/resized the Control Center window once.
   controlWindowBounds: OverlayBounds | null
+  // Hex color (e.g. "#e8401a"), applied to --color-accent/--color-accent-rgb
+  // in theme.css on every window (Control Center + overlays).
+  accentColor: string
 }
+
+// The accent color hardcoded in theme.css (--color-accent) before the user
+// picks their own - what the Control Center's "reset" button restores.
+export const DEFAULT_ACCENT_COLOR = '#e8401a'
 
 export interface BaseOverlaySettings {
   /** Scale factor for the whole overlay, 1 = 100%. */
@@ -429,6 +436,7 @@ export const IPC = {
   CONFIG_GET: 'config:get',
   CONFIG_SET_OVERLAY: 'config:set-overlay',
   EDIT_MODE_SET: 'edit-mode:set',
+  ACCENT_COLOR_SET: 'accent-color:set',
   OVERLAY_BOUNDS_SET: 'overlay:set-bounds',
   OVERLAY_CONTENT_SIZE_SET: 'overlay:set-content-size',
   OVERLAY_SETTINGS_GET: 'overlay-settings:get',

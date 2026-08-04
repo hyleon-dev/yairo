@@ -1,11 +1,12 @@
 import { app } from 'electron'
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
-import type { AppConfig, OverlayConfig } from '../shared/types'
+import { DEFAULT_ACCENT_COLOR, type AppConfig, type OverlayConfig } from '../shared/types'
 
 const DEFAULT_CONFIG: AppConfig = {
   editMode: false,
   controlWindowBounds: null,
+  accentColor: DEFAULT_ACCENT_COLOR,
   overlays: [
     {
       id: 'telemetry',
@@ -110,6 +111,12 @@ export class ConfigStore {
     return this.config
   }
 
+  setAccentColor(accentColor: string): AppConfig {
+    this.config = { ...this.config, accentColor }
+    this.persist()
+    return this.config
+  }
+
   private load(): AppConfig {
     try {
       if (existsSync(this.filePath)) {
@@ -118,6 +125,7 @@ export class ConfigStore {
         return {
           editMode: saved.editMode ?? DEFAULT_CONFIG.editMode,
           controlWindowBounds: saved.controlWindowBounds ?? DEFAULT_CONFIG.controlWindowBounds,
+          accentColor: saved.accentColor ?? DEFAULT_CONFIG.accentColor,
           overlays: mergeOverlays(saved.overlays)
         }
       }

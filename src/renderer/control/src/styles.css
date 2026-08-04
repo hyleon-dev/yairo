@@ -39,6 +39,130 @@ body {
   border-top: 1px solid var(--color-surface);
 }
 
+.app-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accent-color-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.accent-color-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(var(--color-black-rgb), 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+.accent-color-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: min-content;
+  width: min-content;
+}
+
+.accent-color-popup h3 {
+  margin: 0 0 8px;
+  font-size: var(--font-md);
+}
+
+.accent-color-popup .react-colorful {
+  width: 100%;
+}
+
+.accent-color-hex {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-body);
+  color: var(--color-text-gray);
+}
+
+.accent-color-hex input {
+  background: var(--colors-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-light);
+  padding: 4px 6px;
+  font-size: var(--font-body);
+  width: 100%;
+}
+
+.accent-color-field {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.accent-color-field label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--font-caption);
+  color: var(--color-text-gray);
+}
+
+.accent-color-field input[type='number'] {
+  width: 52px;
+  background: var(--colors-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-light);
+  padding: 4px 6px;
+  font-size: var(--font-body);
+}
+
+.accent-color-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.accent-color-actions button {
+  white-space: nowrap;
+}
+
+.accent-color-actions-spacer {
+  flex: 1;
+}
+
+.secondary-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-light);
+  padding: 9px 15px;
+}
+
+.secondary-btn:hover {
+  background: var(--color-border);
+}
+
 .app-version {
   font-size: 11px;
   color: var(--color-text-dim);

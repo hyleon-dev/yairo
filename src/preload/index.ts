@@ -39,6 +39,8 @@ const api = {
 
   setEditMode: (enabled: boolean) => ipcRenderer.invoke(IPC.EDIT_MODE_SET, enabled),
 
+  setAccentColor: (color: string): Promise<AppConfig> => ipcRenderer.invoke(IPC.ACCENT_COLOR_SET, color),
+
   copyToClipboard: (text: string): Promise<void> => ipcRenderer.invoke(IPC.CLIPBOARD_WRITE, text),
 
   setOverlayBounds: (id: OverlayId, bounds: OverlayBounds) =>

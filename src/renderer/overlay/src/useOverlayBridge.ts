@@ -13,6 +13,7 @@ import {
   type TelemetryData,
   type TrackMapData
 } from '../../../shared/types'
+import { hexToRgbTriplet } from '../../../shared/color'
 
 export interface OverlayBridgeState {
   telemetry: TelemetryData | null
@@ -22,6 +23,14 @@ export interface OverlayBridgeState {
   flags: FlagsData | null
   editMode: boolean
   settings: AnyOverlaySettings
+}
+
+// Applied directly here (rather than returned as state) so every overlay
+// window picks up a live accent color change without every overlay's App
+// needing its own effect for it.
+function applyAccentColor(hex: string): void {
+  document.documentElement.style.setProperty('--color-accent', hex)
+  document.documentElement.style.setProperty('--color-accent-rgb', hexToRgbTriplet(hex))
 }
 
 // Overlays run either as Electron BrowserWindow (window.overlayApi via
@@ -66,7 +75,10 @@ function subscribeViaElectron(
   const unsubRelative = window.overlayApi.onRelative(setRelative)
   const unsubTrackMap = window.overlayApi.onTrackMap(setTrackMap)
   const unsubFlags = window.overlayApi.onFlags(setFlags)
-  const unsubConfig = window.overlayApi.onConfigUpdated((cfg: AppConfig) => setEditMode(cfg.editMode))
+  const unsubConfig = window.overlayApi.onConfigUpdated((cfg: AppConfig) => {
+    setEditMode(cfg.editMode)
+    applyAccentColor(cfg.accentColor)
+  })
   const unsubSettings = window.overlayApi.onOverlaySettings(overlayId, setSettings)
   const unsubConnection = window.overlayApi.onConnectionStatus((status: ConnectionStatus) => {
     if (!status.connected) {
@@ -78,7 +90,10 @@ function subscribeViaElectron(
     }
   })
 
-  window.overlayApi.getConfig().then((cfg) => setEditMode(cfg.editMode))
+  window.overlayApi.getConfig().then((cfg) => {
+    setEditMode(cfg.editMode)
+    applyAccentColor(cfg.accentColor)
+  })
   window.overlayApi.getOverlaySettings(overlayId).then(setSettings)
 
   return () => {
@@ -129,6 +144,9 @@ function subscribeViaWebSocket(
           setTrackMap(null)
           setFlags(null)
         }
+        break
+      case IPC.CONFIG_UPDATED:
+        applyAccentColor((payload as AppConfig).accentColor)
         break
       case settingsChannel:
         setSettings(payload as AnyOverlaySettings)

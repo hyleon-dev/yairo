@@ -139,6 +139,14 @@ function registerIpcHandlers(): void {
     return updated
   })
 
+  // Control Center's accent color picker - live-applied to every window via
+  // the same CONFIG_UPDATED broadcast used for editMode.
+  ipcMain.handle(IPC.ACCENT_COLOR_SET, (_evt, accentColor: string) => {
+    const updated = configStore.setAccentColor(accentColor)
+    broadcastToAll(IPC.CONFIG_UPDATED, updated)
+    return updated
+  })
+
   // Overlay reports new position/size after a drag in edit mode
   ipcMain.handle(IPC.OVERLAY_BOUNDS_SET, (_evt, id: OverlayId, bounds: OverlayBounds) => {
     windowManager.setOverlayBounds(id, bounds)
@@ -226,6 +234,11 @@ function registerIpcHandlers(): void {
 // later, which would otherwise never learn about them
 // until the first manual change in the Control Center.
 function seedOverlaySettings(): void {
+  // So a browser/OBS client connecting before the next config change still
+  // gets the persisted accent color instead of theme.css's built-in default
+  // (Electron windows don't need this - they fetch getConfig() themselves).
+  broadcastToAll(IPC.CONFIG_UPDATED, configStore.get())
+
   for (const overlay of configStore.get().overlays) {
     broadcastToOverlays(overlaySettingsChannel(overlay.id), overlaySettingsStore.get(overlay.id))
   }
