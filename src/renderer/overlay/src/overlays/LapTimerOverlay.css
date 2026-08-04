@@ -71,3 +71,9 @@
 .time-val--best {
   color: var(--color-best);
 }
+.time-val--target {
+  color: var(--color-accent);
+}
+.delta-target {
+  font-weight: bold;
+}

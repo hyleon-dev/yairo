@@ -229,6 +229,10 @@ export class FakeIRacingSDK {
       LapLastLapTime: scalarVar(player.lastLapTime),
       LapBestLapTime: scalarVar(player.bestLapTime),
       LapDeltaToBestLap: scalarVar(player.bestLapTime > 0 ? player.lastLapTime - player.bestLapTime : 0),
+      // Real iRacing only flags this valid once a reference lap exists AND
+      // at least one lap has been driven against it - mocked here as "a best
+      // lap exists and this isn't the lap that just set it".
+      LapDeltaToBestLap_OK: scalarVar(player.bestLapTime > 0 && player.lapsCompleted > 0),
 
       CarIdxLapDistPct: arrayVar(this.drivers.map((d) => d.lapDistPct)),
       CarIdxLap: arrayVar(this.drivers.map((d) => d.lapsCompleted + 1)),

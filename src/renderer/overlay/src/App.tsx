@@ -3,6 +3,7 @@ import type {
   AnyOverlaySettings,
   FlagsData,
   FlagsOverlaySettings,
+  LapTimerOverlaySettings,
   OverlayId,
   RelativeData,
   RelativeOverlaySettings,
@@ -48,6 +49,7 @@ const EMPTY_TELEMETRY: TelemetryData = {
   lapLastTime: -1,
   lapBestTime: -1,
   lapDeltaToBest: 0,
+  lapDeltaToBestValid: false,
   isSpectatingOther: false,
   fuelEstimate: null,
   incidentCount: 0,
@@ -149,7 +151,7 @@ function renderOverlayContent(
     case 'fuel':
       return <FuelOverlay data={telemetryData} />
     case 'lap-timer':
-      return <LapTimerOverlay data={telemetryData} />
+      return <LapTimerOverlay data={telemetryData} settings={settings as LapTimerOverlaySettings} />
     case 'incidents':
       return <IncidentsOverlay data={telemetryData} />
     case 'tires':

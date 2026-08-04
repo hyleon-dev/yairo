@@ -335,13 +335,13 @@ h2 {
   opacity: 1;
 }
 
-.overlay-url-btn {
+.overlay-in-line-button {
   font-size: var(--font-body);
   vertical-align: top;
   color: var(--color-text-light);
   background: none;
   border: none;
-  padding: 0;
+  padding: 2px 4px;
   margin-left: 4px;
   cursor: pointer;
 }
@@ -386,6 +386,18 @@ h2 {
   align-items: center;
   justify-content: flex-start;
   gap: 24px;
+}
+
+.target-time-row {
+  gap: 4px;
+}
+
+.target-time-row .overlay-setting {
+  gap: 4px;
+}
+
+.target-time-row button {
+  margin-left: 6px;
 }
 
 button {

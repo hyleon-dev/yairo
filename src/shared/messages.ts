@@ -94,12 +94,16 @@ export const messages = {
     showBestLapTime: 'Show best lap time',
     showWearPct: 'Show wear %',
     showRpmNumber: 'Show RPM number',
-    showLabel: 'Show flag name'
+    showLabel: 'Show flag name',
+    targetTime: 'Target time',
+    resetTargetTime: 'Reset target time',
+    resetTargetTime_short: 'Reset'
   },
   lapTimer: {
     lapLabel: 'LAP',
     lastLap: 'Last',
-    bestLap: 'Best'
+    bestLap: 'Best',
+    targetLap: 'Target'
   },
   telemetry: {
     speedUnit: 'km/h',

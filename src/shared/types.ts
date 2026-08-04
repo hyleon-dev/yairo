@@ -30,6 +30,12 @@ export interface TelemetryData {
   lapLastTime: number // s, -1 if no lap driven yet
   lapBestTime: number // s, -1 if no valid best yet
   lapDeltaToBest: number // s, positive = slower than best lap
+  // Mirrors the SDK's LapDeltaToBestLap_OK: false right after a new best lap
+  // (iRacing needs a completed reference lap to compare live splits against,
+  // so it can't show a delta for the very lap that just set the record) or
+  // while spectating. lapDeltaToBest is meaningless (usually just 0) when this
+  // is false - UI should hide the delta rather than showing a fake "on pace".
+  lapDeltaToBestValid: boolean
   // true if this data is from the driver being watched
   // (spectating/not in our own car) rather than our own car.
   isSpectatingOther: boolean
@@ -369,6 +375,12 @@ export interface TiresOverlaySettings extends BaseOverlaySettings {
   showWearPct: boolean
 }
 
+export interface LapTimerOverlaySettings extends BaseOverlaySettings {
+  // s, <= 0 = no target set (Control Center's min/sec/ms inputs all at 0) -
+  // the target time block is hidden entirely rather than shown as "--:--.---".
+  targetLapTimeSec: number
+}
+
 export interface TelemetryOverlaySettings extends BaseOverlaySettings {
   /** Shows the numeric RPM readout next to the shift-light LED bar. */
   showRpmNumber: boolean
@@ -382,7 +394,7 @@ export interface FlagsOverlaySettings extends BaseOverlaySettings {
 export type OverlaySettingsMap = {
   telemetry: TelemetryOverlaySettings
   fuel: BaseOverlaySettings
-  'lap-timer': BaseOverlaySettings
+  'lap-timer': LapTimerOverlaySettings
   incidents: BaseOverlaySettings
   standings: StandingsOverlaySettings
   relative: RelativeOverlaySettings
@@ -402,7 +414,7 @@ const DEFAULT_TRACKMAP_OPACITY = 0.35
 export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
   telemetry: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showRpmNumber: true },
   fuel: { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
-  'lap-timer': { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
+  'lap-timer': { scale: 1, opacity: DEFAULT_PANEL_OPACITY, targetLapTimeSec: 0 },
   incidents: { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
   standings: {
     scale: 1,

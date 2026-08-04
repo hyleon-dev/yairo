@@ -177,11 +177,11 @@ export default function App() {
                     </span>
                   )}
                   <div className="overlay-spacer"></div>
-                  <button type="button" className="overlay-url-btn" onClick={() => handleCopyUrl(overlay.id)}>
+                  <button type="button" className="overlay-in-line-button" onClick={() => handleCopyUrl(overlay.id)}>
                     {copiedOverlayId === overlay.id ? m.overlayUrlCopied : m.overlayUrlCopy}
                   </button>
                   {screenshotsEnabled && (
-                    <button type="button" className="overlay-url-btn" onClick={() => handleScreenshot(overlay.id)}>
+                    <button type="button" className="overlay-in-line-button" onClick={() => handleScreenshot(overlay.id)}>
                       {screenshotOverlayId?.id === overlay.id
                         ? screenshotOverlayId.ok
                           ? m.overlayScreenshotSaved

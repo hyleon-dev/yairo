@@ -2,6 +2,7 @@ import type {
   AnyOverlaySettings,
   AvgLapTimeOverlaySettings, BestLapTimeOverlaySettings,
   FlagsOverlaySettings,
+  LapTimerOverlaySettings,
   OverlayConfig,
   RelativeOverlaySettings,
   StandingsOverlaySettings,
@@ -71,6 +72,10 @@ export function OverlaySettingsPanel({overlay, settings, onChange}: Props) {
 
         {overlay.id === 'flags' && (
             <FlagsSettings settings={settings as FlagsOverlaySettings} onChange={onChange}/>
+        )}
+
+        {overlay.id === 'lap-timer' && (
+            <LapTimerSettings settings={settings as LapTimerOverlaySettings} onChange={onChange}/>
         )}
       </div>
   )
@@ -283,5 +288,54 @@ function BestLapTimeSettings({
           onChange={(checked) => onChange({showBestLapTime: checked})}
           label={m.showBestLapTime}
       />
+  )
+}
+
+// Displayed/stored as one total-seconds float (targetLapTimeSec, matching
+// every other lap time in the codebase), decomposed into min/sec/ms here
+// purely for the three input fields - <= 0 (all three at 0) means "not set".
+function LapTimerSettings({
+                            settings,
+                            onChange
+                          }: {
+  settings: LapTimerOverlaySettings
+  onChange: (patch: Partial<AnyOverlaySettings>) => void
+}) {
+  const totalMs = Math.max(0, Math.round(settings.targetLapTimeSec * 1000))
+  const minutes = Math.floor(totalMs / 60000)
+  const seconds = Math.floor((totalMs % 60000) / 1000)
+  const millis = totalMs % 1000
+
+  const update = (patch: Partial<{ minutes: number; seconds: number; millis: number }>) => {
+    const nextMinutes = patch.minutes ?? minutes
+    const nextSeconds = patch.seconds ?? seconds
+    const nextMillis = patch.millis ?? millis
+    onChange({targetLapTimeSec: nextMinutes * 60 + nextSeconds + nextMillis / 1000})
+  }
+
+  return (
+      <span className="multi-settings-row target-time-row">
+      <label className="overlay-setting">
+        <NumberInput min={0} max={999} value={minutes} onChange={(value) => update({minutes: value})}/>
+        <span className="overlay-setting-label">:</span>
+      </label>
+      <label className="overlay-setting">
+        <NumberInput min={0} max={59} value={seconds} onChange={(value) => update({seconds: value})}/>
+        <span className="overlay-setting-label">.</span>
+      </label>
+      <label className="overlay-setting">
+        <NumberInput min={0} max={999} value={millis} onChange={(value) => update({millis: value})}/>
+        <span className="overlay-setting-label">{m.targetTime}</span>
+      </label>
+      <button
+          type="button"
+          className="overlay-in-line-button"
+          title={m.resetTargetTime}
+          aria-label={m.resetTargetTime}
+          onClick={() => onChange({targetLapTimeSec: 0})}
+      >
+        {m.resetTargetTime_short}
+      </button>
+      </span>
   )
 }
