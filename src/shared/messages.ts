@@ -82,6 +82,8 @@ export const messages = {
   overlaySettings: {
     scale: 'Scale',
     scaleUnit: '%',
+    opacity: 'Opacity',
+    opacityUnit: '%',
     driversAhead: 'Drivers ahead',
     driversBehind: 'Drivers behind',
     topCount: 'Top Drivers',

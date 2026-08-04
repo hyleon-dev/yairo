@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import type {
   AnyOverlaySettings,
   FlagsData,
@@ -86,6 +87,15 @@ export default function App() {
   const overlayId = useOverlayId()
   const { telemetry, standings, relative, trackMap, flags, editMode, settings } = useOverlayBridge(overlayId)
   const contentRef = useReportContentSize(overlayId, editMode, settings.scale)
+
+  // Overrides both panel-background variants (--panel-bg for most overlays,
+  // --panel-bg-light for trackmap) with the same alpha, so
+  // this works regardless of which one the current overlay's CSS uses.
+  useEffect(() => {
+    const rgba = `rgba(var(--color-background-rgb), ${settings.opacity})`
+    document.documentElement.style.setProperty('--panel-bg', rgba)
+    document.documentElement.style.setProperty('--panel-bg-light', rgba)
+  }, [settings.opacity])
 
   return (
     <div className={`overlay-root ${editMode ? 'edit-mode' : ''}`}>

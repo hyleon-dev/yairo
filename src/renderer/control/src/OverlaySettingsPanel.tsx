@@ -28,17 +28,30 @@ export function OverlaySettingsPanel({overlay, settings, onChange}: Props) {
 
   return (
       <div className="overlay-settings-root">
-        <label className="overlay-setting">
-          <SuffixNumberInput
-              value={Math.round(settings.scale * 100)}
-              suffix={m.scaleUnit}
-              min={50}
-              max={200}
-              step={5}
-              onChange={(value) => onChange({scale: value / 100})}
-          />
-          <span className="overlay-setting-label">{m.scale}</span>
-        </label>
+        <span className="multi-settings-row">
+          <label className="overlay-setting">
+            <SuffixNumberInput
+                value={Math.round(settings.scale * 100)}
+                suffix={m.scaleUnit}
+                min={50}
+                max={200}
+                step={5}
+                onChange={(value) => onChange({scale: value / 100})}
+            />
+            <span className="overlay-setting-label">{m.scale}</span>
+          </label>
+          <label className="overlay-setting">
+            <SuffixNumberInput
+                value={Math.round(settings.opacity * 100)}
+                suffix={m.opacityUnit}
+                min={0}
+                max={100}
+                step={5}
+                onChange={(value) => onChange({opacity: value / 100})}
+            />
+            <span className="overlay-setting-label">{m.opacity}</span>
+          </label>
+        </span>
 
         {overlay.id === 'relative' && (
             <RelativeSettings settings={settings as RelativeOverlaySettings} onChange={onChange}/>

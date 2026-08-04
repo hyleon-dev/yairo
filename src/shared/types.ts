@@ -330,6 +330,8 @@ export const DEFAULT_ACCENT_COLOR = '#e8401a'
 export interface BaseOverlaySettings {
   /** Scale factor for the whole overlay, 1 = 100%. */
   scale: number
+  /** Panel background opacity, 0 = fully transparent, 1 = fully opaque. */
+  opacity: number
 }
 
 export interface DriverRatingOverlaySettings {
@@ -391,13 +393,20 @@ export type OverlaySettingsMap = {
 
 export type AnyOverlaySettings = OverlaySettingsMap[OverlayId]
 
+// Default opacity matches the shared --panel-bg alpha in theme.css (0.85).
+// trackmap is the one exception, matching its own --panel-bg-light (0.35) -
+// see the "Panel-Hintergrund bewusst anders" note in CLAUDE.md.
+const DEFAULT_PANEL_OPACITY = 0.85
+const DEFAULT_TRACKMAP_OPACITY = 0.35
+
 export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
-  telemetry: { scale: 1, showRpmNumber: true },
-  fuel: { scale: 1 },
-  'lap-timer': { scale: 1 },
-  incidents: { scale: 1 },
+  telemetry: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showRpmNumber: true },
+  fuel: { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
+  'lap-timer': { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
+  incidents: { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
   standings: {
     scale: 1,
+    opacity: DEFAULT_PANEL_OPACITY,
     driversAhead: 3,
     driversBehind: 3,
     topCount: 3,
@@ -409,6 +418,7 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
   },
   relative: {
     scale: 1,
+    opacity: DEFAULT_PANEL_OPACITY,
     driversAhead: 3,
     driversBehind: 3,
     showIRating: true,
@@ -416,9 +426,9 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     showStint: true,
     showAvgLapTime: false
   },
-  trackmap: { scale: 1 },
-  tires: { scale: 1, showWearPct: true },
-  flags: { scale: 1, showLabel: false }
+  trackmap: { scale: 1, opacity: DEFAULT_TRACKMAP_OPACITY },
+  tires: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showWearPct: true },
+  flags: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showLabel: false }
 }
 
 // Main -> renderer broadcast channel for a single overlay's settings, one channel per overlay id
