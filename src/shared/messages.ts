@@ -1,4 +1,4 @@
-import type { OverlayId } from './types'
+import type { ColorCorrectionMode, OverlayId } from './types'
 
 // Central collection of all user-facing UI text, components import
 // strings from here instead of hardcoding them inline.
@@ -32,7 +32,14 @@ export const messages = {
     editModeEnter: 'Move overlays (edit mode)',
     editModeHint: 'In edit mode the overlays are clickable and can be dragged around. Turn it back off afterwards so they stay click-through in the game.',
     versionLabel: (version: string) => `v${version}`,
-    accentColorBtn: 'Accent color'
+    accentColorBtn: 'Accent color',
+    colorCorrectionLabel: 'Color correction mode',
+    colorCorrectionOptions: {
+      none: 'Color correction: Off',
+      protanopia: 'Color correction: Protanopia',
+      deuteranopia: 'Color correction: Deuteranopia',
+      tritanopia: 'Color correction: Tritanopia'
+    } as Record<ColorCorrectionMode, string>
   },
   accentColor: {
     title: 'Accent color',

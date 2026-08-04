@@ -3,6 +3,7 @@ import { IPC, overlaySettingsChannel } from '../shared/types'
 import type {
   AnyOverlaySettings,
   AppConfig,
+  ColorCorrectionMode,
   ConnectionStatus,
   DriverStatsData,
   FlagsData,
@@ -40,6 +41,9 @@ const api = {
   setEditMode: (enabled: boolean) => ipcRenderer.invoke(IPC.EDIT_MODE_SET, enabled),
 
   setAccentColor: (color: string): Promise<AppConfig> => ipcRenderer.invoke(IPC.ACCENT_COLOR_SET, color),
+
+  setColorCorrectionMode: (mode: ColorCorrectionMode): Promise<AppConfig> =>
+    ipcRenderer.invoke(IPC.COLOR_CORRECTION_MODE_SET, mode),
 
   copyToClipboard: (text: string): Promise<void> => ipcRenderer.invoke(IPC.CLIPBOARD_WRITE, text),
 

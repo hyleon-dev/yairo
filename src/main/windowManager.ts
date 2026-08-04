@@ -17,7 +17,7 @@ export class WindowManager {
     bounds?: OverlayBounds | null,
     onBoundsChanged?: (bounds: OverlayBounds) => void
   ): BrowserWindow {
-    const MIN_CONTROL_WINDOW_WIDTH = 550
+    const MIN_CONTROL_WINDOW_WIDTH = 660
     const MIN_CONTROL_WINDOW_HEIGHT = 640
 
     const win = new BrowserWindow({

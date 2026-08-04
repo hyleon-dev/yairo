@@ -3,11 +3,17 @@ import {
   OVERLAY_SERVER_PORT,
   type AnyOverlaySettings,
   type AppConfig,
+  type ColorCorrectionMode,
   type ConnectionStatus,
   type OverlayId,
   type UpdateStatus
 } from '../../../shared/types'
 import { hexToRgbTriplet } from '../../../shared/color'
+import {
+  COLOR_CORRECTION_FILTER_SVG_ID,
+  COLOR_CORRECTION_FILTER_SVG_MARKUP,
+  colorCorrectionFilterId
+} from '../../../shared/colorCorrectionFilters'
 import { messages } from '../../../shared/messages'
 import { OverlaySettingsPanel } from './OverlaySettingsPanel'
 import { AccentColorPopup } from './AccentColorPopup'
@@ -21,6 +27,13 @@ const m = messages.control
 function previewAccentColor(hex: string): void {
   document.documentElement.style.setProperty('--color-accent', hex)
   document.documentElement.style.setProperty('--color-accent-rgb', hexToRgbTriplet(hex))
+}
+
+function applyColorCorrectionMode(mode: ColorCorrectionMode): void {
+  if (!document.getElementById(COLOR_CORRECTION_FILTER_SVG_ID)) {
+    document.body.insertAdjacentHTML('beforeend', COLOR_CORRECTION_FILTER_SVG_MARKUP)
+  }
+  document.documentElement.style.filter = mode === 'none' ? '' : `url(#${colorCorrectionFilterId(mode)})`
 }
 
 export default function App() {
@@ -74,12 +87,17 @@ export default function App() {
     return () => unsubs.forEach((unsub) => unsub())
   }, [config?.overlays.map((o) => o.id).join(',')])
 
-  // Applied live here (not just from the picker popup) so a color persisted
-  // in a previous session also takes effect on startup.
+  // Applied live here (not just from the picker popup) so settings persisted
+  // in a previous session also take effect on startup.
   useEffect(() => {
     if (!config) return
     previewAccentColor(config.accentColor)
   }, [config?.accentColor])
+
+  useEffect(() => {
+    if (!config) return
+    applyColorCorrectionMode(config.colorCorrectionMode)
+  }, [config?.colorCorrectionMode])
 
   if (!config) return <div className="app">{m.loading}</div>
 
@@ -95,6 +113,11 @@ export default function App() {
 
   const toggleEditMode = () => {
     window.overlayApi.setEditMode(!config.editMode)
+  }
+
+  const handleColorCorrectionModeChange = (mode: ColorCorrectionMode) => {
+    applyColorCorrectionMode(mode)
+    window.overlayApi.setColorCorrectionMode(mode)
   }
 
   const handleCopyUrl = (id: OverlayId) => {
@@ -191,6 +214,19 @@ export default function App() {
             <span className="accent-color-swatch" style={{ background: config.accentColor }} />
             {m.accentColorBtn}
           </button>
+          <select
+            className="color-correction-select"
+            value={config.colorCorrectionMode}
+            title={m.colorCorrectionLabel}
+            aria-label={m.colorCorrectionLabel}
+            onChange={(e) => handleColorCorrectionModeChange(e.target.value as ColorCorrectionMode)}
+          >
+            {(Object.keys(m.colorCorrectionOptions) as ColorCorrectionMode[]).map((mode) => (
+              <option key={mode} value={mode}>
+                {m.colorCorrectionOptions[mode]}
+              </option>
+            ))}
+          </select>
         </div>
         {updateStatus && <span className="app-version">{m.versionLabel(updateStatus.currentVersion)}</span>}
       </footer>

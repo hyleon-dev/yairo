@@ -302,6 +302,15 @@ export interface OverlayConfig {
   bounds: OverlayBounds
 }
 
+// 'none' = no correction. The others apply a daltonization filter (see
+// shared/colorCorrectionFilters.ts) - only ever applied in the Control Center and
+// the real Electron overlay windows, deliberately NOT for OBS/browser clients
+// (see useOverlayBridge.ts) - a streamer's viewers should see normal colors
+// even if the streamer themselves uses this for their own screen.
+export type ColorCorrectionMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia'
+
+export const DEFAULT_COLOR_CORRECTION_MODE: ColorCorrectionMode = 'none'
+
 /** Full state managed and persisted by the Control Center. */
 export interface AppConfig {
   overlays: OverlayConfig[]
@@ -311,6 +320,7 @@ export interface AppConfig {
   // Hex color (e.g. "#e8401a"), applied to --color-accent/--color-accent-rgb
   // in theme.css on every window (Control Center + overlays).
   accentColor: string
+  colorCorrectionMode: ColorCorrectionMode
 }
 
 // The accent color hardcoded in theme.css (--color-accent) before the user
@@ -437,6 +447,7 @@ export const IPC = {
   CONFIG_SET_OVERLAY: 'config:set-overlay',
   EDIT_MODE_SET: 'edit-mode:set',
   ACCENT_COLOR_SET: 'accent-color:set',
+  COLOR_CORRECTION_MODE_SET: 'color-correction-mode:set',
   OVERLAY_BOUNDS_SET: 'overlay:set-bounds',
   OVERLAY_CONTENT_SIZE_SET: 'overlay:set-content-size',
   OVERLAY_SETTINGS_GET: 'overlay-settings:get',

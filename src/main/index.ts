@@ -12,6 +12,7 @@ import {
   IPC,
   overlaySettingsChannel,
   type AnyOverlaySettings,
+  type ColorCorrectionMode,
   type ConnectionStatus,
   type OverlayId,
   type OverlayBounds,
@@ -139,10 +140,16 @@ function registerIpcHandlers(): void {
     return updated
   })
 
-  // Control Center's accent color picker - live-applied to every window via
-  // the same CONFIG_UPDATED broadcast used for editMode.
+  // Control Center's accent color picker, live-applied to every window.
   ipcMain.handle(IPC.ACCENT_COLOR_SET, (_evt, accentColor: string) => {
     const updated = configStore.setAccentColor(accentColor)
+    broadcastToAll(IPC.CONFIG_UPDATED, updated)
+    return updated
+  })
+
+  // Control Center's colorblind correction dropdown, live-applied to every window.
+  ipcMain.handle(IPC.COLOR_CORRECTION_MODE_SET, (_evt, colorCorrectionMode: ColorCorrectionMode) => {
+    const updated = configStore.setColorCorrectionMode(colorCorrectionMode)
     broadcastToAll(IPC.CONFIG_UPDATED, updated)
     return updated
   })

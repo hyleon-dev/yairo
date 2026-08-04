@@ -5,6 +5,7 @@ import {
   overlaySettingsChannel,
   type AnyOverlaySettings,
   type AppConfig,
+  type ColorCorrectionMode,
   type ConnectionStatus,
   type FlagsData,
   type OverlayId,
@@ -14,6 +15,7 @@ import {
   type TrackMapData
 } from '../../../shared/types'
 import { hexToRgbTriplet } from '../../../shared/color'
+import { COLOR_CORRECTION_FILTER_SVG_ID, COLOR_CORRECTION_FILTER_SVG_MARKUP, colorCorrectionFilterId } from '../../../shared/colorCorrectionFilters'
 
 export interface OverlayBridgeState {
   telemetry: TelemetryData | null
@@ -31,6 +33,16 @@ export interface OverlayBridgeState {
 function applyAccentColor(hex: string): void {
   document.documentElement.style.setProperty('--color-accent', hex)
   document.documentElement.style.setProperty('--color-accent-rgb', hexToRgbTriplet(hex))
+}
+
+// Only ever called from subscribeViaElectron (the real overlay window this user is looking at),
+// deliberately never from subscribeViaWebSocket, so a stream viewer hitting the OBS/browser
+// URL keeps seeing normal colors.
+function applyColorCorrectionMode(mode: ColorCorrectionMode): void {
+  if (!document.getElementById(COLOR_CORRECTION_FILTER_SVG_ID)) {
+    document.body.insertAdjacentHTML('beforeend', COLOR_CORRECTION_FILTER_SVG_MARKUP)
+  }
+  document.documentElement.style.filter = mode === 'none' ? '' : `url(#${colorCorrectionFilterId(mode)})`
 }
 
 // Overlays run either as Electron BrowserWindow (window.overlayApi via
@@ -78,6 +90,7 @@ function subscribeViaElectron(
   const unsubConfig = window.overlayApi.onConfigUpdated((cfg: AppConfig) => {
     setEditMode(cfg.editMode)
     applyAccentColor(cfg.accentColor)
+    applyColorCorrectionMode(cfg.colorCorrectionMode)
   })
   const unsubSettings = window.overlayApi.onOverlaySettings(overlayId, setSettings)
   const unsubConnection = window.overlayApi.onConnectionStatus((status: ConnectionStatus) => {
@@ -93,6 +106,7 @@ function subscribeViaElectron(
   window.overlayApi.getConfig().then((cfg) => {
     setEditMode(cfg.editMode)
     applyAccentColor(cfg.accentColor)
+    applyColorCorrectionMode(cfg.colorCorrectionMode)
   })
   window.overlayApi.getOverlaySettings(overlayId).then(setSettings)
 
@@ -146,6 +160,9 @@ function subscribeViaWebSocket(
         }
         break
       case IPC.CONFIG_UPDATED:
+        // accentColor is a branding choice, applied for OBS/browser viewers too.
+        // colorCorrectionMode is a personal accessibility setting - intentionally
+        // NOT applied here, see applyColorCorrectionMode()'s doc comment above.
         applyAccentColor((payload as AppConfig).accentColor)
         break
       case settingsChannel:
