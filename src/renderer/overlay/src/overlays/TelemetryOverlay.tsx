@@ -15,23 +15,22 @@ function clamp01(v: number): number {
   return Math.min(1, Math.max(0, v))
 }
 
-type RevLedStage = 'normal' | 'shift' | 'last'
+type RevLedStage = 'normal' | 'last' | 'blink'
 
-// Shift-light bar: 0% = rpmIdle, 100% = rpmSLFirst (all LEDs lit)
-// Color fill: blue at rpmSLShift, red at rpmSLLast
-// LEDs blink at rpmSLBlink
+// Shift-light bar: 0% fill at rpmSLFirst, 100% fill (all LEDs lit) at rpmSLShift.
+// Color: green up to rpmSLLast, blue from rpmSLLast, red + blinking from rpmSLBlink.
 function RevLedBar({ data }: { data: TelemetryData }) {
-  const { rpm, rpmIdle, rpmSLFirst, rpmSLShift, rpmSLLast, rpmSLBlink } = data
-  const available = rpmIdle >= 0 && rpmSLFirst > rpmIdle
+  const { rpm, rpmSLFirst, rpmSLShift, rpmSLLast, rpmSLBlink } = data
+  const available = rpmSLFirst >= 0 && rpmSLShift > rpmSLFirst
 
-  const pct = available ? clamp01((rpm - rpmIdle) / (rpmSLFirst - rpmIdle)) : 0
+  const pct = available ? clamp01((rpm - rpmSLFirst) / (rpmSLShift - rpmSLFirst)) : 0
   const litCount = Math.round(pct * REV_LED_COUNT)
 
   let stage: RevLedStage = 'normal'
-  if (available && rpmSLLast > 0 && rpm >= rpmSLLast) stage = 'last'
-  else if (available && rpmSLShift > 0 && rpm >= rpmSLShift) stage = 'shift'
+  if (available && rpmSLBlink > 0 && rpm >= rpmSLBlink) stage = 'blink'
+  else if (available && rpmSLLast > 0 && rpm >= rpmSLLast) stage = 'last'
 
-  const blinking = available && rpmSLBlink > 0 && rpm >= rpmSLBlink
+  const blinking = stage === 'blink'
 
   return (
     <div className={`rev-leds ${blinking ? 'rev-leds--blink' : ''}`}>

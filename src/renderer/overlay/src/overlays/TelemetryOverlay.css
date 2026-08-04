@@ -81,11 +81,11 @@
   background: var(--color-success);
   box-shadow: 0 0 4px rgba(var(--color-success-rgb), 0.7);
 }
-.rev-led--lit.rev-led--shift {
+.rev-led--lit.rev-led--last {
   background: var(--color-primary);
   box-shadow: 0 0 4px rgba(var(--color-primary-rgb), 0.7);
 }
-.rev-led--lit.rev-led--last {
+.rev-led--lit.rev-led--blink {
   background: var(--color-danger);
   box-shadow: 0 0 4px rgba(var(--color-danger-rgb), 0.7);
 }
