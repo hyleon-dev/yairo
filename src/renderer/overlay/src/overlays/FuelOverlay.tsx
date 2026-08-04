@@ -9,9 +9,9 @@ function FuelMatrixRow({ label, estimate }: { label: string; estimate: FuelLapEs
   return (
     <tr>
       <td className="fuel-matrix-label">{label}</td>
-      <td>{estimate ? `${estimate.consumptionPerLapL.toFixed(2)} L` : '–'}</td>
-      <td>{estimate ? `${estimate.marginLiters.toFixed(2)} L` : '–'}</td>
-      <td>{estimate ? `R${estimate.pitByLap}` : '–'}</td>
+      <td>{estimate ? `${estimate.consumptionPerLapL.toFixed(2)} l` : '–'}</td>
+      <td>{estimate ? `L${estimate.pitByLap}` : '–'}</td>
+      <td>{estimate ? `${estimate.marginLiters.toFixed(2)} l` : '–'}</td>
     </tr>
   )
 }
@@ -37,8 +37,8 @@ export function FuelOverlay({ data }: { data: TelemetryData }) {
           <tr>
             <th></th>
             <th>{m.columnConsumption}</th>
-            <th>{m.columnMargin}</th>
             <th>{m.columnPitBy}</th>
+            <th>{m.columnMargin}</th>
           </tr>
         </thead>
         <tbody>

@@ -383,6 +383,8 @@ function trackFuelConsumption(raw: TelemetryVarList): void {
     return
   }
 
+  if (lap === lastFuelLapSample.lap) return
+
   if (lap > lastFuelLapSample.lap) {
     const consumed = lastFuelLapSample.fuelLevel - fuelLevel
     // Refueled during the lap (pit stop) = not representative per-lap
@@ -391,24 +393,31 @@ function trackFuelConsumption(raw: TelemetryVarList): void {
       fuelPerLapHistory.push(consumed)
       if (fuelPerLapHistory.length > FUEL_HISTORY_SIZE) fuelPerLapHistory.shift()
     }
-  } else if (lap < lastFuelLapSample.lap) {
+  } else {
     // Lap counter dropping (= new session/new stint) discards the history
     fuelPerLapHistory = []
   }
 
+  // New lap just started - this fuel level is the baseline for it.
   lastFuelLapSample = { lap, fuelLevel }
 }
 
-function buildFuelLapEstimate(consumptionPerLapL: number, fuelLevelL: number, currentLap: number): FuelLapEstimate | null {
+function buildFuelLapEstimate(
+  consumptionPerLapL: number,
+  fuelLevelL: number,
+  lapStartFuelLevelL: number,
+  currentLap: number
+): FuelLapEstimate | null {
   if (consumptionPerLapL <= 0) return null
 
-  const lapsRemaining = fuelLevelL / consumptionPerLapL
-  const fullLapsRemaining = Math.floor(lapsRemaining)
+  // margin/pitByLap deliberately use lapStartFuelLevelL (a stable snapshot),
+  // not the live fuelLevelL - see FuelLapEstimate's doc comment for why.
+  const fullLapsRemaining = Math.floor(lapStartFuelLevelL / consumptionPerLapL)
 
   return {
     consumptionPerLapL,
-    lapsRemaining,
-    marginLiters: fuelLevelL - fullLapsRemaining * consumptionPerLapL,
+    lapsRemaining: fuelLevelL / consumptionPerLapL,
+    marginLiters: lapStartFuelLevelL - fullLapsRemaining * consumptionPerLapL,
     pitByLap: currentLap + fullLapsRemaining + 1
   }
 }
@@ -416,12 +425,17 @@ function buildFuelLapEstimate(consumptionPerLapL: number, fuelLevelL: number, cu
 function buildFuelEstimate(fuelLevelL: number, currentLap: number): FuelEstimate | null {
   if (fuelPerLapHistory.length === 0) return null
 
+  // Fuel level as of this lap's start (tracked in trackFuelConsumption()) -
+  // falls back to the live level if unavailable, e.g. right after getting
+  // back in the car.
+  const lapStartFuelLevelL = lastFuelLapSample?.fuelLevel ?? fuelLevelL
+
   const lastLapConsumption = fuelPerLapHistory[fuelPerLapHistory.length - 1]
   const avgConsumption = fuelPerLapHistory.reduce((sum, v) => sum + v, 0) / fuelPerLapHistory.length
 
   return {
-    lastLap: buildFuelLapEstimate(lastLapConsumption, fuelLevelL, currentLap),
-    avgLast5: buildFuelLapEstimate(avgConsumption, fuelLevelL, currentLap)
+    lastLap: buildFuelLapEstimate(lastLapConsumption, fuelLevelL, lapStartFuelLevelL, currentLap),
+    avgLast5: buildFuelLapEstimate(avgConsumption, fuelLevelL, lapStartFuelLevelL, currentLap)
   }
 }
 

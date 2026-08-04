@@ -86,12 +86,20 @@ export interface TiresData {
 export interface FuelLapEstimate {
   // L, consumption per lap in this scenario.
   consumptionPerLapL: number
-  // How many more laps the current fuel level covers in this scenario.
+  // How many more laps the current (live) fuel level covers in this scenario -
+  // ticks down continuously as fuel burns, incl. mid-lap.
   lapsRemaining: number
   // L, left over after the last fully possible lap
   // (safety margin, if pitting exactly at "pitByLap").
+  // Unlike lapsRemaining, this (and pitByLap) is only recomputed once per lap,
+  // from the fuel level as of THIS lap's start - not live/mid-lap. Otherwise
+  // it turns into a sawtooth: falls in lockstep with the live tank level,
+  // then jumps back up by a full consumptionPerLapL whenever that live level
+  // happens to cross a multiple-of-consumption threshold mid-lap (unrelated
+  // to actual lap boundaries) - confusing, not a stable "pit-plan buffer".
   marginLiters: number
-  // Absolute lap number by which to pit at the latest.
+  // Absolute lap number by which to pit at the latest. Same once-per-lap
+  // stability as marginLiters, for the same reason.
   pitByLap: number
 }
 

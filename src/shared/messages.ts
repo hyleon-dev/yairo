@@ -117,11 +117,11 @@ export const messages = {
     clutch: 'Clutch'
   },
   fuel: {
-    unit: 'L Fuel',
+    unit: 'l Fuel',
     lapsRemaining: (laps: number) => `~${laps.toFixed(1)} laps remaining`,
     rangeUnknown: 'Range: –',
     columnConsumption: 'Consumption',
-    columnMargin: 'Margin',
+    columnMargin: 'Remaining',
     columnPitBy: 'Pit by',
     rowLastLap: 'Last',
     rowAvg5: 'Last 5'
