@@ -1,10 +1,7 @@
 name: Release
 
-# Triggered by pushing a tag like "v1.2.3":
-# 1. Builds the Windows NSIS installer and attaches it to a new GitHub release.
-# 2. Pushes a read-only "versions/<tag>" branch pointing at the exact tagged
-#    commit, so every released code state stays browsable/checkoutable even
-#    after master moves on.
+# Triggered by pushing a tag like "v1.2.3": builds the Windows NSIS installer
+# and attaches it to a new GitHub release.
 on:
   push:
     tags:
@@ -54,7 +51,10 @@ jobs:
       # We commit directly to master (no PRs), so GitHub's own
       # generate_release_notes feature (PR-based) would come up empty -
       # build the changelog straight from commit messages since the
-      # previous tag instead.
+      # previous tag instead. Commits are grouped by the leading word of
+      # their subject (our own loose convention, e.g. "added ...",
+      # "fixed ..."), Keep-a-Changelog style - anything that doesn't match
+      # a known keyword falls into "Other".
       - name: Build changelog from commits since last tag
         id: changelog
         shell: bash
@@ -62,17 +62,42 @@ jobs:
           previous_tag=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || echo "")
           range="${previous_tag:+$previous_tag..}$GITHUB_REF_NAME"
 
+          added=() changed=() fixed=() removed=() other=()
+
+          while IFS= read -r subject || [ -n "$subject" ]; do
+            # Some commit messages here already start with "- ", strip it
+            # before inspecting the leading word.
+            entry="${subject#- }"
+            keyword=$(echo "$entry" | cut -d' ' -f1 | tr '[:upper:]' '[:lower:]')
+            case "$keyword" in
+              added) added+=("$entry") ;;
+              adjusted|changed|replaced|remade|updated) changed+=("$entry") ;;
+              fixed) fixed+=("$entry") ;;
+              removed) removed+=("$entry") ;;
+              *) other+=("$entry") ;;
+            esac
+          done < <(git log "$range" --reverse --no-merges --pretty=format:'%s')
+
+          print_section() {
+            local title="$1"
+            shift
+            if [ "$#" -gt 0 ]; then
+              echo "### $title"
+              for entry in "$@"; do
+                printf -- '- %s\n' "$entry"
+              done
+              echo
+            fi
+          }
+
           delimiter="CHANGELOG_${{ github.run_id }}"
           {
             echo "changelog<<$delimiter"
-            # Only prefix with "- " if the message doesn't already start
-            # with one - some commit messages here already do.
-            git log "$range" --no-merges --pretty=format:'%s' | while IFS= read -r subject || [ -n "$subject" ]; do
-              case "$subject" in
-                -*) printf '%s\n' "$subject" ;;
-                *) printf '- %s\n' "$subject" ;;
-              esac
-            done
+            print_section "Added" "${added[@]}"
+            print_section "Changed" "${changed[@]}"
+            print_section "Fixed" "${fixed[@]}"
+            print_section "Removed" "${removed[@]}"
+            print_section "Other" "${other[@]}"
             echo "$delimiter"
           } >> "$GITHUB_OUTPUT"
 
@@ -86,18 +111,13 @@ jobs:
         run: npm ci
 
       # Keeps the installer filename/app version in sync with the tag.
-      # Working-tree only, not committed back - the versions/<tag> branch
-      # below still reflects the original untouched commit.
+      # Working-tree only, not committed back.
       - name: Sync package.json version with tag
         shell: bash
         run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
 
       - name: Build Windows installer
         run: npm run build:win
-
-      - name: Persist tagged commit as versions/${{ github.ref_name }}
-        shell: bash
-        run: git push origin "HEAD:refs/heads/versions/${GITHUB_REF_NAME}"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
