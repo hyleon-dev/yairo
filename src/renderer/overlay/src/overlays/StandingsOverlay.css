@@ -1,14 +1,14 @@
 .standings {
-  background: rgba(10, 10, 14, 0.85);
-  border: 1px solid rgba(232, 64, 26, 0.35);
-  border-radius: 8px;
+  background: var(--panel-bg);
+  border: var(--panel-border);
+  border-radius: var(--radius-lg);
   /* only for the rounded corners - content never exceeds the box, the
      window resizes to fit it via useReportContentSize() */
   overflow: hidden;
-  backdrop-filter: blur(6px);
-  color: #e8e8f0;
+  backdrop-filter: blur(var(--panel-blur));
+  color: var(--color-text);
   min-width: 340px;
-  font-size: 12px;
+  font-size: var(--font-body);
 }
 
 .standings .header {
@@ -17,17 +17,17 @@
   align-items: center;
   gap: 10px;
   padding: 7px 12px;
-  background: rgba(232, 64, 26, 0.15);
-  border-bottom: 1px solid rgba(232, 64, 26, 0.3);
+  background: rgba(var(--color-accent-rgb), 0.15);
+  border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.3);
 }
 .header-title {
-  font-size: 10px;
+  font-size: var(--font-caption);
   font-weight: 700;
-  color: #e8401a;
+  color: var(--color-accent);
 }
 .header-track {
-  font-size: 10px;
-  color: #9090a0;
+  font-size: var(--font-caption);
+  color: var(--color-text-muted);
 }
 .header-data-name {
   font-size: 7px;
@@ -37,24 +37,24 @@
 /* Each class gets its own section with a header (name, driver count,
    Strength of Field) - single-class sessions have exactly one. */
 .standings-class + .standings-class {
-  border-top: 2px solid rgba(232, 64, 26, 0.25);
+  border-top: 2px solid rgba(var(--color-accent-rgb), 0.25);
 }
 .class-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   padding: 5px 12px;
-  background: rgba(255, 255, 255, 0.04);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(var(--color-white-rgb), 0.04);
+  border-bottom: 1px solid rgba(var(--color-white-rgb), 0.06);
 }
 .class-name {
-  font-size: 11px;
+  font-size: var(--font-body-sm);
   font-weight: 700;
-  color: #e0e0e0;
+  color: var(--color-text-secondary);
 }
 .class-meta {
-  font-size: 9px;
-  color: #6b6b80;
+  font-size: var(--font-label);
+  color: var(--color-text-dim);
   letter-spacing: 0.02em;
 }
 
@@ -70,10 +70,10 @@
 }
 
 .col-labels {
-  font-size: 9px;
+  font-size: var(--font-label);
   letter-spacing: 0.1em;
-  color: #6b6b80;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--color-text-dim);
+  border-bottom: 1px solid rgba(var(--color-white-rgb), 0.06);
   padding: 5px 12px;
 }
 
@@ -83,7 +83,7 @@
 }
 
 .driver-row {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid rgba(var(--color-white-rgb), 0.04);
 }
 .driver-row:last-child {
   border-bottom: none;
@@ -93,34 +93,34 @@
    when positions in between were hidden (see StandingsOverlay.tsx). */
 .driver-gap {
   text-align: center;
-  font-size: 10px;
+  font-size: var(--font-caption);
   line-height: 1;
-  color: #4a4a58;
+  color: var(--color-text-faint);
   padding: 1px 0;
 }
 .driver-row--player {
-  background: rgba(232, 64, 26, 0.12);
+  background: rgba(var(--color-accent-rgb), 0.12);
 }
 
 /* Fills the configured top slots when there's no class data at all yet */
 .driver-row--placeholder {
-  color: #3a3a48;
+  color: var(--color-text-faint);
 }
 .driver-row--placeholder .col-pos {
   background: none;
-  color: #3a3a48;
+  color: var(--color-text-faint);
 }
 
 .col-pos {
   text-align: center;
   font-weight: 700;
-  color: #e8401a;
+  color: var(--color-accent);
   /* Gradient (background) comes as an inline style from sdkColors.ts,
      derived from the car class color provided by the SDK - deliberately
      limited to this (first) column. */
 }
 .col-num {
-  color: #9090a0;
+  color: var(--color-text-muted);
 }
 
 /* The gradient in col-pos should reach the left row edge and the full row
@@ -140,52 +140,52 @@
 }
 .col-lap {
   text-align: right;
-  color: #9090a0;
+  color: var(--color-text-muted);
 }
 .col-stint {
   text-align: right;
-  color: #9090a0;
+  color: var(--color-text-muted);
 }
 .col-gap {
   text-align: right;
-  color: #e0e0e0;
-  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-body-sm);
 }
 .col-best {
   text-align: right;
-  color: #e0e0e0;
-  font-size: 11px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-body-sm);
 }
 /* Only the class-wide fastest valid best lap is highlighted purple (see
    DriverStanding.isClassFastestLap in irsdkWorker.ts), not every best-lap
    column. */
 .col-best--fastest {
-  color: #b266ff;
+  color: var(--color-best);
   font-weight: 700;
 }
 .col-avg {
   text-align: right;
-  color: #9090a0;
-  font-size: 11px;
+  color: var(--color-text-muted);
+  font-size: var(--font-body-sm);
 }
 .col-irating {
   text-align: right;
-  color: #c0c0cc;
-  font-size: 11px;
+  color: var(--color-text-soft);
+  font-size: var(--font-body-sm);
 }
 .col-sr {
   /* Color/background/border come as inline styles from sdkColors.ts,
      derived from the license color provided by the SDK. */
   text-align: center;
-  font-size: 10px;
+  font-size: var(--font-caption);
   font-weight: 700;
   padding: 1px 4px;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   line-height: 1.4;
 }
 .gap--leader {
-  color: #2ecc71;
-  font-size: 9px;
+  color: var(--color-success);
+  font-size: var(--font-label);
   letter-spacing: 0.05em;
 }

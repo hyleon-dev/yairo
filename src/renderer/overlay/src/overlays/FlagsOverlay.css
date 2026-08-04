@@ -20,19 +20,19 @@
   box-sizing: border-box;
   width: 16px;
   height: 16px;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   transition: background-color 120ms linear, box-shadow 120ms linear, border-color 120ms linear;
 }
 
 .flags-label {
-  font-size: 11px;
+  font-size: var(--font-body-sm);
   letter-spacing: 0.1em;
-  color: #9090a0;
+  color: var(--color-text-muted);
 }
 
 .flags--alert {
-  border-color: rgba(231, 76, 60, 0.8);
-  box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+  border-color: rgba(var(--color-danger-rgb), 0.8);
+  box-shadow: 0 0 10px rgba(var(--color-danger-rgb), 0.5);
 }
 
 /* No flag active: hide everything (panel background/border + the unlit LEDs)

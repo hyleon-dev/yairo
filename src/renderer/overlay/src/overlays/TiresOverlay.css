@@ -27,29 +27,29 @@
 }
 
 .tire-gauge-bg {
-  fill: rgba(0, 0, 0, 0.45);
+  fill: rgba(var(--color-black-rgb), 0.45);
 }
 
 .tire-gauge-outline {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.35);
+  stroke: rgba(var(--color-white-rgb), 0.35);
   stroke-width: 3;
 }
 
 .tire-wear-text {
-  font-size: 14px;
+  font-size: var(--font-md);
   font-weight: 700;
-  fill: #fff;
+  fill: var(--color-text);
   /* Dark outline keeps the number legible over both the bright green fill and the dark background. */
   paint-order: stroke fill;
-  stroke: rgba(0, 0, 0, 0.6);
+  stroke: rgba(var(--color-black-rgb), 0.6);
   stroke-width: 3px;
 }
 
 .tire-temp {
-  font-size: 13px;
+  font-size: var(--font-body-lg);
   font-weight: 600;
-  color: #e8e8f0;
+  color: var(--color-text);
   min-width: 38px;
   text-align: center;
 }

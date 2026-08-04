@@ -9,6 +9,7 @@ import {
 } from '../../../shared/types'
 import { messages } from '../../../shared/messages'
 import { OverlaySettingsPanel } from './OverlaySettingsPanel'
+import {ToggleSwitch} from "./Elements";
 
 const m = messages.control
 
@@ -121,14 +122,11 @@ export default function App() {
 
               <li key={overlay.id}>
                 <div className="overlay-item-header">
-                  <label>
-                    <input
-                        type="checkbox"
-                        checked={overlay.enabled}
-                        onChange={(e) => toggleOverlay(overlay.id, e.target.checked)}
-                    />
-                    {overlay.name}
-                  </label>
+                  <ToggleSwitch
+                      checked={overlay.enabled}
+                      onChange={(checked) => toggleOverlay(overlay.id, checked)}
+                      label={overlay.name}
+                  />
                   {m.overlayHints[overlay.id] && (
                     <span className="info-hint">
                       <button type="button" className="info-hint-btn" aria-label="Info">

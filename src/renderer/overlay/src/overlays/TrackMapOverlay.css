@@ -1,9 +1,11 @@
+/* Panel background/border deliberately NOT the shared --panel-bg/--panel-border
+   (see CLAUDE.md) - only radius/blur/text color are shared with other overlays. */
 .trackmap {
-  background: rgba(10, 10, 14, 0.35);
-  color: #e8e8f0;
-  border-radius: 8px;
+  background: var(--panel-bg-light);
+  color: var(--color-text);
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(var(--panel-blur));
   /* Matches the 1920x1080 viewBox shared by every track in trackmaps/data.json. */
   width: 360px;
   height: 202px;
@@ -17,7 +19,7 @@
 
 .trackmap-outline {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.35);
+  stroke: rgba(var(--color-white-rgb), 0.35);
   /* Matches the stroke width the reference asset format itself is drawn at. */
   stroke-width: 30;
   stroke-linejoin: round;
@@ -38,7 +40,7 @@
   (driver.classColorHex, taken directly from the SDK/Driver.CarClassColor),
   hence only stroke rings as a status indicator here.
   */
-  stroke: rgba(0, 0, 0, 0.55);
+  stroke: rgba(var(--color-black-rgb), 0.55);
   stroke-width: 4;
 }
 .trackmap-marker--pit {
@@ -63,8 +65,8 @@
   stroke-width: 3;
 }
 .trackmap-fallback-label {
-  font-size: 9px;
-  color: #6b6b80;
+  font-size: var(--font-label);
+  color: var(--color-text-dim);
   text-align: center;
   max-width: 190px;
 }

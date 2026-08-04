@@ -17,11 +17,16 @@ export class WindowManager {
     bounds?: OverlayBounds | null,
     onBoundsChanged?: (bounds: OverlayBounds) => void
   ): BrowserWindow {
+    const MIN_CONTROL_WINDOW_WIDTH = 550
+    const MIN_CONTROL_WINDOW_HEIGHT = 640
+
     const win = new BrowserWindow({
       x: bounds?.x,
       y: bounds?.y,
-      width: bounds?.width ?? 480,
-      height: bounds?.height ?? 640,
+      width: Math.max(bounds?.width ?? MIN_CONTROL_WINDOW_WIDTH),
+      height: Math.max(bounds?.height ?? MIN_CONTROL_WINDOW_HEIGHT),
+      minWidth: MIN_CONTROL_WINDOW_WIDTH,
+      minHeight: MIN_CONTROL_WINDOW_HEIGHT,
       title: 'iRacing Overlay - Control Center',
       autoHideMenuBar: true,
       icon,

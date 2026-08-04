@@ -1,0 +1,62 @@
+/* Shared design tokens (colors, radii, blur, recurring font sizes) used by
+   both the Control Center and the Overlay renderer - imported by both
+   main.tsx entry points so every window sees the same values. Only values
+   that are actually reused (same literal, multiple places) live here -
+   one-off/hero sizes (e.g. the big lap time number) stay inline. */
+:root {
+  /* Brand / status colors */
+  --color-primary: #3a7dff;
+  --color-primary-hover: #5c93ff;
+  --color-accent: #e8401a;
+  --color-success: #2ecc71;
+  --color-success-soft: #58d68d;
+  --color-danger: #e74c3c;
+  --color-warning: #e8b93a;
+  --color-best: #b266ff;
+
+  /* RGB triplets for colors reused at many different alpha values via rgba(var(...), a) */
+  --color-primary-rgb: 58, 125, 255;
+  --color-accent-rgb: 232, 64, 26;
+  --color-success-rgb: 46, 204, 113;
+  --color-danger-rgb: 231, 76, 60;
+  --color-white-rgb: 255, 255, 255;
+  --color-black-rgb: 0, 0, 0;
+  --color-background-rgb: 10, 10, 14;
+
+  /* Text colors */
+  --color-text: #e8e8f0; /* overlay panel text */
+  --color-text-light: #eee; /* control window text */
+  --color-text-secondary: #e0e0e0;
+  --color-text-soft: #c0c0cc;
+  --color-text-muted: #9090a0;
+  --color-text-dim: #6b6b80;
+  --color-text-faint: #3a3a48;
+  --color-text-gray: #999;
+
+  /* Control window surfaces */
+  --color-surface: #2a2d33;
+  --color-border: #3a3d44;
+  --colors-background: #1b1d21;
+
+  /* Overlay panel look, shared by (almost) every overlay card */
+  --panel-bg: rgba(var(--color-background-rgb), 0.85);
+  --panel-bg-light: rgba(var(--color-background-rgb), 0.35);
+  --panel-border: 1px solid rgba(var(--color-accent-rgb), 0.35);
+  --panel-blur: 6px;
+
+  /* Corner radii */
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-pill: 999px;
+
+  /* Recurring font sizes */
+  --font-label: 9px;
+  --font-caption: 10px;
+  --font-body-sm: 11px;
+  --font-body: 12px;
+  --font-body-lg: 13px;
+  --font-md: 14px;
+  --font-header: 18px
+}

@@ -1,15 +1,15 @@
 .fuel-laps-remaining {
-  font-size: 11px;
-  color: #9090a0;
+  font-size: var(--font-body-sm);
+  color: var(--color-text-muted);
   margin-bottom: 8px;
 }
 
 .fuel-matrix {
   border-collapse: collapse;
-  font-size: 10px;
-  color: #d0d0d8;
+  font-size: var(--font-caption);
+  color: var(--color-text-soft);
   margin: 4px auto 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-top: 1px solid rgba(var(--color-white-rgb), 0.07);
   padding-top: 4px;
 }
 
@@ -20,14 +20,14 @@
 }
 
 .fuel-matrix thead th {
-  font-size: 9px;
+  font-size: var(--font-label);
   letter-spacing: 0.06em;
-  color: #6b6b80;
-  font-weight: 400;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-dim);
+  font-weight: normal;
+  border-bottom: 1px solid rgba(var(--color-white-rgb), 0.1);
 }
 
 .fuel-matrix-label {
   text-align: left;
-  color: #9090a0;
+  color: var(--color-text-muted);
 }

@@ -11,8 +11,8 @@ body,
 body {
   margin: 0;
   font-family: 'Segoe UI', system-ui, sans-serif;
-  background: #1b1d21;
-  color: #eee;
+  background: var(--colors-background);
+  color: var(--color-text-light);
 }
 
 /* Footer (edit button + version) stays pinned to the window bottom, only
@@ -36,12 +36,12 @@ body {
   justify-content: space-between;
   gap: 10px;
   padding: 10px 20px;
-  border-top: 1px solid #2a2d33;
+  border-top: 1px solid var(--color-surface);
 }
 
 .app-version {
   font-size: 11px;
-  color: #666;
+  color: var(--color-text-dim);
 }
 
 .update-banner {
@@ -52,24 +52,24 @@ body {
   padding: 8px 12px;
   margin-bottom: 16px;
   border-radius: 6px;
-  background: #2b3a55;
-  border: 1px solid #3a5580;
-  font-size: 13px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-body-lg);
 }
 
 .update-banner-link {
   background: none;
-  border: 1px solid #5c93ff;
-  color: #5c93ff;
+  border: 1px solid var(--color-primary-hover);
+  color: var(--color-primary-hover);
   padding: 3px 10px;
-  border-radius: 4px;
-  font-size: 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--font-body);
   cursor: pointer;
   white-space: nowrap;
 }
 
 .update-banner-link:hover {
-  background: #3a7dff;
+  background: var(--color-primary);
   color: white;
 }
 
@@ -81,34 +81,30 @@ header {
 }
 
 h1 {
-  font-size: 18px;
+  font-size: var(--font-header);
   margin: 0;
 }
 
 .status {
-  font-size: 13px;
+  font-size: var(--font-body-lg);
   padding: 4px 10px;
   border-radius: 12px;
-  background: #2a2d33;
+  background: var(--color-surface);
 }
 
 .status.ok {
-  color: #58d68d;
+  color: var(--color-success-soft);
 }
 
 .status.off {
-  color: #999;
-}
-
-section {
-  margin-bottom: 24px;
+  color: var(--color-text-gray);
 }
 
 h2 {
-  font-size: 14px;
+  font-size: var(--font-md);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #999;
+  color: var(--color-text-gray);
   margin-bottom: 8px;
 }
 
@@ -120,13 +116,18 @@ h2 {
 
 .overlay-list li {
   padding: 8px 0;
-  border-bottom: 1px solid #2a2d33;
+  border-bottom: 1px solid var(--color-surface);
 }
 
 .overlay-item-header {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+}
+
+.overlay-item-header .checkbox-slide__label {
+  font-size: var(--font-md);
+  font-weight: bold;
 }
 
 .overlay-spacer {
@@ -152,8 +153,8 @@ h2 {
   padding: 0;
   margin: 0;
   background: none;
-  color: #999;
-  font-size: 11px;
+  color: var(--color-text-gray);
+  font-size: var(--font-body-sm);
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -163,8 +164,8 @@ h2 {
 
 .info-hint-btn:hover {
   background: none;
-  border-color: #999;
-  color: #eee;
+  border-color: var(--color-text-gray);
+  color: var(--color-text-light);
 }
 
 .info-hint-popup {
@@ -182,12 +183,12 @@ h2 {
   resize: none;
   overflow: hidden;
   padding: 8px 10px;
-  border: 1px solid #3a3d44;
-  border-radius: 6px;
-  background: #2a2d33;
-  color: #ccc;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--font-body);
   font-weight: normal;
   line-height: 1.4;
   pointer-events: none;
@@ -201,9 +202,9 @@ h2 {
 }
 
 .overlay-url-btn {
-  font-size: 12px;
+  font-size: var(--font-body);
   vertical-align: top;
-  color: #eee;
+  color: var(--color-text-light);
   background: none;
   border: none;
   padding: 0;
@@ -211,7 +212,7 @@ h2 {
   cursor: pointer;
 }
 
-.overlay-settings {
+.overlay-settings-root {
   margin: 8px 0 4px 26px;
   display: flex;
   flex-direction: column;
@@ -219,45 +220,56 @@ h2 {
   gap: 6px;
 }
 
-.setting-row {
+.overlay-setting {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
-  color: #bbb;
+  font-size: var(--font-body);
+  color: var(--color-text-light);
   cursor: default;
 }
 
-.setting-row input[type='number'] {
-  width: 60px;
-  background: #2a2d33;
-  border: 1px solid #3a3d44;
-  border-radius: 4px;
-  color: #eee;
-  padding: 3px 6px;
-  font-size: 12px;
+.overlay-setting-label {
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.unit-suffix {
-  color: #777;
+.overlay-setting input[type='number'] {
+  width: 60px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-light);
+  padding: 3px 6px;
+  font-size: var(--font-body);
+}
+
+.multi-settings-row {
+  width: 100%;
+  min-width: fit-content;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 24px;
 }
 
 button {
-  background: #3a7dff;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-text-light);
   border: none;
   padding: 10px 16px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-md);
 }
 
 button:hover {
-  background: #5c93ff;
+  background: var(--color-primary-hover);
 }
 
 .hint {
-  font-size: 12px;
-  color: #999;
+  font-size: var(--font-body);
+  color: var(--color-text-gray);
   margin-top: 8px;
 }

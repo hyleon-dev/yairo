@@ -34,8 +34,8 @@ an already-squeezed size that's too small instead of actually needed one. */
 /* Fully click-through during live operation (controlled by Electron via
    setIgnoreMouseEvents). Additionally draggable via OS drag in edit mode. */
 .overlay-root.edit-mode {
-  outline: 2px dashed #3a7dff;
-  background: rgba(58, 125, 255, 0.08);
+  outline: 2px dashed var(--color-primary);
+  background: rgba(var(--color-primary-rgb), 0.08);
   -webkit-app-region: drag;
   cursor: move;
 }
@@ -44,7 +44,7 @@ an already-squeezed size that's too small instead of actually needed one. */
   position: absolute;
   top: 4px;
   left: 6px;
-  font-size: 10px;
-  color: #3a7dff;
+  font-size: var(--font-caption);
+  color: var(--color-primary);
   -webkit-app-region: no-drag;
 }
