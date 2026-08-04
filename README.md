@@ -86,6 +86,9 @@ TODO document
   - White flag
   - Green flag
 
+### 🎨 Custom accent color
+TODO document
+
 ## Notes
 
 ### ⚠️ Stint Laps
