@@ -48,20 +48,31 @@ No cloud, everything free, everything open-source.
 - Gear
 
 ### ⛽ Fuel
-TODO document
+<img src="media/fuel.png" width="225" alt="Fuel"/>
+
+- Current fuel
+- Estimated laps remaining
+- Fuel matrix (Last and average last 5 laps):
+  - Fuel consumption
+  - Lap to pit
+  - Fuel left at pitting
 
 ### ⏱️ Lap Timer
 <img src="media/lap-timer.png" width="225" alt="Lap timer"/>
 
 - Current lap
 - Current lap time
+- Delta to best lap or target lap (if set)
 - Last lap time
 - Best lap time
-- Estimated Laps
-- Incidents
+- Target lap time (only if set)
 
 ### ❌ Incidents
-TODO document
+<img src="media/incidents.png" width="225" alt="Incidents"/>
+
+- Incidents of current driver
+- Team incidents
+- Incident limit (next penalty at X incidents)
 
 ### 🗺️ Trackmap
 <img src="media/trackmap.png" width="550" alt="Trackmap"/>
@@ -80,6 +91,7 @@ TODO document
 - Tire temperature
 
 The data is only updated when you are pitting.
+Therefore, the overlay is only visible in the pit lane.
 
 ### 🏁 Flags
 <img src="media/flags.png" width="225" alt="Flags"/>
