@@ -18,7 +18,8 @@ export const messages = {
     // their name in the Control Center. Undefined = no hint yet, no button.
     overlayHints: {
       standings: stintLapsHint,
-      relative: stintLapsHint
+      relative: stintLapsHint,
+      tires: 'The Data is only updated when pitting.'
     } as Partial<Record<OverlayId, string>>,
     overlayUrlCopy: '🔗',
     overlayUrlCopied: '✅',

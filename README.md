@@ -79,6 +79,8 @@ TODO document
   - as graphic and number (can be hidden)
 - Tire temperature
 
+The data is only updated when you are pitting.
+
 ### 🏁 Flags
 <img src="media/flags.png" width="225" alt="Flags"/>
 
