@@ -5,6 +5,20 @@
   gap: 12px 20px;
 }
 
+/* Not on pit road: hide the panel background/border + gauges without
+   changing the grid's size, so it's still there to grab in edit mode
+   (same pattern as FlagsOverlay's "idle" state). visibility (not display)
+   keeps the layout intact while hiding the SVG gauges' own fill/stroke
+   colors too, without having to override each one individually. */
+.tires--idle {
+  background: transparent;
+  border-color: transparent;
+}
+
+.tires--idle .tire-cell {
+  visibility: hidden;
+}
+
 .tire-cell {
   display: flex;
   align-items: center;

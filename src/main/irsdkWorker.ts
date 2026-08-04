@@ -349,6 +349,7 @@ const NO_TELEMETRY: TelemetryData = {
   lapBestTime: -1,
   lapDeltaToBest: 0,
   lapDeltaToBestValid: false,
+  isOnPitRoad: false,
   incidentCount: 0,
   isSpectatingOther: false,
   fuelEstimate: null,
@@ -513,6 +514,7 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
       lapBestTime: raw.LapBestLapTime?.value?.[0] ?? -1,
       lapDeltaToBest: raw.LapDeltaToBestLap?.value?.[0] ?? 0,
       lapDeltaToBestValid: raw.LapDeltaToBestLap_OK?.value?.[0] ?? false,
+      isOnPitRoad: raw.OnPitRoad?.value?.[0] ?? false,
       incidentCount: raw.PlayerCarMyIncidentCount?.value?.[0] ?? 0,
       isSpectatingOther: false,
       fuelEstimate: buildFuelEstimate(fuelLevelL, lap),
@@ -559,6 +561,8 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
     // iRacing only computes that internally for our own car
     lapDeltaToBest: 0,
     lapDeltaToBestValid: false,
+    // Tires aren't meaningful while spectating anyway (see ZERO_TIRES below).
+    isOnPitRoad: false,
     // iRacing reports CurDriverIncidentCount as -1 for other drivers,
     // pass -1 through rather than normalizing to 0,
     // so UI can distinguish "unavailable" from "0 incidents".

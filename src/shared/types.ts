@@ -36,6 +36,11 @@ export interface TelemetryData {
   // while spectating. lapDeltaToBest is meaningless (usually just 0) when this
   // is false - UI should hide the delta rather than showing a fake "on pace".
   lapDeltaToBestValid: boolean
+  // Mirrors the SDK's OnPitRoad: true anywhere between the pit lane's entry
+  // and exit cones (driving through OR stopped in our stall), false on the
+  // racing surface, and always false while spectating (tires aren't
+  // meaningful for another car either way, see TiresData).
+  isOnPitRoad: boolean
   // true if this data is from the driver being watched
   // (spectating/not in our own car) rather than our own car.
   isSpectatingOther: boolean

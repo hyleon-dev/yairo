@@ -211,6 +211,9 @@ export class FakeIRacingSDK {
       TrackTempCrew: scalarVar(28, 'C'),
 
       IsOnTrack: scalarVar(true),
+      // Fake driver never pits, matches CarIdxTrackSurface's own
+      // "always on track" simplification below.
+      OnPitRoad: scalarVar(false),
       PlayerCarIdx: scalarVar(PLAYER_CAR_IDX),
       CamCarIdx: scalarVar(PLAYER_CAR_IDX),
       PlayerCarPosition: scalarVar(positions[PLAYER_CAR_IDX]),
