@@ -8,7 +8,8 @@ No cloud, everything free, everything open-source.
 ## Features
 
 ### 🥇 Standings
-![standings.png](media/standings.png)
+<img src="media/standings.png" width="550" alt="Standings"/>
+
 - Session info
 - Multi-Class support
 - Choose top cars to be displayed
@@ -24,7 +25,8 @@ No cloud, everything free, everything open-source.
   - Best lap
 
 ### ↔️ Relative
-![relative.png](media/relative.png)
+<img src="media/relative.png" width="550" alt="Relative"/>
+
 - Multi-Class support
 - Choose cars around you to be displayed
 - Car info:
@@ -37,7 +39,8 @@ No cloud, everything free, everything open-source.
   - Gap to you
 
 ### 📊 Telemetry
-![telemetry.png](media/telemetry.png)
+<img src="media/telemetry.png" width="550" alt="Telemetry"/>
+
 - Rev bar
 - RPM as number (can also be hidden)
 - Input bars for clutch, brake and throttle
@@ -48,7 +51,8 @@ No cloud, everything free, everything open-source.
 TODO document
 
 ### ⏱️ Lap Timer
-![lap-timer.png](media/lap-timer.png)
+<img src="media/lap-timer.png" width="225" alt="Lap timer"/>
+
 - Current lap
 - Current lap time
 - Last lap time
@@ -60,7 +64,8 @@ TODO document
 TODO document
 
 ### 🗺️ Trackmap
-![trackmap.png](media/trackmap.png)
+<img src="media/trackmap.png" width="550" alt="Trackmap"/>
+
 - Multi-Class support
 - Cars on track
 - Cars in pit
@@ -68,13 +73,15 @@ TODO document
 - Track direction
 
 ### 🛞 Tires
-![tires.png](media/tires.png)
+<img src="media/tires.png" width="225" alt="Tires"/>
+
 - Tire wear
   - as graphic and number (can be hidden)
 - Tire temperature
 
 ### 🏁 Flags
-![flags.png](media/flags.png)
+<img src="media/flags.png" width="225" alt="Flags"/>
+
 - Flags:
   - Black flag
   - Meatball flag
@@ -87,7 +94,25 @@ TODO document
   - Green flag
 
 ### 🎨 Custom accent color
-TODO document
+<img src="media/control-center__accent-color-picker.png" width="550" alt="Accent color picker"/>
+
+- Choose color by
+  - picker
+  - hex value
+  - RGB value
+- Reset to default orange
+
+### 🔓 Accessibility
+
+#### **Color correction filter**
+
+- Available filter:
+  - Protanopia
+  - Deuteranopia
+  - Tritanopia
+- Affects control center and overlay-windows, using the URL (e.g. in OBS) does not apply the filter!
+
+As I'm not colorblind and I don't know a colorblind person, I can't test this feature properly and relly on feedback. I would appreciate any feedback on this feature!
 
 ## Notes
 
