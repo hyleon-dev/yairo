@@ -9,6 +9,7 @@ import {
   type WeekendInfo
 } from 'irsdk-node'
 import { FakeIRacingSDK } from './irsdkFake'
+import { flairNameToIsoCode } from './nationFlags'
 import type {
   DriverLapCompletedEvent,
   DriverStanding,
@@ -577,6 +578,10 @@ function sdkColorHex(raw: number | undefined): string {
   return '#' + ((raw ?? 0) & 0xffffff).toString(16).padStart(6, '0')
 }
 
+function driverFlagIsoCode(driver: unknown): string | null {
+  return flairNameToIsoCode((driver as { FlairName?: string } | undefined)?.FlairName)
+}
+
 function trackLengthMeters(weekendInfo: WeekendInfo | null): number {
   const match = (weekendInfo?.TrackLength ?? '').match(/([\d.]+)\s*(km|mi)/i)
   if (!match) return 0
@@ -794,7 +799,8 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
       licString: driver?.LicString ?? '',
       licColorHex: sdkColorHex(driver?.LicColor),
       classColorHex: sdkColorHex(driver?.CarClassColor),
-      avgLapTimeSec: avgLapTimeSec(driver?.UserID)
+      avgLapTimeSec: avgLapTimeSec(driver?.UserID),
+      flagIsoCode: driverFlagIsoCode(driver)
     }
   })
 
@@ -894,6 +900,7 @@ interface StandingsRow {
   licColorHex: string
   classColorHex: string
   avgLapTimeSec: number
+  flagIsoCode: string | null
 }
 
 // iRacing's official Strength-of-Field formula
@@ -958,7 +965,8 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
     licString: row.licString,
     licColorHex: row.licColorHex,
     classColorHex: row.classColorHex,
-    avgLapTimeSec: row.avgLapTimeSec
+    avgLapTimeSec: row.avgLapTimeSec,
+    flagIsoCode: row.flagIsoCode
   }))
 }
 
@@ -991,7 +999,8 @@ function buildTimeRanking(rows: StandingsRow[]): DriverStanding[] {
     licString: row.licString,
     licColorHex: row.licColorHex,
     classColorHex: row.classColorHex,
-    avgLapTimeSec: row.avgLapTimeSec
+    avgLapTimeSec: row.avgLapTimeSec,
+    flagIsoCode: row.flagIsoCode
   }))
 }
 

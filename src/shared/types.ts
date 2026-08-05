@@ -180,6 +180,10 @@ export interface DriverStanding {
   // keyed by Driver.UserID so a team driver swap doesn't mix drivers' laps.
   // -1 if this driver hasn't completed a lap yet.
   avgLapTimeSec: number
+  // Resolved from the driver's iRacing "FlairName" (nationality) via
+  // flairNameToIsoCode() in nationFlags.ts - a flag-icons ISO code (e.g. "de"),
+  // or null if there's no flag data or the name didn't resolve to one.
+  flagIsoCode: string | null
 }
 
 export interface StandingsClass {
@@ -397,6 +401,7 @@ export interface StandingsOverlaySettings
   driversAhead: number // How many drivers ahead of the player are shown.
   driversBehind: number // How many drivers behind the player are shown.
   topCount: number // These leading drivers (P1, P2, ...) are always shown.
+  showNationFlag: boolean // Shows the driver's country flag.
 }
 
 export interface TiresOverlaySettings extends BaseOverlaySettings {
@@ -455,7 +460,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     showSafetyRating: true,
     showStint: true,
     showAvgLapTime: true,
-    showBestLapTime: true
+    showBestLapTime: true,
+    showNationFlag: false
   },
   relative: {
     scale: 1,

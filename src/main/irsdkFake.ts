@@ -40,6 +40,28 @@ const DRIVER_NAMES = [
   'Mia Schulz'
 ]
 
+// Matches DRIVER_NAMES by index - for testing the Standings "nation flag"
+// setting (see nationFlags.ts). '' for one driver on purpose, so the
+// "no flag data" fallback (empty spot) is also visible in dev mode.
+const DRIVER_FLAIR_NAMES = [
+  'Vietnam',
+  'Germany',
+  'Italy',
+  'Sweden',
+  'Ireland',
+  'Poland',
+  'Italy',
+  'Sweden',
+  'Portugal',
+  'Germany',
+  'Japan',
+  'France',
+  '',
+  'Czech Republic',
+  'United States of America',
+  'Germany'
+]
+
 // Cycles through the flags every FLAG_CYCLE_INTERVAL_SEC seconds.
 const FLAG_CYCLE = [
   0,
@@ -61,6 +83,7 @@ interface FakeDriverState {
   custId: number
   name: string
   carNumber: string
+  flairName: string
   iRating: number
   licString: string
   licColor: number
@@ -92,6 +115,7 @@ function createDrivers(): FakeDriverState[] {
       custId: 900000 + carIdx,
       name,
       carNumber: String(carIdx + 1),
+      flairName: DRIVER_FLAIR_NAMES[carIdx] ?? '',
       iRating,
       licString: licInfo.licString,
       licColor: licInfo.licColor,
@@ -285,11 +309,14 @@ export class FakeIRacingSDK {
   }
 
   getDriverInfo(): DriverInfo | null {
-    const drivers: Partial<Driver>[] = this.drivers.map((d) => ({
+    // FlairName isn't in @irsdk-node/types' Driver interface (see
+    // nationFlags.ts) - widened here so the fake SDK can still supply it.
+    const drivers: (Partial<Driver> & { FlairName?: string })[] = this.drivers.map((d) => ({
       CarIdx: d.carIdx,
       UserName: d.name,
       UserID: d.custId,
       CarNumber: d.carNumber,
+      FlairName: d.flairName,
       CarClassID: 1,
       CarClassColor: 0x8e44ad,
       CarID: 1,

@@ -165,6 +165,11 @@ function StandingsSettings({
           <AvgLapTimeSettings settings={settings} onChange={onChange}/>
           <BestLapTimeSettings settings={settings} onChange={onChange}/>
         </span>
+        <ToggleSwitch
+            checked={settings.showNationFlag}
+            onChange={(checked) => onChange({showNationFlag: checked})}
+            label={m.showNationFlag}
+        />
       </>
   )
 }

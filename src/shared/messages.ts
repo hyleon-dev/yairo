@@ -93,6 +93,7 @@ export const messages = {
     showStint: 'Show stint laps',
     showAvgLapTime: 'Show average lap time',
     showBestLapTime: 'Show best lap time',
+    showNationFlag: 'Show country flag',
     showWearPct: 'Show wear %',
     showRpmNumber: 'Show RPM number',
     showLabel: 'Show flag name',

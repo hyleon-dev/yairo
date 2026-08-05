@@ -2,6 +2,7 @@ import { Fragment } from 'react'
 import type { DriverStanding, StandingsClass, StandingsData, StandingsOverlaySettings } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import { classPositionGradient, licBadgeStyle } from '../sdkColors'
+import 'flag-icons/css/flag-icons.min.css'
 import './StandingsOverlay.css'
 
 const m = messages.standings
@@ -10,7 +11,9 @@ const m = messages.standings
 // grid column widths are computed instead of fixed in CSS, so the header and
 // data rows stay aligned regardless of combination.
 function gridTemplate(settings: StandingsOverlaySettings): string {
-  const cols = ['22px', '32px', '1fr']
+  const cols = ['22px', '32px']
+  if (settings.showNationFlag) cols.push('18px')
+  cols.push('1fr')
   if (settings.showIRating) cols.push('42px')
   if (settings.showSafetyRating) cols.push('54px')
   cols.push('32px')
@@ -77,6 +80,9 @@ function DriverRow({
         {driver.position}
       </span>
       <span className="col-num">#{driver.carNumber}</span>
+      {settings.showNationFlag && (
+        <span className="col-flag">{driver.flagIsoCode && <span className={`fi fi-${driver.flagIsoCode}`} />}</span>
+      )}
       <span className="col-name">{driver.driverName}</span>
       {settings.showIRating && <span className="col-irating">{driver.iRating > 0 ? driver.iRating : '-'}</span>}
       {settings.showSafetyRating && (
@@ -100,6 +106,7 @@ function ColumnLabels({ settings, template }: { settings: StandingsOverlaySettin
     <div className="col-labels" style={{ gridTemplateColumns: template }}>
       <span className="col-pos">{m.columnPosition}</span>
       <span className="col-num">{m.columnNumber}</span>
+      {settings.showNationFlag && <span className="col-flag" />}
       <span className="col-name">{m.columnDriver}</span>
       {settings.showIRating && <span className="col-irating">{m.columnIRating}</span>}
       {settings.showSafetyRating && <span className="col-sr">{m.columnSafetyRating}</span>}
@@ -155,6 +162,7 @@ function PlaceholderRow({
     <div className="driver-row driver-row--placeholder" style={{ gridTemplateColumns: template }}>
       <span className="col-pos">{position}</span>
       <span className="col-num">–</span>
+      {settings.showNationFlag && <span className="col-flag" />}
       <span className="col-name">–</span>
       {settings.showIRating && <span className="col-irating">–</span>}
       {settings.showSafetyRating && <span className="col-sr">–</span>}

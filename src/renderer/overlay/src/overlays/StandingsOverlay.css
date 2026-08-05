@@ -123,6 +123,17 @@
   color: var(--color-text-muted);
 }
 
+.col-flag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.col-flag .fi {
+  width: 16px;
+  line-height: 12px;
+  border-radius: 2px;
+}
+
 /* The gradient in col-pos should reach the left row edge and the full row
    height (not just within its own grid cell, which would be inset from the
    edge by the row padding), but must NOT bleed into col-num - a negative
