@@ -115,6 +115,17 @@ export interface FuelLapEstimate {
 export interface FuelEstimate {
   lastLap: FuelLapEstimate | null
   avgLast5: FuelLapEstimate | null
+  // L, amount that will be added at the next pit stop, straight from iRacing's
+  // own pit service menu (PitSvFuel telemetry var) - tracks "Auto Fill" live
+  // if the driver has that enabled, otherwise whatever amount is currently
+  // dialed in manually. null while not driving our own car.
+  nextPitFuelL: number | null
+  // How many more pit stops for fuel are needed before the session ends,
+  // assuming a full refill every stop (see estimateStopsRemaining() in
+  // irsdkWorker.ts for the underlying laps-to-go/consumption math). null
+  // without a consumption estimate yet, or if the session has no usable
+  // end (laps or time) to project against.
+  stopsRemaining: number | null
 }
 
 // Sent when iRacing isn't running / no session is active.

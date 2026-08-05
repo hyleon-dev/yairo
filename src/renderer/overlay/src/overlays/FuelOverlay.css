@@ -1,33 +1,40 @@
+.fuel-liters-remaining {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+
 .fuel-laps-remaining {
-  font-size: var(--font-body-sm);
+  font-size: var(--font-body-lg);
   color: var(--color-text-muted);
   margin-bottom: 8px;
 }
 
-.fuel-matrix {
-  border-collapse: collapse;
-  font-size: var(--font-caption);
-  color: var(--color-text-soft);
+.fuel-stats-row {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
   margin: 4px auto 0;
+  padding-top: 6px;
   border-top: 1px solid rgba(var(--color-white-rgb), 0.07);
-  padding-top: 4px;
 }
 
-.fuel-matrix th,
-.fuel-matrix td {
-  padding: 2px 6px;
-  text-align: right;
+.fuel-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.fuel-matrix thead th {
-  font-size: var(--font-label);
+.fuel-stat-label {
+  font-size: var(--font-body-sm);
   letter-spacing: 0.06em;
   color: var(--color-text-dim);
-  font-weight: normal;
-  border-bottom: 1px solid rgba(var(--color-white-rgb), 0.1);
+  margin-bottom: 2px;
 }
 
-.fuel-matrix-label {
-  text-align: left;
-  color: var(--color-text-muted);
+.fuel-stat-val {
+  font-size: var(--font-body-lg);
+  color: var(--color-text-soft);
 }

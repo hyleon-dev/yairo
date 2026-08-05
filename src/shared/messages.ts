@@ -117,14 +117,17 @@ export const messages = {
     clutch: 'Clutch'
   },
   fuel: {
-    unit: 'l Fuel',
-    lapsRemaining: (laps: number) => `~${laps.toFixed(1)} laps remaining`,
+    unit: 'l',
+    lapsRemaining: (laps: number) => `~${laps.toFixed(1)} LAPS`,
     rangeUnknown: 'Range: –',
-    columnConsumption: 'Consumption',
-    columnMargin: 'Remaining',
-    columnPitBy: 'Pit by',
-    rowLastLap: 'Last',
-    rowAvg5: 'Last 5'
+    statLastConsumption: 'LAST',
+    statLast5Consumption: 'LAST 5',
+    statPitBy: 'PIT BY',
+    statRemaining: '@END',
+    statNextFill: 'NEXT FILL',
+    statStopsLeft: 'STOPS',
+    predictionsLabel: 'Predictions',
+    consumptionLabel: 'Usage /Lap'
   },
   incidents: {
     driver: 'Driver',

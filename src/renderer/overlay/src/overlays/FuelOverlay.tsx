@@ -1,51 +1,69 @@
-import type { FuelLapEstimate, TelemetryData } from '../../../../shared/types'
+import type { TelemetryData } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import '../overlay-utils.css'
 import './FuelOverlay.css'
 
 const m = messages.fuel
 
-function FuelMatrixRow({ label, estimate }: { label: string; estimate: FuelLapEstimate | null }) {
+function FuelStat({ label, value }: { label: string; value: string }) {
   return (
-    <tr>
-      <td className="fuel-matrix-label">{label}</td>
-      <td>{estimate ? `${estimate.consumptionPerLapL.toFixed(2)} l` : '–'}</td>
-      <td>{estimate ? `L${estimate.pitByLap}` : '–'}</td>
-      <td>{estimate ? `${estimate.marginLiters.toFixed(2)} l` : '–'}</td>
-    </tr>
+    <div className="fuel-stat">
+      <span className="fuel-stat-label">{label}</span>
+      <span className="fuel-stat-val">{value}</span>
+    </div>
   )
 }
 
 export function FuelOverlay({ data }: { data: TelemetryData }) {
-  const lapsRemaining = data.fuelEstimate?.lastLap?.lapsRemaining
+  const lastLap = data.fuelEstimate?.lastLap ?? null
+  const avgLast5 = data.fuelEstimate?.avgLast5 ?? null
+  const nextPitFuelL = data.fuelEstimate?.nextPitFuelL ?? null
+  const stopsRemaining = data.fuelEstimate?.stopsRemaining ?? null
 
   return (
     <div className="card fuel">
-      <div className="big-number small">{data.fuelLevelL.toFixed(2)}</div>
-      <div className="unit">{m.unit}</div>
+      <div className="fuel-liters-remaining">
+        <div className="big-number small">{data.fuelLevelL.toFixed(2)}</div>
+        <div className="unit">{m.unit}</div>
+      </div>
 
       {
       // Range estimate based on the last completed lap.
       // null until a full lap with known consumption has been driven.
       }
       <div className="fuel-laps-remaining">
-        {lapsRemaining !== undefined ? m.lapsRemaining(lapsRemaining) : m.rangeUnknown}
+        {lastLap ? m.lapsRemaining(lastLap.lapsRemaining) : m.rangeUnknown}
       </div>
 
-      <table className="fuel-matrix">
-        <thead>
-          <tr>
-            <th></th>
-            <th>{m.columnConsumption}</th>
-            <th>{m.columnPitBy}</th>
-            <th>{m.columnMargin}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <FuelMatrixRow label={m.rowLastLap} estimate={data.fuelEstimate?.lastLap ?? null} />
-          <FuelMatrixRow label={m.rowAvg5} estimate={data.fuelEstimate?.avgLast5 ?? null} />
-        </tbody>
-      </table>
+      <div className="fuel-stats-row" style={{ flexDirection: 'column', gap: '0' }}>
+        <label style={{ fontSize: 'var(--font-md)' }}>
+          {m.consumptionLabel}
+        </label>
+        <div className="fuel-stats-row" style={{ border: '0', paddingTop: '0' }}>
+          <FuelStat
+              label={m.statLastConsumption}
+              value={lastLap ? `${lastLap.consumptionPerLapL.toFixed(2)} l` : '–'}
+          />
+          <FuelStat
+              label={m.statLast5Consumption}
+              value={avgLast5 ? `${avgLast5.consumptionPerLapL.toFixed(2)} l` : '–'}
+          />
+        </div>
+      </div>
+
+      <div className="fuel-stats-row" style={{ flexDirection: 'column', gap: '0' }}>
+        <label style={{ fontSize: 'var(--font-md)' }}>
+          {m.predictionsLabel}
+        </label>
+        <div className="fuel-stats-row" style={{ border: '0', paddingTop: '0' }}>
+          <FuelStat label={m.statPitBy} value={lastLap ? `L${lastLap.pitByLap}` : '–'} />
+          <FuelStat label={m.statRemaining} value={lastLap ? `${lastLap.marginLiters.toFixed(2)} l` : '–'} />
+        </div>
+        <div className="fuel-stats-row" style={{ border: '0', paddingTop: '4px' }}>
+          <FuelStat label={m.statNextFill} value={nextPitFuelL !== null ? `${nextPitFuelL.toFixed(2)} l` : '–'} />
+          <FuelStat label={m.statStopsLeft} value={stopsRemaining !== null ? `${stopsRemaining}` : '–'} />
+        </div>
+      </div>
     </div>
   )
 }

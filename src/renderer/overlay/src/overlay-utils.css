@@ -20,7 +20,7 @@
 }
 
 .unit {
-  font-size: var(--font-body);
+  font-size: var(--font-body-lg);
   color: var(--color-text-muted);
   margin-bottom: 6px;
 }

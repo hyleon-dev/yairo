@@ -54,10 +54,14 @@ No cloud, everything free, everything open-source.
 
 - Current fuel
 - Estimated laps remaining
-- Fuel matrix (Last and average last 5 laps):
-  - Fuel consumption
+- Fuel consumption per lap
+  - Last lap
+  - Average last 5 laps
+- Predictions
   - Lap to pit
   - Fuel left at pitting
+  - Fuel to fill
+  - Stops until end of race
 
 ### ⏱️ Lap Timer
 <img src="media/lap-timer.png" width="225" alt="Lap timer"/>

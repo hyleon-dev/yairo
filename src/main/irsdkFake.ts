@@ -118,6 +118,7 @@ export class FakeIRacingSDK {
   private simTimeSec = 0
   private lastTickAt = Date.now()
   private fuelLevel = 65 // L, typical GT3 tank
+  private readonly fuelTankMaxL = 65
   private tireWearPct = 100 // simplified: same wear across all 3 zones per corner
 
   startSDK(): boolean {
@@ -226,6 +227,9 @@ export class FakeIRacingSDK {
       Brake: scalarVar(accelerating ? 0 : 0.5),
       Clutch: scalarVar(clutchEngaged),
       FuelLevel: scalarVar(this.fuelLevel),
+      // Fixed "top off to full" plan, so the Fuel overlay's next-fill display
+      // has a non-empty value to show in dev mode.
+      PitSvFuel: scalarVar(Math.max(0, this.fuelTankMaxL - this.fuelLevel)),
       Lap: scalarVar(player.lapsCompleted + 1),
       LapDistPct: scalarVar(player.lapDistPct),
       LapCurrentLapTime: scalarVar(currentLapTime),
@@ -307,6 +311,8 @@ export class FakeIRacingSDK {
       DriverCarSLShiftRPM: RPM_SL_SHIFT,
       DriverCarSLLastRPM: RPM_SL_LAST,
       DriverCarSLBlinkRPM: RPM_SL_BLINK,
+      DriverCarFuelMaxLtr: this.fuelTankMaxL,
+      DriverCarMaxFuelPct: 0, // unrestricted, matches "no event fuel-load rule"
       Drivers: drivers
     } as unknown as DriverInfo
   }

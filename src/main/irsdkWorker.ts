@@ -423,7 +423,84 @@ function buildFuelLapEstimate(
   }
 }
 
-function buildFuelEstimate(fuelLevelL: number, currentLap: number): FuelEstimate | null {
+// Sanity ceiling for "this dimension doesn't actually limit the session"
+// (e.g. laps remaining in a purely time-limited race). Not verified against
+// iRacing's exact sentinel value for that case, just a defensive cap so an
+// unlimited dimension can't be mistaken for a real number of laps to go.
+const UNLIMITED_LAPS_THRESHOLD = 100_000
+
+// Real-world seconds left before the session ends, covering both lap- and
+// time-limited races. SessionLapsRemainEx is tied to the race LEADER
+// crossing the line - not to our own lap count, so if we're a lap (or more)
+// behind, that many "laps to go" corresponds to MORE real seconds than the
+// same number of our own laps would take. Converted via the leader's own
+// last lap time (not ours) before comparing against SessionTimeRemain
+// (already real seconds) - whichever ends the session sooner wins.
+function estimateSecondsRemaining(raw: TelemetryVarList): number {
+  const lapsByCount = raw.SessionLapsRemainEx?.value?.[0] ?? Number.POSITIVE_INFINITY
+  const timeRemainSec = raw.SessionTimeRemain?.value?.[0] ?? Number.POSITIVE_INFINITY
+
+  const leaderCarIdx = raw.CarIdxPosition?.value?.findIndex((p) => p === 1) ?? -1
+  const leaderLapTimeSec = leaderCarIdx >= 0
+    ? raw.CarIdxLastLapTime?.value?.[leaderCarIdx] ?? raw.CarIdxBestLapTime?.value?.[leaderCarIdx] ?? -1
+    : -1
+  const secondsByLaps = Number.isFinite(lapsByCount) && leaderLapTimeSec > 0
+    ? lapsByCount * leaderLapTimeSec
+    : Number.POSITIVE_INFINITY
+
+  return Math.min(secondsByLaps, timeRemainSec)
+}
+
+// Laps WE will still drive before the session ends - real seconds remaining
+// (see estimateSecondsRemaining()) converted via OUR OWN pace, since that's
+// what determines how many more laps we personally get to complete (and
+// therefore how much fuel we still need). null without a usable pace, or if
+// nothing actually looks like a real limit (e.g. an open-ended practice
+// session).
+function estimateLapsRemaining(raw: TelemetryVarList, lastLapTimeSec: number): number | null {
+  if (lastLapTimeSec <= 0) return null
+
+  const secondsRemaining = estimateSecondsRemaining(raw)
+  if (!Number.isFinite(secondsRemaining)) return null
+
+  const lapsRemaining = secondsRemaining / lastLapTimeSec
+  if (lapsRemaining >= UNLIMITED_LAPS_THRESHOLD) return null
+  return lapsRemaining
+}
+
+// Additional pit stops needed for fuel before the session ends, assuming a
+// full refill every stop - the simplest strategy, and the only one possible
+// without knowing the driver's actual planned fill amounts ahead of time.
+function estimateStopsRemaining(
+  raw: TelemetryVarList,
+  driver: DriverInfo | null,
+  consumptionPerLapL: number,
+  fuelLevelL: number,
+  lastLapTimeSec: number
+): number | null {
+  if (consumptionPerLapL <= 0) return null
+
+  const lapsRemaining = estimateLapsRemaining(raw, lastLapTimeSec)
+  if (lapsRemaining === null) return null
+
+  // DriverCarMaxFuelPct despite its "%" unit label is a 0..1 fraction (like
+  // FuelLevelPct, see irsdkFake.ts) - 0 means the event doesn't restrict fuel
+  // load below the car's physical tank size.
+  const tankMaxL = driver?.DriverCarFuelMaxLtr ?? 0
+  const maxFuelPct = driver?.DriverCarMaxFuelPct ?? 0
+  const tankCapacityL = maxFuelPct > 0 ? tankMaxL * maxFuelPct : tankMaxL
+  if (tankCapacityL <= 0) return null
+
+  const fuelNeededL = lapsRemaining * consumptionPerLapL - fuelLevelL
+  return Math.max(0, Math.ceil(fuelNeededL / tankCapacityL))
+}
+
+function buildFuelEstimate(
+  raw: TelemetryVarList,
+  driver: DriverInfo | null,
+  fuelLevelL: number,
+  currentLap: number
+): FuelEstimate | null {
   if (fuelPerLapHistory.length === 0) return null
 
   // Fuel level as of this lap's start (tracked in trackFuelConsumption()) -
@@ -433,10 +510,21 @@ function buildFuelEstimate(fuelLevelL: number, currentLap: number): FuelEstimate
 
   const lastLapConsumption = fuelPerLapHistory[fuelPerLapHistory.length - 1]
   const avgConsumption = fuelPerLapHistory.reduce((sum, v) => sum + v, 0) / fuelPerLapHistory.length
+  // No dedicated "current pace" telemetry var - last completed lap is the
+  // closest estimate, falling back to the best lap early in a run/out-lap.
+  const lastLapTimeSec = raw.LapLastLapTime?.value?.[0] ?? raw.LapBestLapTime?.value?.[0] ?? -1
 
   return {
     lastLap: buildFuelLapEstimate(lastLapConsumption, fuelLevelL, lapStartFuelLevelL, currentLap),
-    avgLast5: buildFuelLapEstimate(avgConsumption, fuelLevelL, lapStartFuelLevelL, currentLap)
+    avgLast5: buildFuelLapEstimate(avgConsumption, fuelLevelL, lapStartFuelLevelL, currentLap),
+    // Own car only, straight passthrough of iRacing's own pit service menu
+    // value - live-tracks "Auto Fill" if the driver enabled it there,
+    // otherwise whatever amount is currently dialed in manually.
+    nextPitFuelL: raw.PitSvFuel?.value?.[0] ?? null,
+    // Uses the average-of-5 consumption rather than last-lap: this projects
+    // across many remaining laps, so a stable rate matters more here than
+    // reacting fast to a single outlier lap.
+    stopsRemaining: estimateStopsRemaining(raw, driver, avgConsumption, fuelLevelL, lastLapTimeSec)
   }
 }
 
@@ -517,7 +605,7 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
       isOnPitRoad: raw.OnPitRoad?.value?.[0] ?? false,
       incidentCount: raw.PlayerCarMyIncidentCount?.value?.[0] ?? 0,
       isSpectatingOther: false,
-      fuelEstimate: buildFuelEstimate(fuelLevelL, lap),
+      fuelEstimate: buildFuelEstimate(raw, driver, fuelLevelL, lap),
       currentDriverIncidentCount,
       teamIncidentCount,
       incidentLimit,
