@@ -33,12 +33,13 @@ jobs:
       - name: Re-fetch tags as real tag objects
         run: git fetch --tags --force origin
 
-      # Uses the annotated tag's message as the release title, if there is
-      # one (git tag -a v1.2.0 -m "My Title") - falls back to the tag name
-      # itself for plain/lightweight tags. Important: a lightweight tag ref
-      # points directly at the commit, so "%(contents)" on it would return
-      # that COMMIT's message, not "nothing" - cat-file -t distinguishes an
-      # actual tag object ("tag") from a lightweight tag ("commit") first.
+      # Uses "[<tag>] <annotated tag message>" as the release title, if there
+      # is a message (git tag -a v1.2.0 -m "My Title") - falls back to just
+      # the tag name for plain/lightweight tags (no redundant "[v1.2.0] v1.2.0").
+      # Important: a lightweight tag ref points directly at the commit, so
+      # "%(contents)" on it would return that COMMIT's message, not "nothing"
+      # - cat-file -t distinguishes an actual tag object ("tag") from a
+      # lightweight tag ("commit") first.
       - name: Extract release title from tag message
         id: tag
         shell: bash
@@ -46,7 +47,12 @@ jobs:
           if [ "$(git cat-file -t "$GITHUB_REF_NAME")" = "tag" ]; then
             subject=$(git tag -l --format='%(contents:subject)' "$GITHUB_REF_NAME")
           fi
-          echo "title=${subject:-$GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          if [ -n "$subject" ]; then
+            title="[$GITHUB_REF_NAME] $subject"
+          else
+            title="$GITHUB_REF_NAME"
+          fi
+          echo "title=$title" >> "$GITHUB_OUTPUT"
 
       # We commit directly to master (no PRs), so GitHub's own
       # generate_release_notes feature (PR-based) would come up empty -
@@ -62,9 +68,22 @@ jobs:
           previous_tag=$(git describe --tags --abbrev=0 "$GITHUB_REF_NAME^" 2>/dev/null || echo "")
           range="${previous_tag:+$previous_tag..}$GITHUB_REF_NAME"
 
+          # A commit only touching docs/repo-meta/tooling files (README + its
+          # screenshots, CI workflows, issue templates, .gitignore, TS/build
+          # config, dev-only scripts) is noise for a changelog, skip it.
+          # But only if EVERY changed file matches that, so a commit that 
+          # mixes in a real code/app change still gets listed.
+          is_docs_only_commit() {
+            local files
+            files=$(git diff-tree --no-commit-id --name-only -r "$1")
+            [ -n "$files" ] && ! grep -qvE '^(README\.md|media/|\.github/|\.gitignore$|tsconfig(\.\w+)?\.json$|electron\.vite\.config\.ts$|scripts/)' <<< "$files"
+          }
+
           added=() changed=() fixed=() removed=() other=()
 
-          while IFS= read -r subject || [ -n "$subject" ]; do
+          while IFS=$'\t' read -r hash subject || [ -n "$hash" ]; do
+            is_docs_only_commit "$hash" && continue
+
             # Some commit messages here already start with "- ", strip it
             # before inspecting the leading word.
             entry="${subject#- }"
@@ -76,7 +95,7 @@ jobs:
               removed) removed+=("$entry") ;;
               *) other+=("$entry") ;;
             esac
-          done < <(git log "$range" --reverse --no-merges --pretty=format:'%s')
+          done < <(git log "$range" --reverse --no-merges --pretty=format:'%H%x09%s')
 
           print_section() {
             local title="$1"
