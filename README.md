@@ -22,7 +22,8 @@ No cloud, everything free, everything open-source.
   - Lap of cars
   - [Stint laps¹](#-stint-laps)
   - Gap to leader
-  - Best lap
+  - Average lap time
+  - Best lap time
 
 ### ↔️ Relative
 <img src="media/relative.png" width="550" alt="Relative"/>
@@ -37,6 +38,7 @@ No cloud, everything free, everything open-source.
   - Lap of cars
   - [Stint laps¹](#-stint-laps)
   - Gap to you
+  - Average lap time
 
 ### 📊 Telemetry
 <img src="media/telemetry.png" width="550" alt="Telemetry"/>
