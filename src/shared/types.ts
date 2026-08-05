@@ -194,6 +194,11 @@ export interface StandingsData {
   trackName: string
   sessionType: string
   remainingTimeSecs: number
+  // Estimated laps to go for the race as a whole (leader-anchored, not tied
+  // to whoever is focused/spectating) - see estimateRaceLapsRemaining() in
+  // irsdkWorker.ts. null outside a session with a real end (laps or time),
+  // or before the leader has a known lap time yet.
+  lapsRemaining: number | null
   airTemp: number
   airTempUnit: string
   trackTemp: number

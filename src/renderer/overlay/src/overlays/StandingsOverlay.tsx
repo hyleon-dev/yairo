@@ -47,6 +47,10 @@ function fmtSessionTime(secs: number): string {
   return fmtTime(secs, 0, 2, 2, true)
 }
 
+function fmtLapsRemaining(laps: number | null): string {
+  return laps === null ? '–' : `${Math.ceil(laps)}`
+}
+
 function fmtGrip(grip: string): string {
 
   switch (grip.toLowerCase()) {
@@ -188,6 +192,7 @@ export function StandingsOverlay({ data, settings }: { data: StandingsData; sett
         <span className="header-title">{data.trackName}</span>
         <span className="header-session_type">{data.sessionType.charAt(0).toUpperCase()}</span>
         <span className="header-track"><span className="header-data-name">⏱</span> {fmtSessionTime(data.remainingTimeSecs)}</span>
+        {data.lapsRemaining != null && <span className="header-track"><span className="header-data-name">🏁</span> ~{fmtLapsRemaining(data.lapsRemaining)}L</span>}
         <span className="header-track"><span className="header-data-name">☁</span> {fmtTemp(data.airTemp, data.airTempUnit)}</span>
         <span className="header-track"><span className="header-data-name">🌡</span> {fmtTemp(data.trackTemp, data.trackTempUnit)}</span>
         <span className="header-track"><span className="header-data-name">{m.gripLabel}</span> {fmtGrip(data.grip)}</span>

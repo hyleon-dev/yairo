@@ -423,29 +423,56 @@ function buildFuelLapEstimate(
   }
 }
 
-// Sanity ceiling for "this dimension doesn't actually limit the session"
-// (e.g. laps remaining in a purely time-limited race). Not verified against
-// iRacing's exact sentinel value for that case, just a defensive cap so an
-// unlimited dimension can't be mistaken for a real number of laps to go.
+// Sanity ceilings for "this dimension doesn't actually limit the session"
+// (e.g. SessionLapsRemainEx in a purely time-limited race, or SessionTimeRemain
+// in a purely lap-limited one). Not verified against iRacing's exact sentinel
+// values for those cases, just defensive caps well beyond any real race.
 const UNLIMITED_LAPS_THRESHOLD = 100_000
+const UNLIMITED_SECONDS_THRESHOLD = 24 * 60 * 60 // 24h, longer than any real enduro
+
+// Whether the session has a real end at all (a lap or time limit) - checked
+// directly on the raw SDK fields, independent of whether we can currently
+// price that in as a lap count (the leader's pace might not be known yet
+// early in a session, that's a separate "unknown pace" case - see
+// leaderLapTimeSec()).
+function sessionHasRealEnd(raw: TelemetryVarList): boolean {
+  const lapsByCount = raw.SessionLapsRemainEx?.value?.[0] ?? Number.POSITIVE_INFINITY
+  const timeRemainSec = raw.SessionTimeRemain?.value?.[0] ?? Number.POSITIVE_INFINITY
+  return lapsByCount < UNLIMITED_LAPS_THRESHOLD || timeRemainSec < UNLIMITED_SECONDS_THRESHOLD
+}
+
+// Race leader's own pace - the one that actually determines when the
+// checkered flag comes out, regardless of whose estimate we're computing.
+// Falls back to their best lap early in a run/out-lap, and if they haven't
+// set ANY lap time yet (e.g. still on their out-lap), to CarClassEstLapTime -
+// the SDK's own estimated lap time for their car class, available from the
+// start of the session rather than only once a lap has actually been driven.
+// -1 only if there's no leader entry at all to look any of this up on.
+function leaderLapTimeSec(raw: TelemetryVarList, driverInfo: DriverInfo | null): number {
+  const leaderCarIdx = raw.CarIdxPosition?.value?.findIndex((p) => p === 1) ?? -1
+  if (leaderCarIdx < 0) return -1
+
+  const measured = raw.CarIdxLastLapTime?.value?.[leaderCarIdx] ?? raw.CarIdxBestLapTime?.value?.[leaderCarIdx] ?? -1
+  if (measured > 0) return measured
+
+  const estimate = driverInfo?.Drivers?.find((d) => d.CarIdx === leaderCarIdx)?.CarClassEstLapTime ?? -1
+  return estimate > 0 ? estimate : -1
+}
 
 // Real-world seconds left before the session ends, covering both lap- and
 // time-limited races. SessionLapsRemainEx is tied to the race LEADER
 // crossing the line - not to our own lap count, so if we're a lap (or more)
 // behind, that many "laps to go" corresponds to MORE real seconds than the
 // same number of our own laps would take. Converted via the leader's own
-// last lap time (not ours) before comparing against SessionTimeRemain
-// (already real seconds) - whichever ends the session sooner wins.
-function estimateSecondsRemaining(raw: TelemetryVarList): number {
+// pace (not ours) before comparing against SessionTimeRemain (already real
+// seconds) - whichever ends the session sooner wins.
+function estimateSecondsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo | null): number {
   const lapsByCount = raw.SessionLapsRemainEx?.value?.[0] ?? Number.POSITIVE_INFINITY
   const timeRemainSec = raw.SessionTimeRemain?.value?.[0] ?? Number.POSITIVE_INFINITY
 
-  const leaderCarIdx = raw.CarIdxPosition?.value?.findIndex((p) => p === 1) ?? -1
-  const leaderLapTimeSec = leaderCarIdx >= 0
-    ? raw.CarIdxLastLapTime?.value?.[leaderCarIdx] ?? raw.CarIdxBestLapTime?.value?.[leaderCarIdx] ?? -1
-    : -1
-  const secondsByLaps = Number.isFinite(lapsByCount) && leaderLapTimeSec > 0
-    ? lapsByCount * leaderLapTimeSec
+  const leaderPace = leaderLapTimeSec(raw, driverInfo)
+  const secondsByLaps = Number.isFinite(lapsByCount) && leaderPace > 0
+    ? lapsByCount * leaderPace
     : Number.POSITIVE_INFINITY
 
   return Math.min(secondsByLaps, timeRemainSec)
@@ -454,18 +481,34 @@ function estimateSecondsRemaining(raw: TelemetryVarList): number {
 // Laps WE will still drive before the session ends - real seconds remaining
 // (see estimateSecondsRemaining()) converted via OUR OWN pace, since that's
 // what determines how many more laps we personally get to complete (and
-// therefore how much fuel we still need). null without a usable pace, or if
-// nothing actually looks like a real limit (e.g. an open-ended practice
-// session).
-function estimateLapsRemaining(raw: TelemetryVarList, lastLapTimeSec: number): number | null {
-  if (lastLapTimeSec <= 0) return null
+// therefore how much fuel we still need). null if the session has no real
+// end (see sessionHasRealEnd()) or without a usable pace of our own yet.
+function estimateLapsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo | null, lastLapTimeSec: number): number | null {
+  if (lastLapTimeSec <= 0 || !sessionHasRealEnd(raw)) return null
 
-  const secondsRemaining = estimateSecondsRemaining(raw)
+  const secondsRemaining = estimateSecondsRemaining(raw, driverInfo)
   if (!Number.isFinite(secondsRemaining)) return null
 
-  const lapsRemaining = secondsRemaining / lastLapTimeSec
-  if (lapsRemaining >= UNLIMITED_LAPS_THRESHOLD) return null
-  return lapsRemaining
+  return secondsRemaining / lastLapTimeSec
+}
+
+// "Laps to go" for the race as a whole (leader-anchored) - e.g. for the
+// Standings header, shown regardless of who's focused/spectating. Same real
+// seconds remaining as estimateLapsRemaining(), just converted back via the
+// LEADER's own pace instead of a specific driver's. null if the session has
+// no real end at all (hide the display), NOT if the leader simply hasn't
+// set a real lap time yet (leaderLapTimeSec() covers that with its own
+// CarClassEstLapTime fallback instead).
+function estimateRaceLapsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo | null): number | null {
+  if (!sessionHasRealEnd(raw)) return null
+
+  const pace = leaderLapTimeSec(raw, driverInfo)
+  if (pace <= 0) return null
+
+  const secondsRemaining = estimateSecondsRemaining(raw, driverInfo)
+  if (!Number.isFinite(secondsRemaining)) return null
+
+  return secondsRemaining / pace
 }
 
 // Additional pit stops needed for fuel before the session ends, assuming a
@@ -480,7 +523,7 @@ function estimateStopsRemaining(
 ): number | null {
   if (consumptionPerLapL <= 0) return null
 
-  const lapsRemaining = estimateLapsRemaining(raw, lastLapTimeSec)
+  const lapsRemaining = estimateLapsRemaining(raw, driver, lastLapTimeSec)
   if (lapsRemaining === null) return null
 
   // DriverCarMaxFuelPct despite its "%" unit label is a 0..1 fraction (like
@@ -800,6 +843,7 @@ function computeClassPositions(raw: TelemetryVarList): Map<number, number> {
 function buildStandings(raw: TelemetryVarList): StandingsData {
   const weekendInfo = sdk.getWeekendInfo()
   const sessionInfo = sdk.getSessionInfo()
+  const driverInfo = sdk.getDriverInfo()
 
   const rankedClasses = computeRankedClasses(raw)
   const hasPlayerAnywhere = rankedClasses.some((cls) => cls.drivers.some((d) => d.isPlayer))
@@ -821,6 +865,7 @@ function buildStandings(raw: TelemetryVarList): StandingsData {
     trackName: weekendInfo?.TrackDisplayName ?? '',
     sessionType: sessionType,
     remainingTimeSecs: sessionTimeRemain,
+    lapsRemaining: estimateRaceLapsRemaining(raw, driverInfo),
     airTemp: airTemp,
     airTempUnit: airTempUnit,
     trackTemp: trackTemp,

@@ -64,6 +64,7 @@ const EMPTY_STANDINGS: StandingsData = {
   trackName: '-',
   sessionType: '-',
   remainingTimeSecs: 0,
+  lapsRemaining: null,
   airTemp: 0,
   airTempUnit: 'C',
   trackTemp: 0,
