@@ -184,6 +184,9 @@ export interface DriverStanding {
   // flairNameToIsoCode() in nationFlags.ts - a flag-icons ISO code (e.g. "de"),
   // or null if there's no flag data or the name didn't resolve to one.
   flagIsoCode: string | null
+  // Resolved from the car's CarScreenName.
+  // Null if no known manufacturer keyword matched.
+  manufacturerLogoKey: string | null
 }
 
 export interface StandingsClass {
@@ -402,6 +405,7 @@ export interface StandingsOverlaySettings
   driversBehind: number // How many drivers behind the player are shown.
   topCount: number // These leading drivers (P1, P2, ...) are always shown.
   showNationFlag: boolean // Shows the driver's country flag.
+  showManufacturerLogo: boolean // Shows the car's manufacturer logo.
 }
 
 export interface TiresOverlaySettings extends BaseOverlaySettings {
@@ -461,7 +465,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     showStint: true,
     showAvgLapTime: true,
     showBestLapTime: true,
-    showNationFlag: false
+    showNationFlag: false,
+    showManufacturerLogo: false
   },
   relative: {
     scale: 1,

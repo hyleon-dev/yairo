@@ -33,6 +33,7 @@ yarn-error.log*
 
 # Project-specific
 resources/trackmap-assets/
+resources/manufacturer-logos/
 sdk-dump.json
 media/*/
 

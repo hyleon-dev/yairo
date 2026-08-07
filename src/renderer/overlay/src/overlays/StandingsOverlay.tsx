@@ -2,6 +2,7 @@ import { Fragment } from 'react'
 import type { DriverStanding, StandingsClass, StandingsData, StandingsOverlaySettings } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import { classPositionGradient, licBadgeStyle } from '../sdkColors'
+import { manufacturerLogoDataUri } from '../manufacturerLogos/registry'
 import 'flag-icons/css/flag-icons.min.css'
 import './StandingsOverlay.css'
 
@@ -13,6 +14,7 @@ const m = messages.standings
 function gridTemplate(settings: StandingsOverlaySettings): string {
   const cols = ['22px', '32px']
   if (settings.showNationFlag) cols.push('18px')
+  if (settings.showManufacturerLogo) cols.push('24px')
   cols.push('1fr')
   if (settings.showIRating) cols.push('42px')
   if (settings.showSafetyRating) cols.push('54px')
@@ -62,6 +64,11 @@ function fmtGrip(grip: string): string {
   }
 }
 
+function ManufacturerLogo({ logoKey }: { logoKey: string | null }) {
+  const src = manufacturerLogoDataUri(logoKey)
+  return <span className="col-manufacturer">{src && <img src={src} alt="" />}</span>
+}
+
 function DriverRow({
   driver,
   settings,
@@ -83,6 +90,7 @@ function DriverRow({
       {settings.showNationFlag && (
         <span className="col-flag">{driver.flagIsoCode && <span className={`fi fi-${driver.flagIsoCode}`} />}</span>
       )}
+      {settings.showManufacturerLogo && <ManufacturerLogo logoKey={driver.manufacturerLogoKey} />}
       <span className="col-name">{driver.driverName}</span>
       {settings.showIRating && <span className="col-irating">{driver.iRating > 0 ? driver.iRating : '-'}</span>}
       {settings.showSafetyRating && (
@@ -107,6 +115,7 @@ function ColumnLabels({ settings, template }: { settings: StandingsOverlaySettin
       <span className="col-pos">{m.columnPosition}</span>
       <span className="col-num">{m.columnNumber}</span>
       {settings.showNationFlag && <span className="col-flag" />}
+      {settings.showManufacturerLogo && <span className="col-manufacturer" />}
       <span className="col-name">{m.columnDriver}</span>
       {settings.showIRating && <span className="col-irating">{m.columnIRating}</span>}
       {settings.showSafetyRating && <span className="col-sr">{m.columnSafetyRating}</span>}
@@ -163,6 +172,7 @@ function PlaceholderRow({
       <span className="col-pos">{position}</span>
       <span className="col-num">–</span>
       {settings.showNationFlag && <span className="col-flag" />}
+      {settings.showManufacturerLogo && <span className="col-manufacturer" />}
       <span className="col-name">–</span>
       {settings.showIRating && <span className="col-irating">–</span>}
       {settings.showSafetyRating && <span className="col-sr">–</span>}

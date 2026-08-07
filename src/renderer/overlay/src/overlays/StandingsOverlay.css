@@ -134,6 +134,17 @@
   border-radius: 2px;
 }
 
+.col-manufacturer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.col-manufacturer img {
+  max-width: 20px;
+  max-height: 14px;
+  object-fit: contain;
+}
+
 /* The gradient in col-pos should reach the left row edge and the full row
    height (not just within its own grid cell, which would be inset from the
    edge by the row padding), but must NOT bleed into col-num - a negative

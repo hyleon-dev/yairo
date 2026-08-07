@@ -62,6 +62,27 @@ const DRIVER_FLAIR_NAMES = [
   'Germany'
 ]
 
+// Matches DRIVER_NAMES by index
+// For testing the Standings "manufacturer logo" setting
+const DRIVER_CAR_SCREEN_NAMES = [
+  'Ferrari 296 GT3',
+  'BMW M4 GT3',
+  'Mercedes-AMG GT3',
+  'Ford Mustang GT3',
+  'Porsche 911 GT3 R (992)',
+  'Audi R8 LMS EVO II GT3',
+  'McLaren 720S GT3 EVO',
+  'Chevrolet Corvette Z06 GT3.R',
+  'Lamborghini Huracan GT3 EVO',
+  'Aston Martin Vantage GT3',
+  'Toyota GR86',
+  'Mazda MX-5 Cup',
+  'Fictional Concept Car',
+  'Subaru WRX STI',
+  'Hyundai Elantra N TCR',
+  'Honda Civic Type R TCR'
+]
+
 // Cycles through the flags every FLAG_CYCLE_INTERVAL_SEC seconds.
 const FLAG_CYCLE = [
   0,
@@ -84,6 +105,7 @@ interface FakeDriverState {
   name: string
   carNumber: string
   flairName: string
+  carScreenName: string
   iRating: number
   licString: string
   licColor: number
@@ -116,6 +138,7 @@ function createDrivers(): FakeDriverState[] {
       name,
       carNumber: String(carIdx + 1),
       flairName: DRIVER_FLAIR_NAMES[carIdx] ?? '',
+      carScreenName: DRIVER_CAR_SCREEN_NAMES[carIdx] ?? 'Fake GT3',
       iRating,
       licString: licInfo.licString,
       licColor: licInfo.licColor,
@@ -321,7 +344,7 @@ export class FakeIRacingSDK {
       CarClassColor: 0x8e44ad,
       CarID: 1,
       CarIsPaceCar: 0,
-      CarScreenName: 'Fake GT3',
+      CarScreenName: d.carScreenName,
       CarClassShortName: 'GT3',
       CarClassEstLapTime: d.basePaceSec,
       IRating: d.iRating,

@@ -170,6 +170,11 @@ function StandingsSettings({
             onChange={(checked) => onChange({showNationFlag: checked})}
             label={m.showNationFlag}
         />
+        <ToggleSwitch
+            checked={settings.showManufacturerLogo}
+            onChange={(checked) => onChange({showManufacturerLogo: checked})}
+            label={m.showManufacturerLogo}
+        />
       </>
   )
 }

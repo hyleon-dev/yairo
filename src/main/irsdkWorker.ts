@@ -10,6 +10,7 @@ import {
 } from 'irsdk-node'
 import { FakeIRacingSDK } from './irsdkFake'
 import { flairNameToIsoCode } from './nationFlags'
+import { manufacturerLogoKey } from './manufacturerLogos'
 import type {
   DriverLapCompletedEvent,
   DriverStanding,
@@ -800,7 +801,8 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
       licColorHex: sdkColorHex(driver?.LicColor),
       classColorHex: sdkColorHex(driver?.CarClassColor),
       avgLapTimeSec: avgLapTimeSec(driver?.UserID),
-      flagIsoCode: driverFlagIsoCode(driver)
+      flagIsoCode: driverFlagIsoCode(driver),
+      manufacturerLogoKey: manufacturerLogoKey(driver?.CarScreenName)
     }
   })
 
@@ -901,6 +903,7 @@ interface StandingsRow {
   classColorHex: string
   avgLapTimeSec: number
   flagIsoCode: string | null
+  manufacturerLogoKey: string | null
 }
 
 // iRacing's official Strength-of-Field formula
@@ -966,7 +969,8 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
     licColorHex: row.licColorHex,
     classColorHex: row.classColorHex,
     avgLapTimeSec: row.avgLapTimeSec,
-    flagIsoCode: row.flagIsoCode
+    flagIsoCode: row.flagIsoCode,
+    manufacturerLogoKey: row.manufacturerLogoKey
   }))
 }
 
@@ -1000,7 +1004,8 @@ function buildTimeRanking(rows: StandingsRow[]): DriverStanding[] {
     licColorHex: row.licColorHex,
     classColorHex: row.classColorHex,
     avgLapTimeSec: row.avgLapTimeSec,
-    flagIsoCode: row.flagIsoCode
+    flagIsoCode: row.flagIsoCode,
+    manufacturerLogoKey: row.manufacturerLogoKey
   }))
 }
 
