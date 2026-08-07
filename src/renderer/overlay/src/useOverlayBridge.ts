@@ -161,7 +161,7 @@ function subscribeViaWebSocket(
         break
       case IPC.CONFIG_UPDATED:
         // accentColor is a branding choice, applied for OBS/browser viewers too.
-        // colorCorrectionMode is a personal accessibility setting - intentionally
+        // colorCorrectionMode is a personal accessibility setting, intentionally
         // NOT applied here, see applyColorCorrectionMode()'s doc comment above.
         applyAccentColor((payload as AppConfig).accentColor)
         break

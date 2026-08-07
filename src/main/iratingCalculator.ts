@@ -18,9 +18,9 @@ function pairwiseWinProbability(rI: number, rJ: number): number {
 
 // oldIRatings must already be ordered by current position (index 0 = leader).
 // Returns the estimated iRating change per entry, same order/length as the input.
-// null for an entry with no valid iRating (r <= 0) - still counted as an
+// null for an entry with no valid iRating (r <= 0), still counted as an
 // opponent for everyone else's expected score, just no change computed for itself.
-// Unlike the source script, there's no DNS handling here - live position order
+// Unlike the source script, there's no DNS handling here. Live position order
 // doesn't tell us who will actually start/finish, every entry is treated as a starter.
 export function estimateIratingChanges(oldIRatings: number[]): (number | null)[] {
   const n = oldIRatings.length

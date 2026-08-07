@@ -51,8 +51,6 @@ const MANUFACTURER_KEYWORDS: ManufacturerKeyword[] = [
   { key: 'toyota', pattern: /\btoyota\b/i }
 ]
 
-// Falls back to "generic" logo rather than null
-// when no manufacturer keyword matches.
 export function manufacturerLogoKey(carScreenName: string | undefined | null): string {
   if (!carScreenName) return 'generic'
   return MANUFACTURER_KEYWORDS.find(({ pattern }) => pattern.test(carScreenName))?.key ?? 'generic'

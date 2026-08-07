@@ -15,7 +15,7 @@ type CorrectableMode = Exclude<ColorCorrectionMode, 'none'>
 // joergdietrich/daltonize (itself implementing Fidaner/Lin/Ozguven 2005),
 // composed down to one matrix per type so this can run as a single
 // feColorMatrix instead of a multi-pass filter. Operates directly on sRGB
-// (not linearized), matching that reference implementation's convention -
+// (not linearized), matching that reference implementation's convention,
 // hence color-interpolation-filters="sRGB" on the <filter> that uses these.
 export const COLOR_CORRECTION_FILTER_MATRICES: Record<CorrectableMode, string> = {
   protanopia:
@@ -42,7 +42,7 @@ export function colorCorrectionFilterId(mode: CorrectableMode): string {
 export const COLOR_CORRECTION_FILTER_SVG_ID = 'color-correction-filter-defs'
 
 // Hidden <svg> holding one <filter> per deficiency type, injected once into
-// the document by each renderer - see applyColorCorrectionMode() in
+// the document by each renderer, see applyColorCorrectionMode() in
 // control/src/App.tsx and overlay/src/useOverlayBridge.ts.
 export const COLOR_CORRECTION_FILTER_SVG_MARKUP = `<svg id="${COLOR_CORRECTION_FILTER_SVG_ID}" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">${Object.entries(
   COLOR_CORRECTION_FILTER_MATRICES

@@ -3,10 +3,10 @@ import { FLAG_BITS } from '../shared/types'
 
 // Simulated race session for local dev without iRacing running (see
 // "npm run dev:mock", IRSDK_MOCK=1 in irsdkWorker.ts). Mirrors only the SDK
-// fields irsdkWorker.ts actually reads - everything else on
+// fields irsdkWorker.ts actually reads, everything else on
 // TelemetryVarList/DriverInfo/WeekendInfo/SessionList stays unfilled, hence
 // the "as unknown as" casts below. Kept simple on purpose (no pit stops, no
-// session changes, no spectating - always in your own car).
+// session changes, no spectating, always in your own car).
 
 const TRACK_ID = 239 // Autodromo Nazionale Monza (GP layout), see trackmaps/data.json
 const TRACK_LENGTH_M = 5793
@@ -40,7 +40,7 @@ const DRIVER_NAMES = [
   'Mia Schulz'
 ]
 
-// Matches DRIVER_NAMES by index - for testing the Standings "nation flag"
+// Matches DRIVER_NAMES by index, for testing the Standings "nation flag"
 // setting (see nationFlags.ts). '' for one driver on purpose, so the
 // "no flag data" fallback (empty spot) is also visible in dev mode.
 const DRIVER_FLAIR_NAMES = [
@@ -117,7 +117,6 @@ interface FakeDriverState {
   bestLapTime: number
 }
 
-// generate safety rating based on iRating
 function licInfoFor(iRating: number): { licString: string; licColor: number } {
   if (iRating > 3000) return { licString: 'A 3.50', licColor: 0x1c4fd6 } // blue
   if (iRating > 2000) return { licString: 'B 2.80', licColor: 0x1fa62e } // green
@@ -210,7 +209,6 @@ export class FakeIRacingSDK {
         if (driver.bestLapTime < 0 || driver.lastLapTime < driver.bestLapTime) {
           driver.bestLapTime = driver.lastLapTime
         }
-        // Slightly faster/slower next lap for different lap times
         driver.currentLapPaceSec = driver.basePaceSec + (Math.random() - 0.5) * 0.8
       }
     }
@@ -248,7 +246,7 @@ export class FakeIRacingSDK {
     const currentLapTime = player.lapDistPct * player.currentLapPaceSec
 
     const tireWearFrac = this.tireWearPct / 100 // SDK gives 0..1 despite its "%" unit label
-    // Front tires run a bit hotter than rear, varies slightly with track position - just for visual variety.
+    // Front tires run a bit hotter than rear, varies slightly with track position, just for visual variety.
     const baseTireTemp = 75 + 15 * Math.sin(player.lapDistPct * Math.PI * 4)
 
     const raw: Record<string, TelemetryVariable<unknown>> = {
@@ -284,7 +282,7 @@ export class FakeIRacingSDK {
       LapBestLapTime: scalarVar(player.bestLapTime),
       LapDeltaToBestLap: scalarVar(player.bestLapTime > 0 ? player.lastLapTime - player.bestLapTime : 0),
       // Real iRacing only flags this valid once a reference lap exists AND
-      // at least one lap has been driven against it - mocked here as "a best
+      // at least one lap has been driven against it, mocked here as "a best
       // lap exists and this isn't the lap that just set it".
       LapDeltaToBestLap_OK: scalarVar(player.bestLapTime > 0 && player.lapsCompleted > 0),
 
@@ -333,7 +331,7 @@ export class FakeIRacingSDK {
 
   getDriverInfo(): DriverInfo | null {
     // FlairName isn't in @irsdk-node/types' Driver interface (see
-    // nationFlags.ts) - widened here so the fake SDK can still supply it.
+    // nationFlags.ts), widened here so the fake SDK can still supply it.
     const drivers: (Partial<Driver> & { FlairName?: string })[] = this.drivers.map((d) => ({
       CarIdx: d.carIdx,
       UserName: d.name,

@@ -46,7 +46,6 @@ export class DriverStatsStore {
     return this.file.drivers[custId]
   }
 
-  // Appends a lap-time observation to the driver's history
   recordLapTime(custId: number, driverName: string, entry: DriverLapTimeEntry): void {
     const existing = this.file.drivers[custId]
     const record: DriverRecord = existing
@@ -57,17 +56,13 @@ export class DriverStatsStore {
     this.persist()
   }
 
-  // Pushes expiry date forward based on the currently remaining session time.
-  // Doing this over and over again instead of just one time when driver data is first created
-  // helps prevent data loss when a session is extended.
+  // Called repeatedly (not just once) so extending the session doesn't lose data.
   updateSessionExpiry(sessionTimeRemainSec: number): void {
     const expiresAt = Date.now() + Math.max(0, sessionTimeRemainSec) * 1000 + GRACE_PERIOD_MS
     this.file = { ...this.file, sessionExpiresAt: expiresAt }
     this.persist()
   }
 
-  // On (re)connect or app start, check whether the expiry date has passed:
-  // If yes, session has ended, so discard driver history.
   expireIfStale(): void {
     const { sessionExpiresAt } = this.file
     if (sessionExpiresAt !== null && Date.now() > sessionExpiresAt) {

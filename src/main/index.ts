@@ -112,7 +112,6 @@ function createOverlaysFromConfig(): void {
 }
 
 function registerIpcHandlers(): void {
-  // Renderer queries the current configuration
   ipcMain.handle(IPC.CONFIG_GET, () => configStore.get())
 
   // Control Center toggles an overlay on/off or changes settings
@@ -163,7 +162,7 @@ function registerIpcHandlers(): void {
   })
 
   // Overlay reports its actual content size (auto-fit, or a forced resize
-  // after a scale change even in edit mode - see useReportContentSize.ts)
+  // after a scale change even in edit mode, see useReportContentSize.ts)
   ipcMain.handle(
     IPC.OVERLAY_CONTENT_SIZE_SET,
     (_evt, id: OverlayId, width: number, height: number, force?: boolean) => {
@@ -171,17 +170,13 @@ function registerIpcHandlers(): void {
     }
   )
 
-  // Query/Change a single overlay's settings
-  // Saved immediately on change
   ipcMain.handle(IPC.OVERLAY_SETTINGS_GET, (_evt, id: OverlayId) => overlaySettingsStore.get(id))
 
-  // Query driver history
   ipcMain.handle(IPC.DRIVER_STATS_GET_ALL, () => driverStatsStore.getAll())
 
-  // Query the current connection status
   ipcMain.handle(IPC.CONNECTION_STATUS_GET, () => connectionStatus)
 
-  // Control Center's "copy overlay URL" button - writes to the OS clipboard
+  // Control Center's "copy overlay URL" button. Writes to the OS clipboard
   ipcMain.handle(IPC.CLIPBOARD_WRITE, (_evt, text: string) => {
     clipboard.writeText(text)
   })
@@ -189,7 +184,7 @@ function registerIpcHandlers(): void {
   // Query the result of the startup update check (see checkForUpdate() below)
   ipcMain.handle(IPC.UPDATE_STATUS_GET, () => updateStatus)
 
-  // Control Center's update banner link - only ever a release URL under our
+  // Control Center's update banner link, only ever a release URL under our
   // own repo (comes from the GitHub API response, see updateChecker.ts),
   // but validated again here before handing it to the OS.
   ipcMain.handle(IPC.UPDATE_OPEN_RELEASE, (_evt, url: string) => {
@@ -243,7 +238,7 @@ function registerIpcHandlers(): void {
 function seedOverlaySettings(): void {
   // So a browser/OBS client connecting before the next config change still
   // gets the persisted accent color instead of theme.css's built-in default
-  // (Electron windows don't need this - they fetch getConfig() themselves).
+  // (Electron windows don't need this, they fetch getConfig() themselves).
   broadcastToAll(IPC.CONFIG_UPDATED, configStore.get())
 
   for (const overlay of configStore.get().overlays) {
@@ -278,7 +273,6 @@ function registerIrsdkEvents(): void {
     broadcastToOverlays(IPC.FLAGS_UPDATE, data)
   })
   irsdk.on('connected', () => {
-    // Check on every (re)connect whether the old driver history has already expired.
     driverStatsStore.expireIfStale()
     connectionStatus = {connected: true}
     broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
@@ -307,7 +301,6 @@ app.whenReady().then(() => {
   overlayServer.start()
   seedOverlaySettings()
 
-  // Only use system-wide hotkey while screenshot mode is on
   if (screenshotsEnabled) {
     const registered = globalShortcut.register(ALL_OVERLAYS_SHORTCUT, () => {
       captureAllOverlayScreenshots()

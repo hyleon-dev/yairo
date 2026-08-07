@@ -1,5 +1,4 @@
 import { parentPort } from 'worker_threads'
-// use irsdk-node types where possible
 import {
   IRacingSDK,
   type DriverInfo,
@@ -33,7 +32,7 @@ import type { IrsdkWorkerCommand, IrsdkWorkerMessage } from './irsdkWorkerMessag
 
 // Runs as its own worker thread (see irsdkService.ts). waitForData() is a
 // blocking native call that's effectively busy almost constantly while
-// iRacing runs (~60 fps) - in the Electron main process that would visibly
+// iRacing runs (~60 fps). In the Electron main process that would visibly
 // stall the window.
 
 const POLL_INTERVAL_MS = 1000 / 30 // 30 Hz
@@ -64,7 +63,6 @@ function post(message: IrsdkWorkerMessage): void {
   parentPort?.postMessage(message)
 }
 
-// interface that is used for accessing the data either from the real or fake SDK
 interface IrsdkLike {
   startSDK(): boolean
   waitForData(timeoutMs?: number): boolean
@@ -198,8 +196,6 @@ const lastLapsCompletedByCarIdx = new Map<number, number>()
 const lapTimeStatsByCustId = new Map<number, { sum: number; count: number }>()
 let lastLapStatsSessionNum: number | null = null
 
-// Tracks lap times of every driver.
-// When ever a new lap is completed, the lap time is recorded here.
 function checkLapCompletions(raw: TelemetryVarList): DriverLapCompletedEvent[] {
   const driverInfo = sdk.getDriverInfo()
   const weekendInfo = sdk.getWeekendInfo()
@@ -362,10 +358,8 @@ const NO_TELEMETRY: TelemetryData = {
   tires: ZERO_TIRES
 }
 
-// iRacing provides neither consumption-per-lap nor a range estimate
-// Own FuelLevel is compared against its value at start of lap on every lap change,
-// to get consumption of the just-completed lap.
-// Only possible for own car, FuelLevel is only provided for that
+// iRacing provides neither consumption-per-lap nor a range estimate, only own-car FuelLevel.
+// Computed here by comparing FuelLevel at the start of each lap to get that lap's consumption.
 const FUEL_HISTORY_SIZE = 5 // for the "average of the last 5 laps" value
 let lastFuelLapSample: { lap: number; fuelLevel: number } | null = null
 let fuelPerLapHistory: number[] = [] // oldest first, at most FUEL_HISTORY_SIZE entries
@@ -402,7 +396,7 @@ function trackFuelConsumption(raw: TelemetryVarList): void {
     fuelPerLapHistory = []
   }
 
-  // New lap just started - this fuel level is the baseline for it.
+  // New lap just started, this fuel level is the baseline for it.
   lastFuelLapSample = { lap, fuelLevel }
 }
 
@@ -415,7 +409,7 @@ function buildFuelLapEstimate(
   if (consumptionPerLapL <= 0) return null
 
   // margin/pitByLap deliberately use lapStartFuelLevelL (a stable snapshot),
-  // not the live fuelLevelL - see FuelLapEstimate's doc comment for why.
+  // not the live fuelLevelL, see FuelLapEstimate's doc comment for why.
   const fullLapsRemaining = Math.floor(lapStartFuelLevelL / consumptionPerLapL)
 
   return {
@@ -433,10 +427,10 @@ function buildFuelLapEstimate(
 const UNLIMITED_LAPS_THRESHOLD = 100_000
 const UNLIMITED_SECONDS_THRESHOLD = 24 * 60 * 60 // 24h, longer than any real enduro
 
-// Whether the session has a real end at all (a lap or time limit) - checked
+// Whether the session has a real end at all (a lap or time limit). Checked
 // directly on the raw SDK fields, independent of whether we can currently
 // price that in as a lap count (the leader's pace might not be known yet
-// early in a session, that's a separate "unknown pace" case - see
+// early in a session, that's a separate "unknown pace" case, see
 // leaderLapTimeSec()).
 function sessionHasRealEnd(raw: TelemetryVarList): boolean {
   const lapsByCount = raw.SessionLapsRemainEx?.value?.[0] ?? Number.POSITIVE_INFINITY
@@ -444,10 +438,10 @@ function sessionHasRealEnd(raw: TelemetryVarList): boolean {
   return lapsByCount < UNLIMITED_LAPS_THRESHOLD || timeRemainSec < UNLIMITED_SECONDS_THRESHOLD
 }
 
-// Race leader's own pace - the one that actually determines when the
+// Race leader's own pace, the one that actually determines when the
 // checkered flag comes out, regardless of whose estimate we're computing.
 // Falls back to their best lap early in a run/out-lap, and if they haven't
-// set ANY lap time yet (e.g. still on their out-lap), to CarClassEstLapTime -
+// set ANY lap time yet (e.g. still on their out-lap), to CarClassEstLapTime,
 // the SDK's own estimated lap time for their car class, available from the
 // start of the session rather than only once a lap has actually been driven.
 // -1 only if there's no leader entry at all to look any of this up on.
@@ -464,11 +458,11 @@ function leaderLapTimeSec(raw: TelemetryVarList, driverInfo: DriverInfo | null):
 
 // Real-world seconds left before the session ends, covering both lap- and
 // time-limited races. SessionLapsRemainEx is tied to the race LEADER
-// crossing the line - not to our own lap count, so if we're a lap (or more)
+// crossing the line, not to our own lap count, so if we're a lap (or more)
 // behind, that many "laps to go" corresponds to MORE real seconds than the
 // same number of our own laps would take. Converted via the leader's own
 // pace (not ours) before comparing against SessionTimeRemain (already real
-// seconds) - whichever ends the session sooner wins.
+// seconds), whichever ends the session sooner wins.
 function estimateSecondsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo | null): number {
   const lapsByCount = raw.SessionLapsRemainEx?.value?.[0] ?? Number.POSITIVE_INFINITY
   const timeRemainSec = raw.SessionTimeRemain?.value?.[0] ?? Number.POSITIVE_INFINITY
@@ -481,7 +475,7 @@ function estimateSecondsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo 
   return Math.min(secondsByLaps, timeRemainSec)
 }
 
-// Laps WE will still drive before the session ends - real seconds remaining
+// Laps WE will still drive before the session ends. Real seconds remaining
 // (see estimateSecondsRemaining()) converted via OUR OWN pace, since that's
 // what determines how many more laps we personally get to complete (and
 // therefore how much fuel we still need). null if the session has no real
@@ -495,7 +489,7 @@ function estimateLapsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo | n
   return secondsRemaining / lastLapTimeSec
 }
 
-// "Laps to go" for the race as a whole (leader-anchored) - e.g. for the
+// "Laps to go" for the race as a whole (leader-anchored), e.g. for the
 // Standings header, shown regardless of who's focused/spectating. Same real
 // seconds remaining as estimateLapsRemaining(), just converted back via the
 // LEADER's own pace instead of a specific driver's. null if the session has
@@ -515,7 +509,7 @@ function estimateRaceLapsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo
 }
 
 // Additional pit stops needed for fuel before the session ends, assuming a
-// full refill every stop - the simplest strategy, and the only one possible
+// full refill every stop, the simplest strategy, and the only one possible
 // without knowing the driver's actual planned fill amounts ahead of time.
 function estimateStopsRemaining(
   raw: TelemetryVarList,
@@ -530,7 +524,7 @@ function estimateStopsRemaining(
   if (lapsRemaining === null) return null
 
   // DriverCarMaxFuelPct despite its "%" unit label is a 0..1 fraction (like
-  // FuelLevelPct, see irsdkFake.ts) - 0 means the event doesn't restrict fuel
+  // FuelLevelPct, see irsdkFake.ts). 0 means the event doesn't restrict fuel
   // load below the car's physical tank size.
   const tankMaxL = driver?.DriverCarFuelMaxLtr ?? 0
   const maxFuelPct = driver?.DriverCarMaxFuelPct ?? 0
@@ -549,14 +543,14 @@ function buildFuelEstimate(
 ): FuelEstimate | null {
   if (fuelPerLapHistory.length === 0) return null
 
-  // Fuel level as of this lap's start (tracked in trackFuelConsumption()) -
-  // falls back to the live level if unavailable, e.g. right after getting
+  // Fuel level as of this lap's start (tracked in trackFuelConsumption()).
+  // Falls back to the live level if unavailable, e.g. right after getting
   // back in the car.
   const lapStartFuelLevelL = lastFuelLapSample?.fuelLevel ?? fuelLevelL
 
   const lastLapConsumption = fuelPerLapHistory[fuelPerLapHistory.length - 1]
   const avgConsumption = fuelPerLapHistory.reduce((sum, v) => sum + v, 0) / fuelPerLapHistory.length
-  // No dedicated "current pace" telemetry var - last completed lap is the
+  // No dedicated "current pace" telemetry var, last completed lap is the
   // closest estimate, falling back to the best lap early in a run/out-lap.
   const lastLapTimeSec = raw.LapLastLapTime?.value?.[0] ?? raw.LapBestLapTime?.value?.[0] ?? -1
 
@@ -564,7 +558,7 @@ function buildFuelEstimate(
     lastLap: buildFuelLapEstimate(lastLapConsumption, fuelLevelL, lapStartFuelLevelL, currentLap),
     avgLast5: buildFuelLapEstimate(avgConsumption, fuelLevelL, lapStartFuelLevelL, currentLap),
     // Own car only, straight passthrough of iRacing's own pit service menu
-    // value - live-tracks "Auto Fill" if the driver enabled it there,
+    // value, live-tracks "Auto Fill" if the driver enabled it there,
     // otherwise whatever amount is currently dialed in manually.
     nextPitFuelL: raw.PitSvFuel?.value?.[0] ?? null,
     // Uses the average-of-5 consumption rather than last-lap: this projects
@@ -574,7 +568,6 @@ function buildFuelEstimate(
   }
 }
 
-// Convert color form decimal (0xRRGGBB) to hex
 // e.g. Driver.LicColor and Driver.CarClassColor
 function sdkColorHex(raw: number | undefined): string {
   return '#' + ((raw ?? 0) & 0xffffff).toString(16).padStart(6, '0')
@@ -733,7 +726,6 @@ interface RankedStandingsClass {
   drivers: DriverStanding[]
 }
 
-// Builds the fully ranked driver list per car class.
 function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
   const driverInfo = sdk.getDriverInfo()
   const sessionInfo = sdk.getSessionInfo()
@@ -744,7 +736,7 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
   const positions = raw.CarIdxPosition?.value ?? []
   const laps = raw.CarIdxLapCompleted?.value ?? []
   const lapDistPct = raw.CarIdxLapDistPct?.value ?? []
-  // TODO SDK doc only says "race time behind leader" - not verified whether this
+  // TODO SDK doc only says "race time behind leader", not verified whether this
   //  is scoped to the car's own class or the overall race leader in a
   //  multiclass session
   const gapToLeader = raw.CarIdxF2Time?.value ?? []
@@ -818,14 +810,12 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
   }
 
   return Array.from(rowsByClass.entries()).map(([classId, classRows]) => {
-    // in actual race use CarPositions on track to build positions,
-    // in any other session (practive/qualifying/etc.) use best lap time
     const drivers = isRaceSession ? buildRacePositions(classRows) : buildTimeRanking(classRows)
 
     // Fastest valid best-lap time WITHIN this class
     const classFastestLapTime = Math.min(...drivers.map((d) => d.bestLapTime).filter((t) => t > 0))
 
-    // iRating changes only apply to actual races - drivers are already in
+    // iRating changes only apply to actual races. Drivers are already in
     // class-position order (index 0 = P1) here, matching what
     // estimateIratingChanges() expects.
     const iRatingChanges = isRaceSession
@@ -1028,8 +1018,6 @@ function buildTimeRanking(rows: StandingsRow[]): DriverStanding[] {
   }))
 }
 
-// Trims the (sorted) driver list for displaying in standing overlay
-//
 // If the player isn't IN this class (driving/watching a different one), show only the top drivers.
 // If the player can't be found in ANY class (pure spectator with no discernible focus car),
 // leave the list unfiltered.
@@ -1050,8 +1038,6 @@ function filterStandingsWindow(drivers: DriverStanding[], hasPlayerAnywhere: boo
     .map((i) => drivers[i])
 }
 
-// Trims the driver list for displaying in relative overlay
-//
 // Gap to the player is computed ourselves instead of from CarIdxF2Time,
 // this way the Relative overlay updates continuously in any session type instead of only
 // once per lap: track position (completed laps + CarIdxEstTime for
@@ -1086,7 +1072,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
         lapDistPct: lapDistPct[carIdx] ?? 0,
         estLapTime: driver.CarClassEstLapTime > 0 ? driver.CarClassEstLapTime : 0,
         // Named "isFocused" (not "isPlayer") because playerCarIdx above is
-        // actually resolveFocusCarIdx() - while spectating this is the
+        // actually resolveFocusCarIdx(), while spectating this is the
         // watched car (CamCarIdx), not necessarily our own. Mapped back to
         // the public "isPlayer" field name below (RelativeDriver.isPlayer),
         // which the frontend uses regardless of which car it refers to.
@@ -1107,7 +1093,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
 
   // Using track distance from car in focus to other cars to calculate gap time.
   // Always picking shorter distance (max value = half a lap distance)
-  // todo - find a way to compensate for braking in corners
+  // todo, find a way to compensate for braking in corners
   //  (e.g. when car1 brakes and car2 behind is still on straight
   //  it gets 'closer' but in reality, because car2 will also brake at
   //  the corner, the gap stays the same)
@@ -1208,7 +1194,6 @@ function buildTrackMap(raw: TelemetryVarList): TrackMapData {
   }
 }
 
-// Session-wide flags.
 function buildFlags(raw: TelemetryVarList): FlagsData {
   return { flags: raw.SessionFlags?.value?.[0] ?? 0 }
 }

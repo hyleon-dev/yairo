@@ -18,7 +18,7 @@ function gridTemplate(settings: StandingsOverlaySettings): string {
   if (settings.showManufacturerLogo) cols.push('24px')
   cols.push('1fr')
   // iRating and its change (when shown) live in a single cell (see iRating()
-  // below) - not two separate grid columns - so this must stay one push,
+  // below), not two separate grid columns, so this must stay one push,
   // just wider when the change badge needs room too.
   if (settings.showIRating) cols.push(settings.showIRatingChange ? '82px' : '42px')
   if (settings.showSafetyRating) cols.push('54px')

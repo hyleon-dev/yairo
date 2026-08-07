@@ -115,8 +115,6 @@ export default function App() {
   )
 }
 
-// Each overlay lives in its own file under ./overlays,
-// this routes into the right one based on ?overlay=<id> query param.
 function renderOverlayContent(
   id: OverlayId,
   telemetry: TelemetryData | null,

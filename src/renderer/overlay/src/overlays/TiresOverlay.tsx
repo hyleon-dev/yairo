@@ -94,9 +94,7 @@ function TireGauge({
 }
 
 export function TiresOverlay({ data, settings }: { data: TelemetryData; settings: TiresOverlaySettings }) {
-  // Tire data is only meaningful on pit road (see isOnPitRoad's doc comment).
-  // Hidden otherwise, but the panel keeps its normal footprint so it stays
-  // visible/draggable in edit mode (same pattern as FlagsOverlay's "idle" state).
+  // Tire data is only meaningful on pit road (see isOnPitRoad's doc comment), hidden via .tires--idle otherwise.
   const isIdle = !data.isOnPitRoad
   return (
     <div className={`card tires-grid ${isIdle ? 'tires--idle' : ''}`}>

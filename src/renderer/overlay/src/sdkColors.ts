@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 
 // Small collection of styles derived from a 0xRRGGBB color value provided by
-// the SDK (see sdkColorHex() in irsdkWorker.ts) - one use each for
+// the SDK (see sdkColorHex() in irsdkWorker.ts), one use each for
 // Driver.LicColor and Driver.CarClassColor.
 
 // Colors the Safety Rating badge (col-sr in Standings/Relative) to match

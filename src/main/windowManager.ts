@@ -149,8 +149,8 @@ export class WindowManager {
 
   // Resizes an overlay window to the actual rendered size of its content,
   // so e.g. Standings with many drivers isn't cut off.
-  // Normally only in live mode, in edit mode the user controls size via drag
-  // - `force` overrides that for a scale change (see useReportContentSize.ts):
+  // Normally only in live mode, in edit mode the user controls size via drag.
+  // `force` overrides that for a scale change (see useReportContentSize.ts):
   // changing the scale setting changes the content's actual rendered size
   // even while in edit mode, so the drag/resize area needs to follow along
   // live, otherwise it drifts out of sync with the visibly (re-)scaled content.
@@ -165,7 +165,6 @@ export class WindowManager {
     win.setBounds({ x: bounds.x, y: bounds.y, width, height })
   }
 
-  // Helper for multi-monitor setups.
   getPrimaryDisplayBounds() {
     return screen.getPrimaryDisplay().workArea
   }

@@ -8,7 +8,7 @@ import { NumberInput } from './Elements'
 const m = messages.accentColor
 
 interface Props {
-  // Color that was active when the popup was opened - restored on cancel.
+  // Color that was active when the popup was opened, restored on cancel.
   initialColor: string
   // Called on every change, for the live preview on all windows.
   onPreview: (hex: string) => void

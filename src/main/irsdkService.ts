@@ -31,10 +31,7 @@ export declare interface IrsdkService {
   ): boolean
 }
 
-// The actual irsdk-node connection (irsdkWorker.ts) runs in a worker thread:
-// waitForData() blocks the thread almost constantly while iRacing runs. In
-// the Electron main process that would visibly stall window management
-// (drag/resize of overlays and the Control Center).
+// Runs the actual irsdk-node connection in a worker thread, see irsdkWorker.ts for why.
 export class IrsdkService extends EventEmitter {
   private worker: Worker | null = null
 

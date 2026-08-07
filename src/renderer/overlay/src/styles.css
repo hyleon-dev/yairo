@@ -1,4 +1,4 @@
-/* Applies to ALL overlay windows - overlay-specific styles live next to
+/* Applies to ALL overlay windows. Overlay-specific styles live next to
    their component, see overlays/<Name>Overlay.css. */
 
 * {

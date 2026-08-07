@@ -27,10 +27,7 @@
 }
 
 .trackmap-start-finish {
-  /*
-  Fill color comes from the marker asset's own embedded <style>, only opacity is set here.
-  It reads as a track marking rather than competing visually with the driver dots.
-  */
+  /* Fill color comes from the marker asset's own embedded <style>, only opacity is set here. */
   opacity: 0.85;
 }
 

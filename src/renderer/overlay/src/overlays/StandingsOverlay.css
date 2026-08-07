@@ -2,7 +2,7 @@
   background: var(--panel-bg);
   border: var(--panel-border);
   border-radius: var(--radius-lg);
-  /* only for the rounded corners - content never exceeds the box, the
+  /* only for the rounded corners. Content never exceeds the box, the
      window resizes to fit it via useReportContentSize() */
   overflow: hidden;
   backdrop-filter: blur(var(--panel-blur));
@@ -78,7 +78,7 @@
 }
 
 .drivers {
-  /* no max-height/overflow - grows with all drivers, the window resizes to
+  /* no max-height/overflow, grows with all drivers, the window resizes to
      match via useReportContentSize() instead of clipping or scrolling rows. */
 }
 

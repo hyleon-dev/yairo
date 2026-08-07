@@ -3,10 +3,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 import { DEFAULT_OVERLAY_SETTINGS, type AnyOverlaySettings, type OverlayId } from '../shared/types'
 
-// Every overlay gets its own JSON file under
-// userData/overlay-settings/<id>.json
-// keeps settings per overlay independently
-// organized instead of one shared, 'large' file.
+// One JSON file per overlay under userData/overlay-settings/<id>.json, instead of one shared file.
 export class OverlaySettingsStore {
   private dir: string
   private cache = new Map<OverlayId, AnyOverlaySettings>()
@@ -24,7 +21,6 @@ export class OverlaySettingsStore {
     return loaded
   }
 
-  // Merges the patch (new option-state) into the current settings
   set(id: OverlayId, patch: Partial<AnyOverlaySettings>): AnyOverlaySettings {
     const updated = { ...this.get(id), ...patch } as AnyOverlaySettings
     this.cache.set(id, updated)

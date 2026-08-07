@@ -85,7 +85,7 @@ export class OverlayServer {
     await this.serveStatic(url.pathname, res)
   }
 
-  // Nothing is prebuilt in dev mode - electron-vite's Vite dev server
+  // Nothing is prebuilt in dev mode. electron-vite's Vite dev server
   // already serves renderer files live over HTTP, we just pass the request through.
   private proxyToDevServer(req: IncomingMessage, res: ServerResponse): void {
     const target = new URL(req.url ?? '/', process.env['ELECTRON_RENDERER_URL'])

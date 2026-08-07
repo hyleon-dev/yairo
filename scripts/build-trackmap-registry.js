@@ -5,11 +5,11 @@
 // Needs track_info.json (activePath per track), track_settings.json
 // (direction/offset calibration per track, plus an optional customTrackPath
 // override), and start_finish/<id>.svg (start/finish marker, already
-// positioned in the same 1920x1080 coordinate space as activePath - no
-// direction/offset calibration needed for it, unlike the per-car dot
+// positioned in the same 1920x1080 coordinate space as activePath. No
+// direction/offset calibration is needed for it, unlike the per-car dot
 // placement along the track path).
 //
-// The start/finish marker SVGs aren't all built the same way - some use a
+// The start/finish marker SVGs aren't all built the same way. Some use a
 // plain <path>, others <rect>/<polygon>, and a handful reference a
 // <symbol> via <use> (with its own viewBox + a translate/rotate/scale
 // transform). Rather than hand-parse every variant, the raw inner SVG markup
@@ -17,7 +17,7 @@
 // stored as-is and injected directly into a <g> at render time;
 // the browser's own SVG engine then resolves <use>/<symbol> correctly for free.
 //
-// A handful of tracks (Suzuka, Monza, Charlotte Roval - all figure-eight-ish
+// A handful of tracks (Suzuka, Monza, Charlotte Roval, all figure-eight-ish
 // or with a tricky pit/infield loop) ship a customTrackPath in
 // track_settings.json instead of relying on the plain activePath. direction/
 // offset for those tracks were evidently calibrated against customTrackPath,

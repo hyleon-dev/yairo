@@ -76,11 +76,9 @@ function DriverRow({
   )
 }
 
-// If fewer drivers are currently on track ahead/behind the player than
-// configured (driversAhead/driversBehind), the window should NOT shrink.
-// Instead, placeholder rows fill missing slots instead.
-// Real drivers always take priority, so placeholders always end up on the outside (top for missing
-// "ahead" drivers, bottom for missing "behind" drivers).
+// If fewer drivers are on track ahead/behind than configured, placeholder rows fill the gap
+// instead of letting the window shrink. Real drivers always take priority, so placeholders
+// end up on the outside (top for missing "ahead", bottom for missing "behind").
 function PlaceholderRow({ settings, template }: { settings: RelativeOverlaySettings; template: string }) {
   return (
     <div className="rel-row rel-row--placeholder" style={{ gridTemplateColumns: template }}>

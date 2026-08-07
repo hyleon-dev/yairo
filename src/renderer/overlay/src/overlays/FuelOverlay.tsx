@@ -27,10 +27,6 @@ export function FuelOverlay({ data }: { data: TelemetryData }) {
         <div className="unit">{m.unit}</div>
       </div>
 
-      {
-      // Range estimate based on the last completed lap.
-      // null until a full lap with known consumption has been driven.
-      }
       <div className="fuel-laps-remaining">
         {lastLap ? m.lapsRemaining(lastLap.lapsRemaining) : m.rangeUnknown}
       </div>

@@ -34,7 +34,7 @@
   border-bottom: none;
 }
 
-/* The player is the focus of this view - clearly highlighted */
+/* The player is the focus of this view, clearly highlighted */
 .rel-row--player {
   background: rgba(var(--color-accent-rgb), 0.16);
   border-left: 2px solid var(--color-accent);
@@ -109,7 +109,7 @@
   font-size: var(--font-body-sm);
 }
 
-/* Drivers on a different lap than the player (ahead or behind) - the gap
+/* Drivers on a different lap than the player (ahead or behind). The gap
    value stays a pure track distance, only the lap display is highlighted so
    it isn't mistaken for "same lap". */
 .rel-row--lapped .col-lap {

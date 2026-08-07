@@ -311,7 +311,7 @@ function BestLapTimeSettings({
 
 // Displayed/stored as one total-seconds float (targetLapTimeSec, matching
 // every other lap time in the codebase), decomposed into min/sec/ms here
-// purely for the three input fields - <= 0 (all three at 0) means "not set".
+// purely for the three input fields. <= 0 (all three at 0) means "not set".
 function LapTimerSettings({
                             settings,
                             onChange

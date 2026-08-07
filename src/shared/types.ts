@@ -5,8 +5,7 @@
 
 // --- Telemetry -------------------------------------------------------
 
-// Subset of iRacing telemetry actually forwarded to overlays.
-// Only what overlays need, to keep the payload small.
+// Subset of iRacing telemetry actually forwarded to overlays, kept small to just what overlays need.
 export interface TelemetryData {
   speedKph: number
   rpm: number
@@ -34,27 +33,22 @@ export interface TelemetryData {
   // (iRacing needs a completed reference lap to compare live splits against,
   // so it can't show a delta for the very lap that just set the record) or
   // while spectating. lapDeltaToBest is meaningless (usually just 0) when this
-  // is false - UI should hide the delta rather than showing a fake "on pace".
+  // is false, UI should hide the delta rather than showing a fake "on pace".
   lapDeltaToBestValid: boolean
   // Mirrors the SDK's OnPitRoad: true anywhere between the pit lane's entry
   // and exit cones (driving through OR stopped in our stall), false on the
   // racing surface, and always false while spectating (tires aren't
   // meaningful for another car either way, see TiresData).
   isOnPitRoad: boolean
-  // true if this data is from the driver being watched
-  // (spectating/not in our own car) rather than our own car.
+  // true when this data is from the driver being watched (spectating), not our own car.
   isSpectatingOther: boolean
   // null until a full lap with known consumption has been driven (fresh
   // into the session, or just left the pits), or while spectating.
   fuelEstimate: FuelEstimate | null
   incidentCount: number
-  // Incidents of whoever is CURRENTLY driving our team car
-  //(SDK: PlayerCarDriverIncidentCount), unlike incidentCount above, this does
-  // NOT follow the camera (CamCarIdx).
-  // Equals incidentCount while we're driving.
-  // In a team event with a driver swap, it keeps showing the currently driving teammate,
-  // even while we're spectating/out of the car.
-  // -1 = not available yet.
+  // Incidents of whoever is CURRENTLY driving our team car (SDK: PlayerCarDriverIncidentCount).
+  // Unlike incidentCount, this doesn't follow the camera, so in a driver swap it keeps
+  // showing the driving teammate even while spectating. -1 = not available yet.
   currentDriverIncidentCount: number
   // Team incidents this session (SDK: PlayerCarTeamIncidentCount),
   // identical to currentDriverIncidentCount in solo events
@@ -85,38 +79,35 @@ export interface TiresData {
   rr: TireWheelData
 }
 
-// A consumption projection for one scenario (last lap or average of the last 5 laps).
-// The fuel level itself is already in TelemetryData.fuelLevelL, this is just what can
-// be projected from it for this scenario.
+// A consumption projection for one scenario (last lap, or avg of the last 5).
+// Separate from the raw fuel level in TelemetryData.fuelLevelL.
 export interface FuelLapEstimate {
   // L, consumption per lap in this scenario.
   consumptionPerLapL: number
-  // How many more laps the current (live) fuel level covers in this scenario -
+  // How many more laps the current (live) fuel level covers in this scenario,
   // ticks down continuously as fuel burns, incl. mid-lap.
   lapsRemaining: number
   // L, left over after the last fully possible lap
   // (safety margin, if pitting exactly at "pitByLap").
   // Unlike lapsRemaining, this (and pitByLap) is only recomputed once per lap,
-  // from the fuel level as of THIS lap's start - not live/mid-lap. Otherwise
+  // from the fuel level as of THIS lap's start, not live/mid-lap. Otherwise
   // it turns into a sawtooth: falls in lockstep with the live tank level,
   // then jumps back up by a full consumptionPerLapL whenever that live level
   // happens to cross a multiple-of-consumption threshold mid-lap (unrelated
-  // to actual lap boundaries) - confusing, not a stable "pit-plan buffer".
+  // to actual lap boundaries). Confusing, not a stable "pit-plan buffer".
   marginLiters: number
   // Absolute lap number by which to pit at the latest. Same once-per-lap
   // stability as marginLiters, for the same reason.
   pitByLap: number
 }
 
-// Fuel projection for our own car, one based on the last completed lap and
-// one based on the average of the last (up to) 5 laps.
-// iRacing itself provides neither data, so it's computed from the per-lap
-// fuel-level history (see trackFuelConsumption() in irsdkWorker.ts).
+// iRacing itself provides neither consumption nor a range estimate, computed here from
+// the per-lap fuel-level history (see trackFuelConsumption() in irsdkWorker.ts).
 export interface FuelEstimate {
   lastLap: FuelLapEstimate | null
   avgLast5: FuelLapEstimate | null
   // L, amount that will be added at the next pit stop, straight from iRacing's
-  // own pit service menu (PitSvFuel telemetry var) - tracks "Auto Fill" live
+  // own pit service menu (PitSvFuel telemetry var), tracks "Auto Fill" live
   // if the driver has that enabled, otherwise whatever amount is currently
   // dialed in manually. null while not driving our own car.
   nextPitFuelL: number | null
@@ -136,7 +127,7 @@ export interface ConnectionStatus {
 // --- Update check ---------------------------------------------------------
 
 // Result of comparing the running app version against the latest GitHub
-// release (see updateChecker.ts). Purely informational - no auto-download/
+// release (see updateChecker.ts). Purely informational, no auto-download/
 // install, just a banner + link in the Control Center.
 export interface UpdateStatus {
   available: boolean
@@ -172,7 +163,7 @@ export interface DriverStanding {
   isPlayer: boolean
   iRating: number
   // Estimated iRating change if the race ended right now with drivers in
-  // their CURRENT live position order (see iratingCalculator.ts) - NOT a
+  // their CURRENT live position order (see iratingCalculator.ts). NOT a
   // finish-position prediction, purely based on where everyone stands at
   // this instant. null outside a race session, or if this driver has no
   // valid iRating (e.g. missing driver data).
@@ -187,7 +178,7 @@ export interface DriverStanding {
   // -1 if this driver hasn't completed a lap yet.
   avgLapTimeSec: number
   // Resolved from the driver's iRacing "FlairName" (nationality) via
-  // flairNameToIsoCode() in nationFlags.ts - a flag-icons ISO code (e.g. "de"),
+  // flairNameToIsoCode() in nationFlags.ts, a flag-icons ISO code (e.g. "de"),
   // or null if there's no flag data or the name didn't resolve to one.
   flagIsoCode: string | null
   // Resolved from the car's CarScreenName.
@@ -208,7 +199,7 @@ export interface StandingsData {
   sessionType: string
   remainingTimeSecs: number
   // Estimated laps to go for the race as a whole (leader-anchored, not tied
-  // to whoever is focused/spectating) - see estimateRaceLapsRemaining() in
+  // to whoever is focused/spectating), see estimateRaceLapsRemaining() in
   // irsdkWorker.ts. null outside a session with a real end (laps or time),
   // or before the leader has a known lap time yet.
   lapsRemaining: number | null
@@ -297,7 +288,7 @@ export interface FlagsData {
 
 // --- Driver Stats (persistent driver history, keyed by iRacing CustID) ----
 //
-// iRacing itself doesn't expose an average/median lap time per driver - so
+// iRacing itself doesn't expose an average/median lap time per driver, so
 // every completed lap of every driver is recorded here, to be aggregated later.
 
 export interface DriverLapTimeEntry {
@@ -353,9 +344,9 @@ export interface OverlayConfig {
 }
 
 // 'none' = no correction. The others apply a daltonization filter (see
-// shared/colorCorrectionFilters.ts) - only ever applied in the Control Center and
+// shared/colorCorrectionFilters.ts), only ever applied in the Control Center and
 // the real Electron overlay windows, deliberately NOT for OBS/browser clients
-// (see useOverlayBridge.ts) - a streamer's viewers should see normal colors
+// (see useOverlayBridge.ts). A streamer's viewers should see normal colors
 // even if the streamer themselves uses this for their own screen.
 export type ColorCorrectionMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia'
 
@@ -374,7 +365,7 @@ export interface AppConfig {
 }
 
 // The accent color hardcoded in theme.css (--color-accent) before the user
-// picks their own - what the Control Center's "reset" button restores.
+// picks their own. What the Control Center's "reset" button restores.
 export const DEFAULT_ACCENT_COLOR = '#e8401a'
 
 export interface BaseOverlaySettings {
@@ -423,7 +414,7 @@ export interface TiresOverlaySettings extends BaseOverlaySettings {
 }
 
 export interface LapTimerOverlaySettings extends BaseOverlaySettings {
-  // s, <= 0 = no target set (Control Center's min/sec/ms inputs all at 0) -
+  // s, <= 0 = no target set (Control Center's min/sec/ms inputs all at 0),
   // the target time block is hidden entirely rather than shown as "--:--.---".
   targetLapTimeSec: number
 }
@@ -453,7 +444,7 @@ export type OverlaySettingsMap = {
 export type AnyOverlaySettings = OverlaySettingsMap[OverlayId]
 
 // Default opacity matches the shared --panel-bg alpha in theme.css (0.85).
-// trackmap is the one exception, matching its own --panel-bg-light (0.35) -
+// trackmap is the one exception, matching its own --panel-bg-light (0.35),
 // see the "Panel-Hintergrund bewusst anders" note in CLAUDE.md.
 const DEFAULT_PANEL_OPACITY = 0.85
 const DEFAULT_TRACKMAP_OPACITY = 0.35

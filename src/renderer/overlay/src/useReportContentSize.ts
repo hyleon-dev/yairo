@@ -33,7 +33,7 @@ export function useReportContentSize(overlayId: OverlayId, editMode: boolean, sc
   }, [overlayId, editMode])
 
   // Changing the scale setting changes the content's actual rendered size
-  // (CSS zoom) even while in edit mode - without this, the drag/resize area
+  // (CSS zoom) even while in edit mode. Without this, the drag/resize area
   // (the window itself) stays at its old size and visibly drifts out of sync
   // with the now-scaled content. Unlike the continuous observer above, this
   // is a one-off resize tied to the scale value itself, not to every layout

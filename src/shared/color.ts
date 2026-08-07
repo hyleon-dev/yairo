@@ -1,5 +1,5 @@
 /**
- * Pure hex/RGB helpers for the accent color picker (Control Center) - no DOM
+ * Pure hex/RGB helpers for the accent color picker (Control Center). No DOM
  * access here so this can be included by both the main process and renderer
  * tsconfig projects.
  */

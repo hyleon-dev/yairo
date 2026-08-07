@@ -34,7 +34,7 @@ function computeDelta(data: TelemetryData, settings: LapTimerOverlaySettings): n
 export function LapTimerOverlay({ data, settings }: { data: TelemetryData; settings: LapTimerOverlaySettings }) {
   const useTargetLap = settings.targetLapTimeSec > 0
   // Without a target, we depend on the SDK's own delta, which isn't valid
-  // right after a new best lap (see lapDeltaToBestValid's doc comment) - hide
+  // right after a new best lap (see lapDeltaToBestValid's doc comment), hide
   // it rather than showing a misleading "+0.000" during that window.
   const showDelta = !data.isSpectatingOther && (useTargetLap || data.lapDeltaToBestValid)
   return (

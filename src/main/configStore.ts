@@ -72,10 +72,8 @@ const DEFAULT_CONFIG: AppConfig = {
   ]
 }
 
-// Merges saved array into DEFAULT_CONFIG per overlay id instead
-// of replacing it wholesale; otherwise a newly added overlay would
-// never show up for existing config.json files, since their "overlays"
-// array would replace the default array on spread instead of extending it.
+// Merges saved overlays into DEFAULT_CONFIG by id instead of replacing the
+// array outright, so a newly added overlay still appears for existing config.json files.
 function mergeOverlays(saved: OverlayConfig[] | undefined): OverlayConfig[] {
   const savedById = new Map((saved ?? []).map((o) => [o.id, o]))
   return DEFAULT_CONFIG.overlays.map((def) => {

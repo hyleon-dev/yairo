@@ -1,8 +1,5 @@
 import type { ColorCorrectionMode, OverlayId } from './types'
 
-// Central collection of all user-facing UI text, components import
-// strings from here instead of hardcoding them inline.
-
 const stintLapsHint = 'Stint Laps:\niRacing does not provide this info. It is calculated internally from tracked laps. ' +
     'But when the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits, ' +
     'it is not tracked and the stint laps will continue to rise when you reconnect and start YAiRO.'

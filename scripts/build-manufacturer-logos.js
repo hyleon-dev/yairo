@@ -3,26 +3,26 @@
 // src/renderer/overlay/src/manufacturerLogos/data.json (base64 data-URI per
 // manufacturer). Two sources, checked in this order per manufacturer:
 //
-// 1. resources/manufacturer-logos/<key>.svg or .png - local files the user
-//    supplied by hand (gitignored, not in this repo - same pattern as
+// 1. resources/manufacturer-logos/<key>.svg or .png are local files the user
+//    supplied by hand, gitignored and not in this repo (same pattern as
 //    resources/trackmap-assets/). Takes priority if present, so it also
 //    doubles as a way to override any of the downloaded ones below.
-// 2. @avto-dev/vehicle-logotypes' hosted image CDN (its npm package only
-//    ships a JSON file with remote image URLs, no local files - see
-//    https://github.com/avto-dev/vehicle-logotypes).
+// 2. @avto-dev/vehicle-logotypes' hosted image CDN. Its npm package only
+//    ships a JSON file with remote image URLs, no local files, see
+//    https://github.com/avto-dev/vehicle-logotypes.
 //
 // Either way the network fetch (or local read) only ever happens here, when
-// re-generating the registry - the running app stays fully offline.
+// re-generating the registry. The running app stays fully offline.
 //
 // Keys here are shared with src/main/manufacturerLogos.ts (CarScreenName
-// keyword matching) - both use the same canonical slug per manufacturer.
+// keyword matching), both use the same canonical slug per manufacturer.
 //
 // Dallara, RAY, Skip Barber, Williams F1 aren't in avto-dev's dataset at
-// all - niche racing constructors/spec-series brands, not retail car
+// all. They're niche racing constructors/spec-series brands, not retail car
 // manufacturers, so no general-purpose logo library carries them. "generic"
 // (iRacing's own placeholder badge for unbadged/unmatched cars, see
 // manufacturerLogoKey()'s fallback) isn't a manufacturer either. All five
-// are local-only - only bundled once/if a matching file shows up in
+// are local-only, only bundled once/if a matching file shows up in
 // resources/manufacturer-logos/.
 //
 // Usage: npm run build-manufacturer-logos
@@ -39,11 +39,11 @@ const SLUG_OVERRIDES = {
   radical: 'radical-sportscars'
 }
 
-// Keys with no avto-dev equivalent - local-only (resources/manufacturer-logos/
+// Keys with no avto-dev equivalent, local-only (resources/manufacturer-logos/
 // or nothing), see header comment.
 const LOCAL_ONLY_KEYS = ['dallara', 'ray', 'skip-barber', 'williams-f1', 'generic']
 
-// Our canonical keys - must stay in sync with MANUFACTURER_KEYWORDS in
+// Our canonical keys. Must stay in sync with MANUFACTURER_KEYWORDS in
 // src/main/manufacturerLogos.ts (LOCAL_ONLY_KEYS aside, "generic" is matched
 // there too, as the no-brand-detected fallback).
 const MANUFACTURER_KEYS = [

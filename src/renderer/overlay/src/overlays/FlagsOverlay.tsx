@@ -42,7 +42,7 @@ interface FlagVisual {
   ledBorder?: string
 }
 
-const LED_OFF = 'rgba(255, 255, 255, 0.08)' // unlit LED
+const LED_OFF = 'rgba(255, 255, 255, 0.08)'
 const BLACK_FIELD = '#0d0d10'
 const BLACK_LED_BORDER = '1px solid rgba(255, 255, 255, 0.5)'
 

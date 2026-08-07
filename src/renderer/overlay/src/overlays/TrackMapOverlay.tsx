@@ -12,8 +12,7 @@ interface Dot {
   y: number
 }
 
-// Plain circle used whenever a track isn't in the bundled dataset yet (e.g. a new track iRacing released).
-// Not an actual track layout, just a circle so relative spacing/pit status between cars is still visible.
+// Plain circle fallback for tracks not in the bundled dataset (e.g. a new track), just to keep pit-status/spacing visible.
 const FALLBACK_VIEW_BOX = '0 0 200 200'
 const FALLBACK_CENTER = 100
 const FALLBACK_RADIUS = 80
