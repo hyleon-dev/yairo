@@ -5,6 +5,7 @@ import { classPositionGradient, licBadgeStyle } from '../sdkColors'
 import { manufacturerLogoDataUri } from '../manufacturerLogos/registry'
 import 'flag-icons/css/flag-icons.min.css'
 import './StandingsOverlay.css'
+import { iRating } from '../overlay-elements'
 
 const m = messages.standings
 
@@ -16,7 +17,10 @@ function gridTemplate(settings: StandingsOverlaySettings): string {
   if (settings.showNationFlag) cols.push('18px')
   if (settings.showManufacturerLogo) cols.push('24px')
   cols.push('1fr')
-  if (settings.showIRating) cols.push('42px')
+  // iRating and its change (when shown) live in a single cell (see iRating()
+  // below) - not two separate grid columns - so this must stay one push,
+  // just wider when the change badge needs room too.
+  if (settings.showIRating) cols.push(settings.showIRatingChange ? '82px' : '42px')
   if (settings.showSafetyRating) cols.push('54px')
   cols.push('32px')
   if (settings.showStint) cols.push('40px')
@@ -92,7 +96,7 @@ function DriverRow({
       )}
       {settings.showManufacturerLogo && <ManufacturerLogo logoKey={driver.manufacturerLogoKey} />}
       <span className="col-name">{driver.driverName}</span>
-      {settings.showIRating && <span className="col-irating">{driver.iRating > 0 ? driver.iRating : '-'}</span>}
+      {settings.showIRating && iRating({ driver, settings })}
       {settings.showSafetyRating && (
         <span className="col-sr" style={licBadgeStyle(driver.licColorHex)}>
           {driver.licString || '-'}

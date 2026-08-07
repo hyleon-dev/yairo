@@ -83,11 +83,6 @@
   text-align: right;
   color: var(--color-text-muted);
 }
-.col-irating {
-  text-align: right;
-  color: var(--color-text-soft);
-  font-size: var(--font-body-sm);
-}
 .col-sr {
   /* Color/background/border come as inline styles from sdkColors.ts,
      derived from the license color provided by the SDK. */

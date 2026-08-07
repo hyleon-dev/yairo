@@ -11,6 +11,7 @@ import {
 import { FakeIRacingSDK } from './irsdkFake'
 import { flairNameToIsoCode } from './nationFlags'
 import { manufacturerLogoKey } from './manufacturerLogos'
+import { estimateIratingChanges } from './iratingCalculator'
 import type {
   DriverLapCompletedEvent,
   DriverStanding,
@@ -823,9 +824,18 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
 
     // Fastest valid best-lap time WITHIN this class
     const classFastestLapTime = Math.min(...drivers.map((d) => d.bestLapTime).filter((t) => t > 0))
-    const driversWithFastestFlag = drivers.map((d) => ({
+
+    // iRating changes only apply to actual races - drivers are already in
+    // class-position order (index 0 = P1) here, matching what
+    // estimateIratingChanges() expects.
+    const iRatingChanges = isRaceSession
+      ? estimateIratingChanges(drivers.map((d) => d.iRating))
+      : drivers.map(() => null)
+
+    const driversWithFastestFlag = drivers.map((d, i) => ({
       ...d,
-      isClassFastestLap: d.bestLapTime > 0 && d.bestLapTime === classFastestLapTime
+      isClassFastestLap: d.bestLapTime > 0 && d.bestLapTime === classFastestLapTime,
+      iRatingChange: iRatingChanges[i]
     }))
 
     return {
@@ -838,14 +848,21 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
   })
 }
 
-function computeClassPositions(raw: TelemetryVarList): Map<number, number> {
-  const positionsByCarIdx = new Map<number, number>()
+interface ClassPositionInfo {
+  position: number
+  iRatingChange: number | null
+}
+
+// Position + iRating-change estimate per car, both derived from the same
+// per-class ranking (see computeRankedClasses()).
+function computeClassPositions(raw: TelemetryVarList): Map<number, ClassPositionInfo> {
+  const infoByCarIdx = new Map<number, ClassPositionInfo>()
   for (const cls of computeRankedClasses(raw)) {
     for (const driver of cls.drivers) {
-      positionsByCarIdx.set(driver.carIdx, driver.position)
+      infoByCarIdx.set(driver.carIdx, { position: driver.position, iRatingChange: driver.iRatingChange })
     }
   }
-  return positionsByCarIdx
+  return infoByCarIdx
 }
 
 function buildStandings(raw: TelemetryVarList): StandingsData {
@@ -965,6 +982,7 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
     isClassFastestLap: false,
     isPlayer: row.isPlayer,
     iRating: row.iRating,
+    iRatingChange: null, // filled in by computeRankedClasses() once class order is known
     licString: row.licString,
     licColorHex: row.licColorHex,
     classColorHex: row.classColorHex,
@@ -1000,6 +1018,7 @@ function buildTimeRanking(rows: StandingsRow[]): DriverStanding[] {
     isClassFastestLap: false,
     isPlayer: row.isPlayer,
     iRating: row.iRating,
+    iRatingChange: null, // filled in by computeRankedClasses() once class order is known
     licString: row.licString,
     licColorHex: row.licColorHex,
     classColorHex: row.classColorHex,
@@ -1056,9 +1075,10 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
     .filter((driver) => !driver.IsSpectator && !driver.CarIsPaceCar && (trackSurface[driver.CarIdx] ?? -1) !== -1)
     .map((driver) => {
       const carIdx = driver.CarIdx
+      const classPosition = classPositions.get(carIdx)
       return {
         carIdx,
-        position: classPositions.get(carIdx) ?? 0,
+        position: classPosition?.position ?? 0,
         carNumber: driver.CarNumber,
         driverName: displayDriverName(carIdx, rawPlayerCarIdx, driver.TeamName),
         lap: laps[carIdx] ?? 0,
@@ -1072,6 +1092,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
         // which the frontend uses regardless of which car it refers to.
         isFocused: carIdx === playerCarIdx,
         iRating: driver.IRating,
+        iRatingChange: classPosition?.iRatingChange ?? null,
         licString: driver.LicString ?? '',
         licColorHex: sdkColorHex(driver.LicColor),
         classColorHex: sdkColorHex(driver.CarClassColor),
@@ -1124,6 +1145,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
     lapsDifference: row.lap - focusDriver.lap,
     isPlayer: row.isFocused,
     iRating: row.iRating,
+    iRatingChange: row.iRatingChange,
     licString: row.licString,
     licColorHex: row.licColorHex,
     classColorHex: row.classColorHex,

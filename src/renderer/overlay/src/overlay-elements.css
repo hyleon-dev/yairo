@@ -1,0 +1,54 @@
+
+.card {
+  text-align: center;
+  background: var(--panel-bg);
+  border: var(--panel-border);
+  border-radius: var(--radius-lg);
+  padding: 12px 20px;
+  backdrop-filter: blur(var(--panel-blur));
+  color: var(--color-text);
+}
+
+.big-number {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.big-number.small {
+  font-size: 32px;
+}
+
+.unit {
+  font-size: var(--font-body-lg);
+  color: var(--color-text-muted);
+  margin-bottom: 6px;
+}
+
+
+.col-irating {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  color: var(--color-text-soft);
+  font-size: var(--font-body-sm);
+  text-wrap: nowrap;
+}
+.col-irating-value {
+  text-align: right;
+}
+.col-irchange {
+  /* fixed width regardless of sign/digit count, so the layout always has
+     enough room and stays stable whether a driver is gaining or losing. */
+  display: inline-block;
+  min-width: 26px;
+  text-align: right;
+  color: var(--color-text-soft);
+  font-size: var(--font-body-sm);
+}
+.col-irchange--up {
+  color: var(--color-success);
+}
+.col-irchange--down {
+  color: var(--color-danger);
+}

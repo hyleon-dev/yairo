@@ -95,6 +95,7 @@ export const messages = {
     showBestLapTime: 'Show best lap time',
     showNationFlag: 'Show country flag',
     showManufacturerLogo: 'Show manufacturer logo',
+    showIRatingChange: 'Show iRating change',
     showWearPct: 'Show wear %',
     showRpmNumber: 'Show RPM number',
     showLabel: 'Show flag name',

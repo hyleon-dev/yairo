@@ -2,6 +2,7 @@ import type { RelativeData, RelativeDriver, RelativeOverlaySettings } from '../.
 import { messages } from '../../../../shared/messages'
 import { classPositionGradient, licBadgeStyle } from '../sdkColors'
 import './RelativeOverlay.css'
+import { iRating } from '../overlay-elements'
 
 const m = messages.relative
 
@@ -10,7 +11,7 @@ const m = messages.relative
 // data rows stay aligned regardless of combination.
 function gridTemplate(settings: RelativeOverlaySettings): string {
   const cols = ['22px', '32px', '1fr']
-  if (settings.showIRating) cols.push('42px')
+  if (settings.showIRating) cols.push(settings.showIRatingChange ? '82px' : '42px')
   if (settings.showSafetyRating) cols.push('54px')
   cols.push('32px')
   if (settings.showStint) cols.push('40px')
@@ -61,7 +62,7 @@ function DriverRow({
       </span>
       <span className="col-num">#{driver.carNumber}</span>
       <span className="col-name">{driver.driverName}</span>
-      {settings.showIRating && <span className="col-irating">{driver.iRating > 0 ? driver.iRating : '-'}</span>}
+      {settings.showIRating && iRating({ driver, settings })}
       {settings.showSafetyRating && (
         <span className="col-sr" style={licBadgeStyle(driver.licColorHex)}>
           {driver.licString || '-'}

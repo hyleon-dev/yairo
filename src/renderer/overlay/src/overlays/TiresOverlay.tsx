@@ -1,6 +1,6 @@
 import type { TelemetryData, TiresOverlaySettings, TireWheelData } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
-import '../overlay-utils.css'
+import '../overlay-elements.css'
 import './TiresOverlay.css'
 
 const m = messages.tires

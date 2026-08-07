@@ -128,43 +128,36 @@ function StandingsSettings({
 }) {
   return (
       <>
-      <span className="multi-settings-row">
+        <span className="multi-settings-row">
+          <label className="overlay-setting">
+          <NumberInput
+              min={0}
+              max={10}
+              value={settings.topCount}
+              onChange={(value) => onChange({topCount: value})}
+          />
+          <span className="overlay-setting-label">{m.topCount}</span>
+        </label>
         <label className="overlay-setting">
-        <NumberInput
-            min={0}
-            max={10}
-            value={settings.topCount}
-            onChange={(value) => onChange({topCount: value})}
-        />
-        <span className="overlay-setting-label">{m.topCount}</span>
-      </label>
-      <label className="overlay-setting">
-        <NumberInput
-            min={0}
-            max={10}
-            value={settings.driversAhead}
-            onChange={(value) => onChange({driversAhead: value})}
-        />
-        <span className="overlay-setting-label">{m.driversAhead}</span>
-      </label>
-      <label className="overlay-setting">
-        <NumberInput
-            min={0}
-            max={10}
-            value={settings.driversBehind}
-            onChange={(value) => onChange({driversBehind: value})}
-        />
-        <span className="overlay-setting-label">{m.driversBehind}</span>
-      </label>
-      </span>
-        <span className="multi-settings-row">
-          <DriverRatingSettings settings={settings} onChange={onChange}/>
+          <NumberInput
+              min={0}
+              max={10}
+              value={settings.driversAhead}
+              onChange={(value) => onChange({driversAhead: value})}
+          />
+          <span className="overlay-setting-label">{m.driversAhead}</span>
+        </label>
+        <label className="overlay-setting">
+          <NumberInput
+              min={0}
+              max={10}
+              value={settings.driversBehind}
+              onChange={(value) => onChange({driversBehind: value})}
+          />
+          <span className="overlay-setting-label">{m.driversBehind}</span>
+        </label>
         </span>
-        <StintSettings settings={settings} onChange={onChange}/>
         <span className="multi-settings-row">
-          <AvgLapTimeSettings settings={settings} onChange={onChange}/>
-          <BestLapTimeSettings settings={settings} onChange={onChange}/>
-        </span>
         <ToggleSwitch
             checked={settings.showNationFlag}
             onChange={(checked) => onChange({showNationFlag: checked})}
@@ -175,6 +168,15 @@ function StandingsSettings({
             onChange={(checked) => onChange({showManufacturerLogo: checked})}
             label={m.showManufacturerLogo}
         />
+        </span>
+        <span className="multi-settings-row">
+          <DriverRatingSettings settings={settings} onChange={onChange}/>
+        </span>
+        <StintSettings settings={settings} onChange={onChange}/>
+        <span className="multi-settings-row">
+          <AvgLapTimeSettings settings={settings} onChange={onChange}/>
+          <BestLapTimeSettings settings={settings} onChange={onChange}/>
+        </span>
       </>
   )
 }
@@ -196,6 +198,12 @@ function DriverRatingSettings({
             onChange={(checked) => onChange({showIRating: checked})}
             label={m.showIRating}
         />
+        {settings.showIRating &&
+            <ToggleSwitch
+                checked={settings.showIRatingChange}
+                onChange={(checked) => onChange({showIRatingChange: checked})}
+                label={m.showIRatingChange}
+            />}
         <ToggleSwitch
             checked={settings.showSafetyRating}
             onChange={(checked) => onChange({showSafetyRating: checked})}

@@ -171,6 +171,12 @@ export interface DriverStanding {
   isClassFastestLap: boolean
   isPlayer: boolean
   iRating: number
+  // Estimated iRating change if the race ended right now with drivers in
+  // their CURRENT live position order (see iratingCalculator.ts) - NOT a
+  // finish-position prediction, purely based on where everyone stands at
+  // this instant. null outside a race session, or if this driver has no
+  // valid iRating (e.g. missing driver data).
+  iRatingChange: number | null
   licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
   licColorHex: string // License class color, taken directly from the SDK (Driver.LicColor) as a CSS hex code.
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
@@ -230,6 +236,8 @@ export interface RelativeDriver {
   lapsDifference: number // > 0 = driver is that many laps ahead, < 0 = that many laps behind.
   isPlayer: boolean
   iRating: number
+  // See DriverStanding.iRatingChange.
+  iRatingChange: number | null
   licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
   licColorHex: string // License class color, taken directly from the SDK (Driver.LicColor) as a CSS hex code.
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
@@ -378,6 +386,7 @@ export interface BaseOverlaySettings {
 
 export interface DriverRatingOverlaySettings {
   showIRating: boolean
+  showIRatingChange: boolean
   showSafetyRating: boolean
 }
 
@@ -461,6 +470,7 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     driversBehind: 3,
     topCount: 3,
     showIRating: true,
+    showIRatingChange: true,
     showSafetyRating: true,
     showStint: true,
     showAvgLapTime: true,
@@ -474,6 +484,7 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     driversAhead: 3,
     driversBehind: 3,
     showIRating: true,
+    showIRatingChange: false,
     showSafetyRating: true,
     showStint: true,
     showAvgLapTime: false
