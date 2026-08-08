@@ -7,6 +7,8 @@ import icon from '../../resources/icon.png?asset'
 
 const PRELOAD_PATH = join(__dirname, '../preload/index.js')
 
+const MIN_CONTENT_DIMENSION = 20
+
 export class WindowManager {
   controlWindow: BrowserWindow | null = null
   private overlayWindows = new Map<OverlayId, BrowserWindow>()
@@ -158,6 +160,11 @@ export class WindowManager {
     const win = this.overlayWindows.get(id)
     if (!win || win.isDestroyed()) return
     if (win.isResizable() && !force) return
+    // Ignore degenerate reports (e.g. a transient 0x0 layout measurement during
+    // a session change): applying one would shrink the window to invisible and,
+    // since static content may not trigger another resize report, leave it stuck
+    // there until edit mode is toggled.
+    if (width < MIN_CONTENT_DIMENSION || height < MIN_CONTENT_DIMENSION) return
 
     const bounds = win.getBounds()
     if (bounds.width === width && bounds.height === height) return
