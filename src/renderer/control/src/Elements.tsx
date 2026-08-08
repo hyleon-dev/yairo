@@ -13,6 +13,7 @@ function useWheelStep(
     if (!el) return
 
     const handleWheel = (e: WheelEvent) => {
+      if (document.activeElement !== el) return
       e.preventDefault()
       const next = value + (e.deltaY < 0 ? step : -step)
       onChange(Math.min(max ?? Infinity, Math.max(min ?? -Infinity, next)))
