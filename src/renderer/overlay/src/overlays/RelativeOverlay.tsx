@@ -17,6 +17,7 @@ function gridTemplate(settings: RelativeOverlaySettings): string {
   if (settings.showStint) cols.push('40px')
   cols.push('56px')
   if (settings.showAvgLapTime) cols.push('70px')
+  if (settings.showLastLapTime) cols.push('80px')
   return cols.join(' ')
 }
 
@@ -31,7 +32,7 @@ function fmtLap(lap: number): string {
   return `L${lap}`
 }
 
-function fmtAvgLap(secs: number): string {
+function fmtLapTime(secs: number): string {
   if (secs <= 0) return '–'
   const m = Math.floor(secs / 60)
   const s = (secs % 60).toFixed(3).padStart(6, '0')
@@ -68,10 +69,11 @@ function DriverRow({
           {driver.licString || '-'}
         </span>
       )}
-      <span className="col-lap">{fmtLap(driver.lap)}</span>
+      <span className="col-driver-current-lap">{fmtLap(driver.lap)}</span>
       {settings.showStint && <span className="col-stint">{driver.stintLaps}</span>}
       <span className="col-gap">{fmtGap(driver.gapToPlayerSec, driver.isPlayer)}</span>
-      {settings.showAvgLapTime && <span className="col-avg">{fmtAvgLap(driver.avgLapTimeSec)}</span>}
+      {settings.showAvgLapTime && <span className="col-avg">{fmtLapTime(driver.avgLapTimeSec)}</span>}
+      {settings.showLastLapTime && <span className="col-lap">{fmtLapTime(driver.lastLapTime)}</span>}
     </div>
   )
 }
@@ -87,10 +89,11 @@ function PlaceholderRow({ settings, template }: { settings: RelativeOverlaySetti
       <span className="col-name">–</span>
       {settings.showIRating && <span className="col-irating">–</span>}
       {settings.showSafetyRating && <span className="col-sr">–</span>}
-      <span className="col-lap">–</span>
+      <span className="col-driver-current-lap">–</span>
       {settings.showStint && <span className="col-stint">–</span>}
       <span className="col-gap">–</span>
       {settings.showAvgLapTime && <span className="col-avg">–</span>}
+      {settings.showLastLapTime && <span className="col-lap">–</span>}
     </div>
   )
 }
@@ -112,10 +115,11 @@ export function RelativeOverlay({ data, settings }: { data: RelativeData; settin
         <span className="col-name">{m.columnDriver}</span>
         {settings.showIRating && <span className="col-irating">{m.columnIRating}</span>}
         {settings.showSafetyRating && <span className="col-sr">{m.columnSafetyRating}</span>}
-        <span className="col-lap">{m.columnLap}</span>
+        <span className="col-driver-current-lap">{m.columnLap}</span>
         {settings.showStint && <span className="col-stint">{m.columnStint}</span>}
         <span className="col-gap">{m.columnGap}</span>
         {settings.showAvgLapTime && <span className="col-avg">{m.columnAvgLap}</span>}
+        {settings.showLastLapTime && <span className="col-lap">{m.columnLast}</span>}
       </div>
 
       <div className="rel-drivers">

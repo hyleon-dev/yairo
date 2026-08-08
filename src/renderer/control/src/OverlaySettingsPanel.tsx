@@ -2,7 +2,7 @@ import type {
   AnyOverlaySettings,
   AvgLapTimeOverlaySettings, BestLapTimeOverlaySettings,
   FlagsOverlaySettings,
-  LapTimerOverlaySettings,
+  LapTimerOverlaySettings, LastLapTimeOverlaySettings,
   OverlayConfig,
   RelativeOverlaySettings,
   StandingsOverlaySettings,
@@ -113,8 +113,11 @@ function RelativeSettings({
         <span className="multi-settings-row">
       <DriverRatingSettings settings={settings} onChange={onChange}/>
       </span>
-        <StintSettings settings={settings} onChange={onChange}/>
+      <StintSettings settings={settings} onChange={onChange}/>
+      <span className="multi-settings-row">
         <AvgLapTimeSettings settings={settings} onChange={onChange}/>
+        <LastLapTimeSettings settings={settings} onChange={onChange}/>
+      </span>
       </>
   )
 }
@@ -176,6 +179,7 @@ function StandingsSettings({
         <span className="multi-settings-row">
           <AvgLapTimeSettings settings={settings} onChange={onChange}/>
           <BestLapTimeSettings settings={settings} onChange={onChange}/>
+          <LastLapTimeSettings settings={settings} onChange={onChange}/>
         </span>
       </>
   )
@@ -305,6 +309,22 @@ function BestLapTimeSettings({
           checked={settings.showBestLapTime}
           onChange={(checked) => onChange({showBestLapTime: checked})}
           label={m.showBestLapTime}
+      />
+  )
+}
+
+function LastLapTimeSettings({
+                               settings,
+                               onChange
+                             }: {
+  settings: LastLapTimeOverlaySettings
+  onChange: (patch: Partial<AnyOverlaySettings>) => void
+}) {
+  return (
+      <ToggleSwitch
+          checked={settings.showLastLapTime}
+          onChange={(checked) => onChange({showLastLapTime: checked})}
+          label={m.showLastLapTime}
       />
   )
 }

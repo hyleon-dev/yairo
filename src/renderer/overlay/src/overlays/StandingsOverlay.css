@@ -160,7 +160,7 @@
   white-space: nowrap;
   min-width: 150px;
 }
-.col-lap {
+.col-driver-current-lap {
   text-align: right;
   color: var(--color-text-muted);
 }
@@ -173,15 +173,14 @@
   color: var(--color-text-secondary);
   font-size: var(--font-body-sm);
 }
-.col-best {
+.col-lap {
   text-align: right;
   color: var(--color-text-secondary);
   font-size: var(--font-body-sm);
 }
-/* Only the class-wide fastest valid best lap is highlighted purple (see
-   DriverStanding.isClassFastestLap in irsdkWorker.ts), not every best-lap
-   column. */
-.col-best--fastest {
+/* Purple highlight, shared by two different conditions (see StandingsOverlay.tsx):
+   Best column = class-wide fastest lap (isClassFastestLap), Last column = driver's own best lap. */
+.col-lap--fastest {
   color: var(--color-best);
   font-weight: 700;
 }

@@ -75,7 +75,7 @@
   white-space: nowrap;
   min-width: 150px;
 }
-.col-lap {
+.col-driver-current-lap {
   text-align: right;
   color: var(--color-text-muted);
 }
@@ -108,11 +108,16 @@
   color: var(--color-text-muted);
   font-size: var(--font-body-sm);
 }
+.col-lap {
+  text-align: right;
+  color: var(--color-text-muted);
+  font-size: var(--font-body-sm);
+}
 
 /* Drivers on a different lap than the player (ahead or behind). The gap
    value stays a pure track distance, only the lap display is highlighted so
    it isn't mistaken for "same lap". */
-.rel-row--lapped .col-lap {
+.rel-row--lapped .col-driver-current-lap {
   color: var(--color-warning);
   font-weight: 700;
 }

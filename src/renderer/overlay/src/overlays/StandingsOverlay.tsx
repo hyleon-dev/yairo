@@ -27,6 +27,7 @@ function gridTemplate(settings: StandingsOverlaySettings): string {
   cols.push('70px')
   if (settings.showAvgLapTime) cols.push('70px')
   if (settings.showBestLapTime) cols.push('80px')
+  if (settings.showLastLapTime) cols.push('80px')
   return cols.join(' ')
 }
 
@@ -104,13 +105,14 @@ function DriverRow({
           {driver.licString || '-'}
         </span>
       )}
-      <span className="col-lap">{driver.lapsCompleted == -1 ? '-' : driver.lapsCompleted}</span>
+      <span className="col-driver-current-lap">{driver.lapsCompleted == -1 ? '-' : driver.lapsCompleted}</span>
       {settings.showStint && <span className="col-stint">{driver.stintLaps}</span>}
       <span className={`col-gap ${driver.position === 1 ? 'gap--leader' : ''}`}>
         {fmtGap(driver.gapToLeaderSec, driver.position)}
       </span>
       {settings.showAvgLapTime && <span className="col-avg">{fmtLapTime(driver.avgLapTimeSec)}</span>}
-      {settings.showBestLapTime && <span className={`col-best ${driver.isClassFastestLap ? 'col-best--fastest' : ''}`}>{fmtLapTime(driver.bestLapTime)}</span>}
+      {settings.showBestLapTime && <span className={`col-lap ${driver.isClassFastestLap ? 'col-lap--fastest' : ''}`}>{fmtLapTime(driver.bestLapTime)}</span>}
+      {settings.showLastLapTime && <span className={`col-lap ${driver.lastLapTime != -1 && driver.lastLapTime == driver.bestLapTime ? 'col-lap--fastest' : ''}`}>{fmtLapTime(driver.lastLapTime)}</span>}
     </div>
   )
 }
@@ -125,11 +127,12 @@ function ColumnLabels({ settings, template }: { settings: StandingsOverlaySettin
       <span className="col-name">{m.columnDriver}</span>
       {settings.showIRating && <span className="col-irating">{m.columnIRating}</span>}
       {settings.showSafetyRating && <span className="col-sr">{m.columnSafetyRating}</span>}
-      <span className="col-lap">{m.columnLap}</span>
+      <span className="col-driver-current-lap">{m.columnLap}</span>
       {settings.showStint && <span className="col-stint">{m.columnStint}</span>}
       <span className="col-gap">{m.columnGap}</span>
       {settings.showAvgLapTime && <span className="col-avg">{m.columnAvgLap}</span>}
-      {settings.showBestLapTime && <span className="col-best">{m.columnBest}</span>}
+      {settings.showBestLapTime && <span className="col-lap">{m.columnBest}</span>}
+      {settings.showLastLapTime && <span className="col-lap">{m.columnLast}</span>}
     </div>
   )
 }
@@ -182,11 +185,12 @@ function PlaceholderRow({
       <span className="col-name">–</span>
       {settings.showIRating && <span className="col-irating">–</span>}
       {settings.showSafetyRating && <span className="col-sr">–</span>}
-      <span className="col-lap">–</span>
+      <span className="col-driver-current-lap">–</span>
       {settings.showStint && <span className="col-stint">–</span>}
       <span className="col-gap">–</span>
       {settings.showAvgLapTime && <span className="col-avg">–</span>}
-      {settings.showBestLapTime && <span className="col-best">–</span>}
+      {settings.showBestLapTime && <span className="col-lap">–</span>}
+      {settings.showLastLapTime && <span className="col-lap">–</span>}
     </div>
   )
 }

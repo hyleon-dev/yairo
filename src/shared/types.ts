@@ -184,6 +184,7 @@ export interface DriverStanding {
   // Resolved from the car's CarScreenName.
   // Null if no known manufacturer keyword matched.
   manufacturerLogoKey: string | null
+  lastLapTime: number
 }
 
 export interface StandingsClass {
@@ -234,6 +235,7 @@ export interface RelativeDriver {
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
   // See DriverStanding.avgLapTimeSec.
   avgLapTimeSec: number
+  lastLapTime: number
 }
 
 export interface RelativeData {
@@ -393,14 +395,18 @@ export interface BestLapTimeOverlaySettings {
   showBestLapTime: boolean
 }
 
+export interface LastLapTimeOverlaySettings {
+  showLastLapTime: boolean
+}
+
 export interface RelativeOverlaySettings
-  extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings, AvgLapTimeOverlaySettings {
+  extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings, AvgLapTimeOverlaySettings, LastLapTimeOverlaySettings {
   driversAhead: number // How many drivers ahead of the player are shown.
   driversBehind: number // How many drivers behind the player are shown.
 }
 
 export interface StandingsOverlaySettings
-  extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings, AvgLapTimeOverlaySettings, BestLapTimeOverlaySettings {
+  extends BaseOverlaySettings, DriverRatingOverlaySettings, StintOverlaySettings, AvgLapTimeOverlaySettings, BestLapTimeOverlaySettings, LastLapTimeOverlaySettings {
   driversAhead: number // How many drivers ahead of the player are shown.
   driversBehind: number // How many drivers behind the player are shown.
   topCount: number // These leading drivers (P1, P2, ...) are always shown.
@@ -467,7 +473,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     showAvgLapTime: true,
     showBestLapTime: true,
     showNationFlag: false,
-    showManufacturerLogo: false
+    showManufacturerLogo: false,
+    showLastLapTime: true
   },
   relative: {
     scale: 1,
@@ -478,7 +485,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     showIRatingChange: false,
     showSafetyRating: true,
     showStint: true,
-    showAvgLapTime: false
+    showAvgLapTime: false,
+    showLastLapTime: true
   },
   trackmap: { scale: 1, opacity: DEFAULT_TRACKMAP_OPACITY },
   tires: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showWearPct: true },

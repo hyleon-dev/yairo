@@ -57,6 +57,7 @@ export const messages = {
     columnGap: 'Gap',
     columnBest: 'Best',
     columnAvgLap: 'Avg',
+    columnLast: 'Last',
     leader: 'LEADER',
     classMeta: (driverCount: number, strengthOfField: number) =>
       `${driverCount} Driver · SoF ${strengthOfField}`,
@@ -71,7 +72,8 @@ export const messages = {
     columnLap: 'Lap',
     columnStint: 'Stint Laps',
     columnGap: 'Gap',
-    columnAvgLap: 'Avg'
+    columnAvgLap: 'Avg',
+    columnLast: 'Last'
   },
   trackmap: {
     noMapAvailable: (trackName: string, trackId: number) =>
@@ -98,7 +100,8 @@ export const messages = {
     showLabel: 'Show flag name',
     targetTime: 'Target time',
     resetTargetTime: 'Reset target time',
-    resetTargetTime_short: 'Reset'
+    resetTargetTime_short: 'Reset',
+    showLastLapTime: 'Show last lap time'
   },
   lapTimer: {
     lapLabel: 'LAP',

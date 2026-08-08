@@ -741,6 +741,7 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
   //  multiclass session
   const gapToLeader = raw.CarIdxF2Time?.value ?? []
   const bestLapTimes = raw.CarIdxBestLapTime?.value ?? []
+  const lastLapTimes = raw.CarIdxLastLapTime?.value ?? []
   const playerCarPosition = raw.PlayerCarPosition?.value?.[0] ?? 0
 
   // Official session results stays for a driver once they've
@@ -774,6 +775,8 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
     const lapsCompleted = laps[carIdx] > 0 ? laps[carIdx] : (result?.LapsComplete ?? laps[carIdx] ?? 0)
     const bestLapTime =
       (bestLapTimes[carIdx] ?? -1) > 0 ? bestLapTimes[carIdx] : (result?.FastestTime ?? bestLapTimes[carIdx] ?? -1)
+    const lastLapTime =
+      (lastLapTimes[carIdx] ?? -1) > 0 ? lastLapTimes[carIdx] : (result?.LastTime ?? lastLapTimes[carIdx] ?? -1)
 
     return {
       carIdx,
@@ -795,7 +798,8 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
       classColorHex: sdkColorHex(driver?.CarClassColor),
       avgLapTimeSec: avgLapTimeSec(driver?.UserID),
       flagIsoCode: driverFlagIsoCode(driver),
-      manufacturerLogoKey: manufacturerLogoKey(driver?.CarScreenName)
+      manufacturerLogoKey: manufacturerLogoKey(driver?.CarScreenName),
+      lastLapTime
     }
   })
 
@@ -911,6 +915,7 @@ interface StandingsRow {
   avgLapTimeSec: number
   flagIsoCode: string | null
   manufacturerLogoKey: string | null
+  lastLapTime: number
 }
 
 // iRacing's official Strength-of-Field formula
@@ -978,7 +983,8 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
     classColorHex: row.classColorHex,
     avgLapTimeSec: row.avgLapTimeSec,
     flagIsoCode: row.flagIsoCode,
-    manufacturerLogoKey: row.manufacturerLogoKey
+    manufacturerLogoKey: row.manufacturerLogoKey,
+    lastLapTime: row.lastLapTime
   }))
 }
 
@@ -1014,7 +1020,8 @@ function buildTimeRanking(rows: StandingsRow[]): DriverStanding[] {
     classColorHex: row.classColorHex,
     avgLapTimeSec: row.avgLapTimeSec,
     flagIsoCode: row.flagIsoCode,
-    manufacturerLogoKey: row.manufacturerLogoKey
+    manufacturerLogoKey: row.manufacturerLogoKey,
+    lastLapTime: row.lastLapTime
   }))
 }
 
@@ -1051,6 +1058,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
   const lapDistPct = raw.CarIdxLapDistPct?.value ?? []
   const trackSurface = raw.CarIdxTrackSurface?.value ?? []
   const classPositions = computeClassPositions(raw)
+  const lastLapTimes = raw.CarIdxLastLapTime?.value ?? []
 
   // driverInfo.Drivers doesn't reliably mark a driver as a spectator after
   // they leave the server, they can stay listed with frozen lap data.
@@ -1066,7 +1074,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
         carIdx,
         position: classPosition?.position ?? 0,
         carNumber: driver.CarNumber,
-        driverName: displayDriverName(carIdx, rawPlayerCarIdx, driver.TeamName),
+        driverName: displayDriverName(carIdx, rawPlayerCarIdx, driver.UserName),
         lap: laps[carIdx] ?? 0,
         stintLaps: stintLaps(carIdx, laps[carIdx] ?? 0),
         lapDistPct: lapDistPct[carIdx] ?? 0,
@@ -1082,7 +1090,8 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
         licString: driver.LicString ?? '',
         licColorHex: sdkColorHex(driver.LicColor),
         classColorHex: sdkColorHex(driver.CarClassColor),
-        avgLapTimeSec: avgLapTimeSec(driver.UserID)
+        avgLapTimeSec: avgLapTimeSec(driver.UserID),
+        lastLapTime: lastLapTimes[carIdx] ?? -1
       }
     })
 
@@ -1135,7 +1144,8 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
     licString: row.licString,
     licColorHex: row.licColorHex,
     classColorHex: row.classColorHex,
-    avgLapTimeSec: row.avgLapTimeSec
+    avgLapTimeSec: row.avgLapTimeSec,
+    lastLapTime: row.lastLapTime
   }))
 
   return { drivers }
