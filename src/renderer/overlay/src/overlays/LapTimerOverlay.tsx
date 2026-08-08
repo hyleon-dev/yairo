@@ -56,7 +56,7 @@ export function LapTimerOverlay({ data, settings }: { data: TelemetryData; setti
       <div className="times-row">
         <div className="time-block">
           <span className="time-label">{m.lastLap}</span>
-          <span className="time-val">{fmtTime(data.lapLastTime)}</span>
+          <span className={`time-val ${(data.lapLastTime != -1 && data.lapLastTime == data.lapBestTime) ? 'time-val--best' : ''}`}>{fmtTime(data.lapLastTime)}</span>
         </div>
         <div className={`time-block ${!useTargetLap ? 'delta-target' : ''}`}>
           <span className="time-label">{m.bestLap}</span>

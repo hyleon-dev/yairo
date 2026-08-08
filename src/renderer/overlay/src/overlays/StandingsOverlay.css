@@ -21,16 +21,16 @@
   border-bottom: 1px solid rgba(var(--color-accent-rgb), 0.3);
 }
 .header-title {
-  font-size: var(--font-caption);
+  font-size: var(--font-body);
   font-weight: 700;
   color: var(--color-accent);
 }
-.header-track {
-  font-size: var(--font-caption);
+.header-data {
+  font-size: var(--font-body-sm);
   color: var(--color-text-muted);
 }
 .header-data-name {
-  font-size: 7px;
+  font-size: var(--font-label-sm);
   vertical-align: top;
 }
 

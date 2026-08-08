@@ -27,7 +27,7 @@ export const messages = {
     updateAvailableLink: 'View release',
     positioningHeading: 'Positioning',
     editModeExit: 'Exit edit mode',
-    editModeEnter: 'Move overlays (edit mode)',
+    editModeEnter: 'Edit mode',
     editModeHint: 'In edit mode the overlays are clickable and can be dragged around. Turn it back off afterwards so they stay click-through in the game.',
     versionLabel: (version: string) => `v${version}`,
     accentColorBtn: 'Accent color',

@@ -52,6 +52,7 @@
   --radius-pill: 999px;
 
   /* Recurring font sizes */
+  --font-label-sm: 8px;
   --font-label: 9px;
   --font-caption: 10px;
   --font-body-sm: 11px;

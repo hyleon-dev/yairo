@@ -63,7 +63,9 @@ function fmtLapsRemaining(laps: number | null): string {
 function fmtGrip(grip: string): string {
 
   switch (grip.toLowerCase()) {
-    case 'moderately low usage': return 'ML'
+    case 'moderately low usage': return 'FAIRLY LOW'
+    case 'moderately high usage': return 'FAIRLY HIGH'
+    case 'maximum usage': return 'MAX'
     default: return grip.toUpperCase().replace(' USAGE', '')
   }
 }
@@ -213,11 +215,11 @@ export function StandingsOverlay({ data, settings }: { data: StandingsData; sett
       <div className="header">
         <span className="header-title">{data.trackName}</span>
         <span className="header-session_type">{data.sessionType.charAt(0).toUpperCase()}</span>
-        <span className="header-track"><span className="header-data-name">⏱</span> {fmtSessionTime(data.remainingTimeSecs)}</span>
-        {data.lapsRemaining != null && <span className="header-track"><span className="header-data-name">🏁</span> ~{fmtLapsRemaining(data.lapsRemaining)}L</span>}
-        <span className="header-track"><span className="header-data-name">☁</span> {fmtTemp(data.airTemp, data.airTempUnit)}</span>
-        <span className="header-track"><span className="header-data-name">🌡</span> {fmtTemp(data.trackTemp, data.trackTempUnit)}</span>
-        <span className="header-track"><span className="header-data-name">{m.gripLabel}</span> {fmtGrip(data.grip)}</span>
+        <span className="header-data"><span className="header-data-name">⏱</span> {fmtSessionTime(data.remainingTimeSecs)}</span>
+        {data.lapsRemaining != null && <span className="header-data"><span className="header-data-name">🏁</span> ~{fmtLapsRemaining(data.lapsRemaining)}L</span>}
+        <span className="header-data"><span className="header-data-name">☁</span> {fmtTemp(data.airTemp, data.airTempUnit)}</span>
+        <span className="header-data"><span className="header-data-name">🌡</span> {fmtTemp(data.trackTemp, data.trackTempUnit)}</span>
+        <span className="header-data"><span className="header-data-name">{m.gripLabel}</span> {fmtGrip(data.grip)}</span>
       </div>
 
       {data.classes.length === 0 ? (
