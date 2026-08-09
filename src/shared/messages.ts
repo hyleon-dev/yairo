@@ -101,7 +101,8 @@ export const messages = {
     targetTime: 'Target time',
     resetTargetTime: 'Reset target time',
     resetTargetTime_short: 'Reset',
-    showLastLapTime: 'Show last lap time'
+    showLastLapTime: 'Show last lap time',
+    showRealTime: 'Show real time'
   },
   lapTimer: {
     lapLabel: 'LAP',

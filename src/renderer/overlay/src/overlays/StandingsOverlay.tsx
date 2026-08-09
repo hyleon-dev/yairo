@@ -3,7 +3,6 @@ import type { DriverStanding, StandingsClass, StandingsData, StandingsOverlaySet
 import { messages } from '../../../../shared/messages'
 import { classPositionGradient, licBadgeStyle } from '../sdkColors'
 import { manufacturerLogoDataUri } from '../manufacturerLogos/registry'
-import 'flag-icons/css/flag-icons.min.css'
 import './StandingsOverlay.css'
 import { iRating } from '../overlay-elements'
 
@@ -41,7 +40,7 @@ function fmtTemp(temp: number, unit: string): string {
   return `${temp.toFixed(0)}°${unit}`
 }
 
-function fmtTime(secs: number, fractionsSecs: number, padSecs: number, padMins: number, useHours = false): string {
+function fmtRacingTime(secs: number, fractionsSecs: number, padSecs: number, padMins: number, useHours = false): string {
   if (secs <= 0) return '–'
   const h = useHours ? Math.floor(secs / 3600) : 0
   const m = (Math.floor((secs - (h * 3600)) / 60)).toFixed(0).padStart(padMins, '0')
@@ -50,11 +49,11 @@ function fmtTime(secs: number, fractionsSecs: number, padSecs: number, padMins: 
 }
 
 function fmtLapTime(secs: number): string {
-  return fmtTime(secs, 3, 6, 1)
+  return fmtRacingTime(secs, 3, 6, 1)
 }
 
 function fmtSessionTime(secs: number): string {
-  return fmtTime(secs, 0, 2, 2, true)
+  return fmtRacingTime(secs, 0, 2, 2, true)
 }
 
 function fmtLapsRemaining(laps: number | null): string {
@@ -76,6 +75,9 @@ function ManufacturerLogo({ logoKey }: { logoKey: string | null }) {
   return <span className="col-manufacturer">{src && <img src={src} alt="" />}</span>
 }
 
+// ===================================
+// === Class Columns / Driver Data Row
+// ===================================
 function DriverRow({
   driver,
   settings,
@@ -117,6 +119,9 @@ function DriverRow({
   )
 }
 
+// ===================================
+// === Class Header / Labels
+// ===================================
 function ColumnLabels({ settings, template }: { settings: StandingsOverlaySettings; template: string }) {
   return (
     <div className="col-labels" style={{ gridTemplateColumns: template }}>
@@ -213,6 +218,9 @@ function EmptyClassBlock({ settings }: { settings: StandingsOverlaySettings }) {
   )
 }
 
+// ===================================
+// === Overlay Header
+// ===================================
 export function StandingsOverlay({ data, settings }: { data: StandingsData; settings: StandingsOverlaySettings }) {
   return (
     <div className="standings">
@@ -224,6 +232,8 @@ export function StandingsOverlay({ data, settings }: { data: StandingsData; sett
         <span className="header-data"><span className="header-data-name">☁</span> {fmtTemp(data.airTemp, data.airTempUnit)}</span>
         <span className="header-data"><span className="header-data-name">🌡</span> {fmtTemp(data.trackTemp, data.trackTempUnit)}</span>
         <span className="header-data"><span className="header-data-name">{m.gripLabel}</span> {fmtGrip(data.grip)}</span>
+        <span className="overlay-spacer"/>
+        <span className="header-data"><span className="header-data-name">⌚</span> {new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span>
       </div>
 
       {data.classes.length === 0 ? (

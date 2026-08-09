@@ -181,6 +181,11 @@ function StandingsSettings({
           <BestLapTimeSettings settings={settings} onChange={onChange}/>
           <LastLapTimeSettings settings={settings} onChange={onChange}/>
         </span>
+        <ToggleSwitch
+          checked={settings.showRealTime}
+          onChange={(checked) => onChange({showRealTime: checked})}
+          label={m.showRealTime}
+        />
       </>
   )
 }

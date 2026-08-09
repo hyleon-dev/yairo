@@ -412,6 +412,7 @@ export interface StandingsOverlaySettings
   topCount: number // These leading drivers (P1, P2, ...) are always shown.
   showNationFlag: boolean // Shows the driver's country flag.
   showManufacturerLogo: boolean // Shows the car's manufacturer logo.
+  showRealTime: boolean // Shows real time in header.
 }
 
 export interface TiresOverlaySettings extends BaseOverlaySettings {
@@ -474,7 +475,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     showBestLapTime: true,
     showNationFlag: false,
     showManufacturerLogo: false,
-    showLastLapTime: true
+    showLastLapTime: true,
+    showRealTime: false
   },
   relative: {
     scale: 1,
