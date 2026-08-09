@@ -1,6 +1,5 @@
 import type { TelemetryData, TelemetryOverlaySettings } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
-import '../overlay-elements.css'
 import './TelemetryOverlay.css'
 
 const m = messages.telemetry

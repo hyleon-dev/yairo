@@ -1,5 +1,4 @@
 import type {DriverStanding, RelativeDriver, RelativeOverlaySettings, StandingsOverlaySettings} from "../../../shared/types";
-import './overlay-elements.css'
 
 
 export function iRating({ driver, settings }: { driver: DriverStanding | RelativeDriver; settings: StandingsOverlaySettings | RelativeOverlaySettings }) {

@@ -1,3 +1,13 @@
+/* Single CSS entry point for both renderers. Each main.tsx imports only this
+   file - everything else (design tokens below + every other .css file in the
+   project) comes along transitively via the @import chain, so every class is
+   available in every window without a separate import per component. */
+@import '../renderer/control/src/styles.css';
+@import '../renderer/control/src/elements.css';
+@import '../renderer/overlay/src/styles.css';
+@import '../renderer/overlay/src/overlay-elements.css';
+@import 'flag-icons/css/flag-icons.min.css';
+
 /* Shared design tokens (colors, radii, blur, recurring font sizes) used by
    both the Control Center and the Overlay renderer - imported by both
    main.tsx entry points so every window sees the same values. Only values

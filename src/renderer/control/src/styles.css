@@ -2,13 +2,19 @@
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
+html {
   height: 100%;
 }
 
-body {
+/* Scoped to .control-window (set on <body> in index.html) since this
+   stylesheet now merges with the overlay window's, which also resets
+   body/#root but needs different values (transparent background etc.). */
+body.control-window,
+body.control-window #root {
+  height: 100%;
+}
+
+body.control-window {
   margin: 0;
   font-family: 'Segoe UI', system-ui, sans-serif;
   background: var(--colors-background);

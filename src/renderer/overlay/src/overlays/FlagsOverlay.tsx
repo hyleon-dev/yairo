@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FLAG_BITS, type FlagsData, type FlagsOverlaySettings } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
-import '../overlay-elements.css'
 import './FlagsOverlay.css'
 
 const m = messages.flags
