@@ -5,6 +5,7 @@ import { classPositionGradient, licBadgeStyle } from '../sdkColors'
 import { manufacturerLogoDataUri } from '../manufacturerLogos/registry'
 import './StandingsOverlay.css'
 import { iRating } from '../overlay-elements'
+import {Clock, Earth, Flag, Road, RotateCw, ThermometerSun} from "lucide-react";
 
 const m = messages.standings
 
@@ -227,13 +228,13 @@ export function StandingsOverlay({ data, settings }: { data: StandingsData; sett
       <div className="header">
         <span className="header-title">{data.trackName}</span>
         <span className="header-session_type">{data.sessionType.charAt(0).toUpperCase()}</span>
-        <span className="header-data"><span className="header-data-name">⏱</span> {fmtSessionTime(data.remainingTimeSecs)}</span>
-        {data.lapsRemaining != null && <span className="header-data"><span className="header-data-name">🏁</span> ~{fmtLapsRemaining(data.lapsRemaining)}L</span>}
-        <span className="header-data"><span className="header-data-name">☁</span> {fmtTemp(data.airTemp, data.airTempUnit)}</span>
-        <span className="header-data"><span className="header-data-name">🌡</span> {fmtTemp(data.trackTemp, data.trackTempUnit)}</span>
+        <span className="header-data"><Clock className="header-icon" /> {fmtSessionTime(data.remainingTimeSecs)}</span>
+        {data.lapsRemaining != null && <span className="header-data"><Flag className="header-icon" /> ~{fmtLapsRemaining(data.lapsRemaining)}L</span>}
+        <span className="header-data"><ThermometerSun className="header-icon" /> {fmtTemp(data.airTemp, data.airTempUnit)}</span>
+        <span className="header-data"><Road className="header-icon" /> {fmtTemp(data.trackTemp, data.trackTempUnit)}</span>
         <span className="header-data"><span className="header-data-name">{m.gripLabel}</span> {fmtGrip(data.grip)}</span>
         <span className="overlay-spacer"/>
-        <span className="header-data"><span className="header-data-name">⌚</span> {new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span>
+        <span className="header-data"><Earth className="header-icon" /> {new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span>
       </div>
 
       {data.classes.length === 0 ? (

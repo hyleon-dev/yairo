@@ -18,6 +18,7 @@ import { messages } from '../../../shared/messages'
 import { OverlaySettingsPanel } from './OverlaySettingsPanel'
 import { AccentColorPopup } from './AccentColorPopup'
 import {ToggleSwitch} from "./Elements";
+import {Camera, Check, Link, X} from "lucide-react";
 
 const m = messages.control
 
@@ -178,15 +179,15 @@ export default function App() {
                   )}
                   <div className="overlay-spacer"></div>
                   <button type="button" className="overlay-in-line-button" onClick={() => handleCopyUrl(overlay.id)}>
-                    {copiedOverlayId === overlay.id ? m.overlayUrlCopied : m.overlayUrlCopy}
+                    {copiedOverlayId === overlay.id ? <Check style={{ color: 'var(--color-success)' }} /> : <Link />}
                   </button>
                   {screenshotsEnabled && (
                     <button type="button" className="overlay-in-line-button" onClick={() => handleScreenshot(overlay.id)}>
                       {screenshotOverlayId?.id === overlay.id
                         ? screenshotOverlayId.ok
-                          ? m.overlayScreenshotSaved
-                          : m.overlayScreenshotError
-                        : m.overlayScreenshot}
+                          ? <Check style={{ color: 'var(--color-success)' }} />
+                          : <X style={{ color: 'var(--color-danger)' }}  />
+                        : <Camera />}
                     </button>
                   )}
                 </div>

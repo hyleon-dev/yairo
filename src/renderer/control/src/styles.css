@@ -343,13 +343,19 @@ h2 {
 
 .overlay-in-line-button {
   font-size: var(--font-body);
-  vertical-align: top;
+  vertical-align: center;
   color: var(--color-text-light);
   background: none;
   border: none;
   padding: 2px 4px;
   margin-left: 4px;
   cursor: pointer;
+  height: 20px;
+
+  svg {
+    height: var(--font-md);
+    width: var(--font-md);
+  }
 }
 
 .overlay-settings-root {

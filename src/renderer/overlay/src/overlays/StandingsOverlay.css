@@ -33,6 +33,11 @@
   font-size: var(--font-label-sm);
   vertical-align: top;
 }
+.header-icon {
+  width: 10px;
+  height: 10px;
+  vertical-align: top;
+}
 
 /* Each class gets its own section with a header (name, driver count,
    Strength of Field) - single-class sessions have exactly one. */

@@ -20,6 +20,7 @@
   "dependencies": {
     "flag-icons": "^7.5.0",
     "irsdk-node": "^4.4.0",
+    "lucide-react": "^1.31.0",
     "react": "^18.3.1",
     "react-colorful": "^5.8.0",
     "react-dom": "^18.3.1",

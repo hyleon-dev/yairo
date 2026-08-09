@@ -18,11 +18,6 @@ export const messages = {
       relative: stintLapsHint,
       tires: 'The Data is only updated when pitting.'
     } as Partial<Record<OverlayId, string>>,
-    overlayUrlCopy: '🔗',
-    overlayUrlCopied: '✅',
-    overlayScreenshot: '📷',
-    overlayScreenshotSaved: '✅',
-    overlayScreenshotError: '⚠️',
     updateAvailable: (version: string) => `A new version (${version}) is available.`,
     updateAvailableLink: 'View release',
     positioningHeading: 'Positioning',
