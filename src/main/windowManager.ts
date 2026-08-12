@@ -12,6 +12,7 @@ const MIN_CONTENT_DIMENSION = 20
 export class WindowManager {
   controlWindow: BrowserWindow | null = null
   private overlayWindows = new Map<OverlayId, BrowserWindow>()
+  private editMode = false
 
   // --- Control Center -----------------------------------------------
 
@@ -101,10 +102,11 @@ export class WindowManager {
       this.overlayWindows.delete(config.id)
     })
 
-    // Report the new position/size back after drag/resize in edit mode so it can be persisted.
-    // Outside edit mode a size change can only come from setOverlayContentSize() (auto-fit)
+    // Report the new position back after a drag in edit mode so it can be persisted.
+    // Outside edit mode a size change can only come from setOverlayContentSize() (auto-fit),
+    // which shouldn't be persisted as if the user had chosen that size.
     const reportBounds = () => {
-      if (!win.isResizable()) return
+      if (!this.editMode) return
       onBoundsChanged?.(config.id, win.getBounds())
     }
     win.on('moved', reportBounds)
@@ -133,14 +135,15 @@ export class WindowManager {
   }
 
   // Globally controls whether overlays let mouse clicks through (live) or
-  // capture them (edit mode, for dragging/resizing).
+  // capture them (edit mode, for dragging). Overlays are never resizable by
+  // mouse, position only changes via drag (-webkit-app-region: drag) or the
+  // scale setting.
   setEditMode(enabled: boolean): void {
+    this.editMode = enabled
     for (const win of this.overlayWindows.values()) {
       win.setIgnoreMouseEvents(!enabled, { forward: true })
-      // Make focusable/resizable in edit mode, otherwise windows are hard to
-      // grab or resize on Windows.
+      // Make focusable in edit mode, otherwise windows are hard to grab on Windows.
       win.setFocusable(enabled)
-      win.setResizable(enabled)
     }
   }
 
@@ -151,15 +154,16 @@ export class WindowManager {
 
   // Resizes an overlay window to the actual rendered size of its content,
   // so e.g. Standings with many drivers isn't cut off.
-  // Normally only in live mode, in edit mode the user controls size via drag.
+  // Normally only in live mode, edit mode intentionally freezes the size so
+  // continuous auto-fit reports don't fight the user dragging the window around.
   // `force` overrides that for a scale change (see useReportContentSize.ts):
   // changing the scale setting changes the content's actual rendered size
-  // even while in edit mode, so the drag/resize area needs to follow along
-  // live, otherwise it drifts out of sync with the visibly (re-)scaled content.
+  // even while in edit mode, so the window needs to follow along live,
+  // otherwise it drifts out of sync with the visibly (re-)scaled content.
   setOverlayContentSize(id: OverlayId, width: number, height: number, force = false): void {
     const win = this.overlayWindows.get(id)
     if (!win || win.isDestroyed()) return
-    if (win.isResizable() && !force) return
+    if (this.editMode && !force) return
     // Ignore degenerate reports (e.g. a transient 0x0 layout measurement during
     // a session change): applying one would shrink the window to invisible and,
     // since static content may not trigger another resize report, leave it stuck
