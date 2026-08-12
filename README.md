@@ -163,13 +163,62 @@ it is not tracked and the stint laps will continue to rise when you reconnect an
 
 ## Development and Build (WIP)
 
+#### Install dependencies
+
 ```bash
 npm install
+```
+
+#### Run the App
+
+Run the app in normal mode:
+```bash
 npm run dev
 ```
 
-Build `.exe`:
+Run the app with mockup data:
+```bash
+npm run dev:mock
+```
+
+Run the app with enabled screenshot function and randomized driver names:
+```bash
+npm run dev:document
+```
+
+#### Utilities
+
+Dump current SDK data into JSON
+```bash
+npm run dump-sdk
+```
+
+#### Build `.exe`
 
 ```bash
 npm run build:win
 ```
+
+### Releases
+
+Releases and pre-releases are both built by GitHub Actions
+([`release.yml`](.github/workflows/release.yml) /
+[`prerelease.yml`](.github/workflows/prerelease.yml)), triggered by pushing a
+git tag. Both workflows do the same thing: sync `package.json`'s version to
+the tag, build the Windows installer, and create a GitHub release with the
+installer attached and a changelog generated from the commit messages since
+the previous tag (grouped into Added/Changed/Fixed/Removed/Other by the
+leading word of the commit subject).
+
+Which workflow runs depends on the tag name:
+
+- `vX.Y.Z` (e.g. `v1.2.3`) → `release.yml`, creates a normal release.
+- `vX.Y.Z-preN` (e.g. `v1.2.3-pre1`) → `prerelease.yml`, creates a GitHub
+  pre-release instead.
+
+When a normal release is pushed, `release.yml` first deletes every existing
+pre-release (release entry and git tag) before building the changelog. This
+keeps old pre-releases from lingering around once a real release supersedes
+them, and makes the release's changelog look as if the pre-releases never
+existed (commits made during a pre-release phase simply show up in the next
+real release's changelog instead).
