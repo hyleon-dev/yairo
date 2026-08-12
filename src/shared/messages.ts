@@ -113,7 +113,9 @@ export const messages = {
     gearReverse: 'R',
     throttle: 'Throttle',
     brake: 'Brake',
-    clutch: 'Clutch'
+    clutch: 'Clutch',
+    pitLimiterLabel: 'PIT',
+    lowFuelLabel: 'FUEL'
   },
   fuel: {
     unit: 'l',

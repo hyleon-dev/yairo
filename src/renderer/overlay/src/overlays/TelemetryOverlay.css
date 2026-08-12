@@ -29,6 +29,13 @@
   flex: 1;
 }
 
+.hint-leds {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
 .pedal-bar-track {
   height: 10px;
   border-radius: var(--radius-xs);
@@ -45,7 +52,7 @@
 }
 
 .pedal-bar-fill--clutch {
-  background: var(--color-primary);
+  background: var(--color-hint);
 }
 .pedal-bar-fill--brake {
   background: var(--color-danger);
@@ -83,8 +90,8 @@
   box-shadow: 0 0 4px rgba(var(--color-success-rgb), 0.7);
 }
 .rev-led--lit.rev-led--last {
-  background: var(--color-primary);
-  box-shadow: 0 0 4px rgba(var(--color-primary-rgb), 0.7);
+  background: var(--color-hint);
+  box-shadow: 0 0 4px rgba(var(--color-hint-rgb), 0.7);
 }
 .rev-led--lit.rev-led--blink {
   background: var(--color-danger);

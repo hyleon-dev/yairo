@@ -52,3 +52,33 @@
 .col-irchange--down {
   color: var(--color-danger);
 }
+
+.hint-led {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--color-white-rgb), 0.05);
+  border: 2px solid rgba(var(--color-white-rgb), 0.3);
+  transition: background-color 100ms linear, border-color 100ms linear;
+}
+
+.hint-led-text {
+  font-size: var(--font-label);
+  font-weight: 700;
+  color: #000;
+}
+
+.hint-led--lit.hint-led--blue {
+  background: var(--color-hint);
+  border-color: var(--color-hint);
+  box-shadow: 0 0 6px rgba(var(--color-hint-rgb), 0.7);
+}
+
+.hint-led--lit.hint-led--red {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  box-shadow: 0 0 6px rgba(var(--color-danger-rgb), 0.7);
+}

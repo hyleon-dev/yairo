@@ -40,6 +40,12 @@ export interface TelemetryData {
   // racing surface, and always false while spectating (tires aren't
   // meaningful for another car either way, see TiresData).
   isOnPitRoad: boolean
+  // Mirrors the SDK's EngineWarnings pit speed limiter bit, always false while spectating.
+  pitLimiterActive: boolean
+  // Approximation of a car's own low-fuel dash warning (e.g. GT3): iRacing doesn't expose that
+  // per-car threshold via telemetry, so this fires below a fixed fuel percentage instead.
+  // Always false while spectating.
+  lowFuelWarning: boolean
   // true when this data is from the driver being watched (spectating), not our own car.
   isSpectatingOther: boolean
   // null until a full lap with known consumption has been driven (fresh

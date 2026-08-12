@@ -21,6 +21,7 @@
   --color-success: #2ecc71;
   --color-success-soft: #58d68d;
   --color-danger: #e74c3c;
+  --color-hint: #3a7dff;
   --color-warning: #e8b93a;
   --color-best: #b266ff;
 
@@ -29,6 +30,7 @@
   --color-accent-rgb: 232, 64, 26;
   --color-success-rgb: 46, 204, 113;
   --color-danger-rgb: 231, 76, 60;
+  --color-hint-rgb: 58, 125, 255;
   --color-white-rgb: 255, 255, 255;
   --color-black-rgb: 0, 0, 0;
   --color-background-rgb: 10, 10, 14;

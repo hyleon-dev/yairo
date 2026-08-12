@@ -272,6 +272,9 @@ export class FakeIRacingSDK {
       Brake: scalarVar(accelerating ? 0 : 0.5),
       Clutch: scalarVar(clutchEngaged),
       FuelLevel: scalarVar(this.fuelLevel),
+      FuelLevelPct: scalarVar(this.fuelLevel / this.fuelTankMaxL),
+      // Fake driver never engages the limiter, matches OnPitRoad always being false above.
+      EngineWarnings: scalarVar(0),
       // Fixed "top off to full" plan, so the Fuel overlay's next-fill display
       // has a non-empty value to show in dev mode.
       PitSvFuel: scalarVar(Math.max(0, this.fuelTankMaxL - this.fuelLevel)),

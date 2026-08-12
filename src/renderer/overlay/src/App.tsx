@@ -51,6 +51,8 @@ const EMPTY_TELEMETRY: TelemetryData = {
   lapDeltaToBest: 0,
   lapDeltaToBestValid: false,
   isOnPitRoad: false,
+  pitLimiterActive: false,
+  lowFuelWarning: false,
   isSpectatingOther: false,
   fuelEstimate: null,
   incidentCount: 0,

@@ -349,6 +349,8 @@ const NO_TELEMETRY: TelemetryData = {
   lapDeltaToBest: 0,
   lapDeltaToBestValid: false,
   isOnPitRoad: false,
+  pitLimiterActive: false,
+  lowFuelWarning: false,
   incidentCount: 0,
   isSpectatingOther: false,
   fuelEstimate: null,
@@ -606,6 +608,13 @@ function estimateSpeedKph(carIdx: number, raw: TelemetryVarList, trackMeters: nu
   return ((pctDelta * trackMeters) / dt) * 3.6
 }
 
+// irsdk_EngineWarnings bit for "pit speed limiter engaged"
+const ENGINE_WARNING_PIT_SPEED_LIMITER = 16
+
+// iRacing doesn't expose each car's own low-fuel dash warning threshold via telemetry,
+// approximated here with a fixed percentage instead.
+const LOW_FUEL_PCT_THRESHOLD = 0.1
+
 function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): TelemetryData {
   const rawPlayerCarIdx = raw.PlayerCarIdx?.value?.[0] ?? -1
   const isDriving = raw.IsOnTrack?.value?.[0] ?? false
@@ -620,6 +629,8 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
 
   if (isDriving) {
     const fuelLevelL = raw.FuelLevel?.value?.[0] ?? 0
+    const fuelLevelPct = raw.FuelLevelPct?.value?.[0] ?? 1
+    const engineWarnings = raw.EngineWarnings?.value?.[0] ?? 0
     const lap = raw.Lap?.value?.[0] ?? 0
 
     return {
@@ -646,6 +657,8 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
       lapDeltaToBest: raw.LapDeltaToBestLap?.value?.[0] ?? 0,
       lapDeltaToBestValid: raw.LapDeltaToBestLap_OK?.value?.[0] ?? false,
       isOnPitRoad: raw.OnPitRoad?.value?.[0] ?? false,
+      pitLimiterActive: (engineWarnings & ENGINE_WARNING_PIT_SPEED_LIMITER) !== 0,
+      lowFuelWarning: fuelLevelPct <= LOW_FUEL_PCT_THRESHOLD,
       incidentCount: raw.PlayerCarMyIncidentCount?.value?.[0] ?? 0,
       isSpectatingOther: false,
       fuelEstimate: buildFuelEstimate(raw, driver, fuelLevelL, lap),
@@ -694,6 +707,8 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
     lapDeltaToBestValid: false,
     // Tires aren't meaningful while spectating anyway (see ZERO_TIRES below).
     isOnPitRoad: false,
+    pitLimiterActive: false,
+    lowFuelWarning: false,
     // iRacing reports CurDriverIncidentCount as -1 for other drivers,
     // pass -1 through rather than normalizing to 0,
     // so UI can distinguish "unavailable" from "0 incidents".

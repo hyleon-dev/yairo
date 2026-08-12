@@ -1,5 +1,6 @@
 import type { TelemetryData, TelemetryOverlaySettings } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
+import { HintLed } from '../overlay-elements'
 import './TelemetryOverlay.css'
 
 const m = messages.telemetry
@@ -69,6 +70,10 @@ export function TelemetryOverlay({ data, settings }: { data: TelemetryData; sett
           <div className="gear">
             {m.gearLabel} {data.gear === 0 ? m.gearNeutral : data.gear === -1 ? m.gearReverse : data.gear}
           </div>
+        </div>
+        <div className="hint-leds">
+          <HintLed label={m.pitLimiterLabel} active={data.pitLimiterActive} color="blue" />
+          <HintLed label={m.lowFuelLabel} active={data.lowFuelWarning} color="red" />
         </div>
       </div>
     </div>
