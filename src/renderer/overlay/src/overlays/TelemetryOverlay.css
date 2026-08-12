@@ -85,9 +85,17 @@
   background: rgba(var(--color-white-rgb), 0.08);
 }
 
-.rev-led--lit.rev-led--normal {
+.rev-led--lit.rev-led--zone-green {
   background: var(--color-success);
   box-shadow: 0 0 4px rgba(var(--color-success-rgb), 0.7);
+}
+.rev-led--lit.rev-led--zone-yellow {
+  background: var(--color-warning);
+  box-shadow: 0 0 4px rgba(var(--color-warning-rgb), 0.7);
+}
+.rev-led--lit.rev-led--zone-red {
+  background: var(--color-danger);
+  box-shadow: 0 0 4px rgba(var(--color-danger-rgb), 0.7);
 }
 .rev-led--lit.rev-led--last {
   background: var(--color-hint);

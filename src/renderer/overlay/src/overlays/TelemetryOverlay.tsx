@@ -6,6 +6,7 @@ import './TelemetryOverlay.css'
 const m = messages.telemetry
 
 const REV_LED_COUNT = 12
+const REV_LED_ZONE_SIZE = REV_LED_COUNT / 3 // 4 LEDs each for green/yellow/red
 
 function fmtRPM(rpm: number) {
   return rpm == -1 ? '0' : `${Math.round(rpm)}`
@@ -18,7 +19,7 @@ function clamp01(v: number): number {
 type RevLedStage = 'normal' | 'last' | 'blink'
 
 // Shift-light bar: 0% fill at rpmSLFirst, 100% fill (all LEDs lit) at rpmSLShift.
-// Color: green up to rpmSLLast, blue from rpmSLLast, red + blinking from rpmSLBlink.
+// Color: green/yellow/red by LED position below rpmSLLast, blue from rpmSLLast, red + blinking from rpmSLBlink.
 function RevLedBar({ data }: { data: TelemetryData }) {
   const { rpm, rpmSLFirst, rpmSLShift, rpmSLLast, rpmSLBlink } = data
   const available = rpmSLFirst >= 0 && rpmSLShift > rpmSLFirst
@@ -37,7 +38,15 @@ function RevLedBar({ data }: { data: TelemetryData }) {
       {Array.from({ length: REV_LED_COUNT }, (_, i) => {
         // Once shift/last is reached, EVERY LED lights up
         const lit = stage !== 'normal' || i < litCount
-        return <span key={i} className={lit ? `rev-led rev-led--lit rev-led--${stage}` : 'rev-led'} />
+        const colorClass =
+          stage === 'normal'
+            ? i < REV_LED_ZONE_SIZE
+              ? 'rev-led--zone-green'
+              : i < REV_LED_ZONE_SIZE * 2
+                ? 'rev-led--zone-yellow'
+                : 'rev-led--zone-red'
+            : `rev-led--${stage}`
+        return <span key={i} className={lit ? `rev-led rev-led--lit ${colorClass}` : 'rev-led'} />
       })}
     </div>
   )
