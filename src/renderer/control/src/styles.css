@@ -287,6 +287,11 @@ h2 {
   margin-left: 6px;
 }
 
+.setting-with-hint {
+  display: flex;
+  align-items: center;
+}
+
 .info-hint-btn {
   width: 11px;
   height: 11px;
@@ -306,6 +311,12 @@ h2 {
   background: none;
   border-color: var(--color-text-gray);
   color: var(--color-text-light);
+}
+
+.info-hint-btn svg {
+  color: var(--color-primary);
+  height: 100%;
+  width: 100%;
 }
 
 .info-hint-popup {

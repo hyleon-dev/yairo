@@ -17,7 +17,7 @@ import {
 import { messages } from '../../../shared/messages'
 import { OverlaySettingsPanel, TargetLapTimeInputs } from './OverlaySettingsPanel'
 import { AccentColorPopup } from './AccentColorPopup'
-import {ToggleSwitch} from "./Elements";
+import {InfoHint, ToggleSwitch} from "./Elements";
 import {Camera, Check, Link, X} from "lucide-react";
 
 const m = messages.control
@@ -182,14 +182,7 @@ export default function App() {
                       onChange={(checked) => toggleOverlay(overlay.id, checked)}
                       label={overlay.name}
                   />
-                  {m.overlayHints[overlay.id] && (
-                    <span className="info-hint">
-                      <button type="button" className="info-hint-btn" aria-label="Info">
-                        ℹ️
-                      </button>
-                      <textarea className="info-hint-popup">{m.overlayHints[overlay.id]}</textarea>
-                    </span>
-                  )}
+                  {m.overlayHints[overlay.id] && <InfoHint text={m.overlayHints[overlay.id]!}/>}
                   <div className="overlay-spacer"></div>
                   <button type="button" className="overlay-in-line-button" onClick={() => handleCopyUrl(overlay.id)}>
                     {copiedOverlayId === overlay.id ? <Check style={{ color: 'var(--color-success)' }} /> : <Link />}

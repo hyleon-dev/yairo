@@ -1,4 +1,5 @@
 import { useEffect, useRef, type RefObject } from 'react'
+import {Info} from "lucide-react";
 
 function useWheelStep(
     ref: RefObject<HTMLInputElement>,
@@ -35,6 +36,17 @@ export function ToggleSwitch(
         <span className="checkbox-slide__label">{label}</span>
       </label>
   );
+}
+
+export function InfoHint({text}: { text: string }) {
+  return (
+      <span className="info-hint">
+        <button type="button" className="info-hint-btn" aria-label="Info">
+          <Info />
+        </button>
+        <textarea className="info-hint-popup" readOnly>{text}</textarea>
+      </span>
+  )
 }
 
 export function NumberInput(

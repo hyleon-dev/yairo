@@ -1,8 +1,8 @@
 import type { ColorCorrectionMode, OverlayId } from './types'
 
-const stintLapsHint = 'Stint Laps:\niRacing does not provide this info. It is calculated internally from tracked laps. ' +
-    'But when the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits, ' +
-    'it is not tracked and the stint laps will continue to rise when you reconnect and start YAiRO.'
+const stintLapsHint = 'iRacing does not provide this info. It is calculated internally from tracked laps. ' +
+    'When the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits, ' +
+    'it is not tracked and the stint laps won\'t be correct when you reconnect and start YAiRO until the car boxes.'
 
 export const messages = {
   control: {
@@ -14,8 +14,6 @@ export const messages = {
     // Only overlays with an entry here get the info ('i') button next to
     // their name in the Control Center. Undefined = no hint yet, no button.
     overlayHints: {
-      standings: stintLapsHint,
-      relative: stintLapsHint,
       tires: 'The Data is only updated when pitting.'
     } as Partial<Record<OverlayId, string>>,
     updateAvailable: (version: string) => `A new version (${version}) is available.`,
@@ -86,6 +84,7 @@ export const messages = {
     showIRating: 'Show iRating',
     showSafetyRating: 'Show Safety Rating',
     showStint: 'Show stint laps',
+    showStintHint: stintLapsHint,
     showAvgLapTime: 'Show average lap time',
     showBestLapTime: 'Show best lap time',
     showNationFlag: 'Show country flag',

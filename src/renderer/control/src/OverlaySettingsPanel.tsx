@@ -12,7 +12,7 @@ import type {
   TiresOverlaySettings
 } from '../../../shared/types'
 import {messages} from '../../../shared/messages'
-import {ToggleSwitch, SuffixNumberInput, NumberInput} from "./Elements";
+import {ToggleSwitch, SuffixNumberInput, NumberInput, InfoHint} from "./Elements";
 
 const m = messages.overlaySettings
 
@@ -284,11 +284,14 @@ function StintSettings({
   onChange: (patch: Partial<AnyOverlaySettings>) => void
 }) {
   return (
-      <ToggleSwitch
-          checked={settings.showStint}
-          onChange={(checked) => onChange({showStint: checked})}
-          label={m.showStint}
-      />
+      <span className="setting-with-hint">
+        <ToggleSwitch
+            checked={settings.showStint}
+            onChange={(checked) => onChange({showStint: checked})}
+            label={m.showStint}
+        />
+        <InfoHint text={m.showStintHint}/>
+      </span>
   )
 }
 
