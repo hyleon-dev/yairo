@@ -113,6 +113,13 @@ Therefore, the overlay is only visible in the pit lane.
   - White flag
   - Green flag
 
+### ⏱️ Delta bar
+<img src="media/delta-bar.png" width="550" alt="Delta bar"/>
+
+- Delta in comparison to best lap or target lap if set
+- Bar goes up to =/- 9.99 seconds
+- Text can be hidden
+
 ### 🎨 Custom accent color
 <img src="media/control-center__accent-color-picker.png" width="550" alt="Accent color picker"/>
 

@@ -45,6 +45,9 @@ const api = {
   setColorCorrectionMode: (mode: ColorCorrectionMode): Promise<AppConfig> =>
     ipcRenderer.invoke(IPC.COLOR_CORRECTION_MODE_SET, mode),
 
+  setTargetLapTimeSec: (targetLapTimeSec: number): Promise<AppConfig> =>
+    ipcRenderer.invoke(IPC.TARGET_LAP_TIME_SET, targetLapTimeSec),
+
   copyToClipboard: (text: string): Promise<void> => ipcRenderer.invoke(IPC.CLIPBOARD_WRITE, text),
 
   setOverlayBounds: (id: OverlayId, bounds: OverlayBounds) =>

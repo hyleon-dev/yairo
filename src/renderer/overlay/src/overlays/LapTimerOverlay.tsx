@@ -1,5 +1,6 @@
-import type { LapTimerOverlaySettings, TelemetryData } from '../../../../shared/types'
+import type { TelemetryData } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
+import { computeLapDelta, isLapDeltaValid } from '../lapDelta'
 import './LapTimerOverlay.css'
 
 const m = messages.lapTimer
@@ -22,21 +23,9 @@ function DeltaIndicator({ delta }: { delta: number }) {
   )
 }
 
-// for delta to best lap: data.lapDeltaToBest straight from iRacing's own LapDeltaToBestLap SDK value.
-// for delta to target lap: where we'd be right now if pacing the target exactly
-// (targetLapTimeSec * lapDistPct), vs where we actually are.
-function computeDelta(data: TelemetryData, settings: LapTimerOverlaySettings): number {
-  if (settings.targetLapTimeSec <= 0) return data.lapDeltaToBest
-  const currentTime = data.lapCurrentTime >= 0 ? data.lapCurrentTime : 0
-  return currentTime - settings.targetLapTimeSec * data.lapDistPct
-}
-
-export function LapTimerOverlay({ data, settings }: { data: TelemetryData; settings: LapTimerOverlaySettings }) {
-  const useTargetLap = settings.targetLapTimeSec > 0
-  // Without a target, we depend on the SDK's own delta, which isn't valid
-  // right after a new best lap (see lapDeltaToBestValid's doc comment), hide
-  // it rather than showing a misleading "+0.000" during that window.
-  const showDelta = !data.isSpectatingOther && (useTargetLap || data.lapDeltaToBestValid)
+export function LapTimerOverlay({ data, targetLapTimeSec }: { data: TelemetryData; targetLapTimeSec: number }) {
+  const useTargetLap = targetLapTimeSec > 0
+  const showDelta = isLapDeltaValid(data, targetLapTimeSec)
   return (
     <div className="lap-timer">
       <div className="lap-row">
@@ -51,7 +40,7 @@ export function LapTimerOverlay({ data, settings }: { data: TelemetryData; setti
         // own car, no value while spectating, instead of incorrectly showing
         // 0 as "exactly on pace".
       }
-      {showDelta && <DeltaIndicator delta={computeDelta(data, settings)} />}
+      {showDelta && <DeltaIndicator delta={computeLapDelta(data, targetLapTimeSec)} />}
 
       <div className="times-row">
         <div className="time-block">
@@ -65,7 +54,7 @@ export function LapTimerOverlay({ data, settings }: { data: TelemetryData; setti
         {useTargetLap && !data.isSpectatingOther && (
           <div className={`time-block ${useTargetLap ? 'delta-target' : ''}`}>
             <span className="time-label">{m.targetLap}</span>
-            <span className="time-val time-val--target">{fmtTime(settings.targetLapTimeSec)}</span>
+            <span className="time-val time-val--target">{fmtTime(targetLapTimeSec)}</span>
           </div>
         )}
       </div>

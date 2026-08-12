@@ -25,6 +25,8 @@ export interface OverlayBridgeState {
   flags: FlagsData | null
   editMode: boolean
   settings: AnyOverlaySettings
+  // s, <= 0 = no target set. Global (part of AppConfig), see its doc comment in shared/types.ts.
+  targetLapTimeSec: number
 }
 
 // Applied directly here (rather than returned as state) so every overlay
@@ -57,15 +59,18 @@ export function useOverlayBridge(overlayId: OverlayId): OverlayBridgeState {
   const [flags, setFlags] = useState<FlagsData | null>(null)
   const [editMode, setEditMode] = useState(false)
   const [settings, setSettings] = useState<AnyOverlaySettings>(DEFAULT_OVERLAY_SETTINGS[overlayId])
+  const [targetLapTimeSec, setTargetLapTimeSec] = useState(0)
 
   useEffect(() => {
-    const setters = { setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings }
+    const setters = {
+      setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec
+    }
     return window.overlayApi
       ? subscribeViaElectron(overlayId, setters)
       : subscribeViaWebSocket(overlayId, setters)
   }, [overlayId])
 
-  return { telemetry, standings, relative, trackMap, flags, editMode, settings }
+  return { telemetry, standings, relative, trackMap, flags, editMode, settings, targetLapTimeSec }
 }
 
 interface Setters {
@@ -76,11 +81,12 @@ interface Setters {
   setFlags: (d: FlagsData | null) => void
   setEditMode: (v: boolean) => void
   setSettings: (s: AnyOverlaySettings) => void
+  setTargetLapTimeSec: (v: number) => void
 }
 
 function subscribeViaElectron(
   overlayId: OverlayId,
-  { setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings }: Setters
+  { setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec }: Setters
 ): () => void {
   const unsubTelemetry = window.overlayApi.onTelemetry(setTelemetry)
   const unsubStandings = window.overlayApi.onStandings(setStandings)
@@ -91,6 +97,7 @@ function subscribeViaElectron(
     setEditMode(cfg.editMode)
     applyAccentColor(cfg.accentColor)
     applyColorCorrectionMode(cfg.colorCorrectionMode)
+    setTargetLapTimeSec(cfg.targetLapTimeSec)
   })
   const unsubSettings = window.overlayApi.onOverlaySettings(overlayId, setSettings)
   const unsubConnection = window.overlayApi.onConnectionStatus((status: ConnectionStatus) => {
@@ -107,6 +114,7 @@ function subscribeViaElectron(
     setEditMode(cfg.editMode)
     applyAccentColor(cfg.accentColor)
     applyColorCorrectionMode(cfg.colorCorrectionMode)
+    setTargetLapTimeSec(cfg.targetLapTimeSec)
   })
   window.overlayApi.getOverlaySettings(overlayId).then(setSettings)
 
@@ -124,7 +132,7 @@ function subscribeViaElectron(
 
 function subscribeViaWebSocket(
     overlayId: OverlayId,
-    {setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings}: Setters
+    {setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec}: Setters
 ): () => void {
   // No edit mode/dragging in the browser
   setEditMode(false)
@@ -164,6 +172,7 @@ function subscribeViaWebSocket(
         // colorCorrectionMode is a personal accessibility setting, intentionally
         // NOT applied here, see applyColorCorrectionMode()'s doc comment above.
         applyAccentColor((payload as AppConfig).accentColor)
+        setTargetLapTimeSec((payload as AppConfig).targetLapTimeSec)
         break
       case settingsChannel:
         setSettings(payload as AnyOverlaySettings)

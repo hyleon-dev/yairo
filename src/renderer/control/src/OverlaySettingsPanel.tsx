@@ -1,8 +1,9 @@
 import type {
   AnyOverlaySettings,
   AvgLapTimeOverlaySettings, BestLapTimeOverlaySettings,
+  DeltaBarOverlaySettings,
   FlagsOverlaySettings,
-  LapTimerOverlaySettings, LastLapTimeOverlaySettings,
+  LastLapTimeOverlaySettings,
   OverlayConfig,
   RelativeOverlaySettings,
   StandingsOverlaySettings,
@@ -41,17 +42,22 @@ export function OverlaySettingsPanel({overlay, settings, onChange}: Props) {
             />
             <span className="overlay-setting-label">{m.scale}</span>
           </label>
-          <label className="overlay-setting">
-            <SuffixNumberInput
-                value={Math.round(settings.opacity * 100)}
-                suffix={m.opacityUnit}
-                min={0}
-                max={100}
-                step={5}
-                onChange={(value) => onChange({opacity: value / 100})}
-            />
-            <span className="overlay-setting-label">{m.opacity}</span>
-          </label>
+          {
+            // delta-bar has no panel background at all, opacity would be a dead control there.
+          }
+          {overlay.id !== 'delta-bar' && (
+              <label className="overlay-setting">
+                <SuffixNumberInput
+                    value={Math.round(settings.opacity * 100)}
+                    suffix={m.opacityUnit}
+                    min={0}
+                    max={100}
+                    step={5}
+                    onChange={(value) => onChange({opacity: value / 100})}
+                />
+                <span className="overlay-setting-label">{m.opacity}</span>
+              </label>
+          )}
         </span>
 
         {overlay.id === 'relative' && (
@@ -74,8 +80,8 @@ export function OverlaySettingsPanel({overlay, settings, onChange}: Props) {
             <FlagsSettings settings={settings as FlagsOverlaySettings} onChange={onChange}/>
         )}
 
-        {overlay.id === 'lap-timer' && (
-            <LapTimerSettings settings={settings as LapTimerOverlaySettings} onChange={onChange}/>
+        {overlay.id === 'delta-bar' && (
+            <DeltaBarSettings settings={settings as DeltaBarOverlaySettings} onChange={onChange}/>
         )}
       </div>
   )
@@ -337,14 +343,16 @@ function LastLapTimeSettings({
 // Displayed/stored as one total-seconds float (targetLapTimeSec, matching
 // every other lap time in the codebase), decomposed into min/sec/ms here
 // purely for the three input fields. <= 0 (all three at 0) means "not set".
-function LapTimerSettings({
-                            settings,
-                            onChange
-                          }: {
-  settings: LapTimerOverlaySettings
-  onChange: (patch: Partial<AnyOverlaySettings>) => void
+// Global setting (see App.tsx), shared by every overlay comparing against
+// either the best lap or this same target lap time (Lap Timer, Delta Bar, ...).
+export function TargetLapTimeInputs({
+                                targetLapTimeSec,
+                                onChange
+                              }: {
+  targetLapTimeSec: number
+  onChange: (targetLapTimeSec: number) => void
 }) {
-  const totalMs = Math.max(0, Math.round(settings.targetLapTimeSec * 1000))
+  const totalMs = Math.max(0, Math.round(targetLapTimeSec * 1000))
   const minutes = Math.floor(totalMs / 60000)
   const seconds = Math.floor((totalMs % 60000) / 1000)
   const millis = totalMs % 1000
@@ -353,7 +361,7 @@ function LapTimerSettings({
     const nextMinutes = patch.minutes ?? minutes
     const nextSeconds = patch.seconds ?? seconds
     const nextMillis = patch.millis ?? millis
-    onChange({targetLapTimeSec: nextMinutes * 60 + nextSeconds + nextMillis / 1000})
+    onChange(nextMinutes * 60 + nextSeconds + nextMillis / 1000)
   }
 
   return (
@@ -375,10 +383,39 @@ function LapTimerSettings({
           className="overlay-in-line-button"
           title={m.resetTargetTime}
           aria-label={m.resetTargetTime}
-          onClick={() => onChange({targetLapTimeSec: 0})}
+          onClick={() => onChange(0)}
       >
         {m.resetTargetTime_short}
       </button>
       </span>
+  )
+}
+
+function DeltaBarSettings({
+                            settings,
+                            onChange
+                          }: {
+  settings: DeltaBarOverlaySettings
+  onChange: (patch: Partial<AnyOverlaySettings>) => void
+}) {
+  return (
+      <>
+        <label className="overlay-setting">
+          <SuffixNumberInput
+              value={settings.barWidthPx}
+              suffix={m.barWidthUnit}
+              min={100}
+              max={1000}
+              step={10}
+              onChange={(value) => onChange({barWidthPx: value})}
+          />
+          <span className="overlay-setting-label">{m.barWidth}</span>
+        </label>
+        <ToggleSwitch
+            checked={settings.showDeltaNumber}
+            onChange={(checked) => onChange({showDeltaNumber: checked})}
+            label={m.showDeltaNumber}
+        />
+      </>
   )
 }

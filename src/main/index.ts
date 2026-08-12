@@ -153,6 +153,13 @@ function registerIpcHandlers(): void {
     return updated
   })
 
+  // Control Center's global target lap time, shared by every overlay that compares against it.
+  ipcMain.handle(IPC.TARGET_LAP_TIME_SET, (_evt, targetLapTimeSec: number) => {
+    const updated = configStore.setTargetLapTimeSec(targetLapTimeSec)
+    broadcastToAll(IPC.CONFIG_UPDATED, updated)
+    return updated
+  })
+
   // Overlay reports new position/size after a drag in edit mode
   ipcMain.handle(IPC.OVERLAY_BOUNDS_SET, (_evt, id: OverlayId, bounds: OverlayBounds) => {
     windowManager.setOverlayBounds(id, bounds)

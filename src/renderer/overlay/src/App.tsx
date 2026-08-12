@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 import type {
   AnyOverlaySettings,
+  DeltaBarOverlaySettings,
   FlagsData,
   FlagsOverlaySettings,
-  LapTimerOverlaySettings,
   OverlayId,
   RelativeData,
   RelativeOverlaySettings,
@@ -25,6 +25,7 @@ import { RelativeOverlay } from './overlays/RelativeOverlay'
 import { TrackMapOverlay } from './overlays/TrackMapOverlay'
 import { TiresOverlay } from './overlays/TiresOverlay'
 import { FlagsOverlay } from './overlays/FlagsOverlay'
+import { DeltaBarOverlay } from './overlays/DeltaBarOverlay'
 
 // Fallback data shown before the first message for this overlay has arrived.
 const EMPTY_WHEEL = { wearPct: 0, tempC: 0, tempUnit: 'C' }
@@ -91,7 +92,7 @@ function useOverlayId(): OverlayId {
 
 export default function App() {
   const overlayId = useOverlayId()
-  const { telemetry, standings, relative, trackMap, flags, editMode, settings } = useOverlayBridge(overlayId)
+  const { telemetry, standings, relative, trackMap, flags, editMode, settings, targetLapTimeSec } = useOverlayBridge(overlayId)
   const contentRef = useReportContentSize(overlayId, editMode, settings.scale)
 
   // Overrides both panel-background variants (--panel-bg for most overlays,
@@ -111,7 +112,7 @@ export default function App() {
         // that's what lets the ResizeObserver in useReportContentSize pick up a scale change.
       }
       <div ref={contentRef} className="overlay-content" style={{ zoom: settings.scale }}>
-        {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, flags, settings)}
+        {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, flags, settings, targetLapTimeSec)}
       </div>
     </div>
   )
@@ -124,7 +125,8 @@ function renderOverlayContent(
   relative: RelativeData | null,
   trackMap: TrackMapData | null,
   flags: FlagsData | null,
-  settings: AnyOverlaySettings
+  settings: AnyOverlaySettings,
+  targetLapTimeSec: number
 ) {
   if (id === 'standings') {
     return <StandingsOverlay data={standings ?? EMPTY_STANDINGS} settings={settings as StandingsOverlaySettings} />
@@ -153,11 +155,19 @@ function renderOverlayContent(
     case 'fuel':
       return <FuelOverlay data={telemetryData} />
     case 'lap-timer':
-      return <LapTimerOverlay data={telemetryData} settings={settings as LapTimerOverlaySettings} />
+      return <LapTimerOverlay data={telemetryData} targetLapTimeSec={targetLapTimeSec} />
     case 'incidents':
       return <IncidentsOverlay data={telemetryData} />
     case 'tires':
       return <TiresOverlay data={telemetryData} settings={settings as TiresOverlaySettings} />
+    case 'delta-bar':
+      return (
+        <DeltaBarOverlay
+          data={telemetryData}
+          settings={settings as DeltaBarOverlaySettings}
+          targetLapTimeSec={targetLapTimeSec}
+        />
+      )
     default:
       return null
   }

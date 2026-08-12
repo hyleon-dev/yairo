@@ -15,7 +15,7 @@ import {
   colorCorrectionFilterId
 } from '../../../shared/colorCorrectionFilters'
 import { messages } from '../../../shared/messages'
-import { OverlaySettingsPanel } from './OverlaySettingsPanel'
+import { OverlaySettingsPanel, TargetLapTimeInputs } from './OverlaySettingsPanel'
 import { AccentColorPopup } from './AccentColorPopup'
 import {ToggleSwitch} from "./Elements";
 import {Camera, Check, Link, X} from "lucide-react";
@@ -121,6 +121,10 @@ export default function App() {
     window.overlayApi.setColorCorrectionMode(mode)
   }
 
+  const handleTargetLapTimeChange = (targetLapTimeSec: number) => {
+    window.overlayApi.setTargetLapTimeSec(targetLapTimeSec)
+  }
+
   const handleCopyUrl = (id: OverlayId) => {
     const url = `http://127.0.0.1:${OVERLAY_SERVER_PORT}/overlays/${id}`
     window.overlayApi.copyToClipboard(url)
@@ -156,6 +160,15 @@ export default function App() {
             {connection.connected ? m.connected : m.disconnected}
           </span>
         </header>
+
+        <section>
+          <h2>{m.targetTimeHeader}</h2>
+
+          <TargetLapTimeInputs
+              targetLapTimeSec={config.targetLapTimeSec}
+              onChange={handleTargetLapTimeChange}
+          />
+        </section>
 
         <section>
           <h2>{m.overlaysHeading}</h2>

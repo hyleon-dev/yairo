@@ -336,6 +336,7 @@ export type OverlayId =
   | 'trackmap'
   | 'tires'
   | 'flags'
+  | 'delta-bar'
 
 export interface OverlayBounds {
   x: number
@@ -370,6 +371,10 @@ export interface AppConfig {
   // in theme.css on every window (Control Center + overlays).
   accentColor: string
   colorCorrectionMode: ColorCorrectionMode
+  // s, <= 0 = no target set. Global rather than per-overlay so every overlay
+  // that compares against a target lap (Lap Timer, Delta Bar, ...) shares one
+  // value, set once in the Control Center instead of separately per overlay.
+  targetLapTimeSec: number
 }
 
 // The accent color hardcoded in theme.css (--color-accent) before the user
@@ -426,12 +431,6 @@ export interface TiresOverlaySettings extends BaseOverlaySettings {
   showWearPct: boolean
 }
 
-export interface LapTimerOverlaySettings extends BaseOverlaySettings {
-  // s, <= 0 = no target set (Control Center's min/sec/ms inputs all at 0),
-  // the target time block is hidden entirely rather than shown as "--:--.---".
-  targetLapTimeSec: number
-}
-
 export interface TelemetryOverlaySettings extends BaseOverlaySettings {
   /** Shows the numeric RPM readout next to the shift-light LED bar. */
   showRpmNumber: boolean
@@ -442,16 +441,24 @@ export interface FlagsOverlaySettings extends BaseOverlaySettings {
   showLabel: boolean
 }
 
+export interface DeltaBarOverlaySettings extends BaseOverlaySettings {
+  /** Shows the numeric delta below the bar. */
+  showDeltaNumber: boolean
+  /** px, width of the bar itself (independent of the overlay's own "scale" setting). */
+  barWidthPx: number
+}
+
 export type OverlaySettingsMap = {
   telemetry: TelemetryOverlaySettings
   fuel: BaseOverlaySettings
-  'lap-timer': LapTimerOverlaySettings
+  'lap-timer': BaseOverlaySettings
   incidents: BaseOverlaySettings
   standings: StandingsOverlaySettings
   relative: RelativeOverlaySettings
   trackmap: BaseOverlaySettings
   tires: TiresOverlaySettings
   flags: FlagsOverlaySettings
+  'delta-bar': DeltaBarOverlaySettings
 }
 
 export type AnyOverlaySettings = OverlaySettingsMap[OverlayId]
@@ -465,7 +472,7 @@ const DEFAULT_TRACKMAP_OPACITY = 0.35
 export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
   telemetry: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showRpmNumber: true },
   fuel: { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
-  'lap-timer': { scale: 1, opacity: DEFAULT_PANEL_OPACITY, targetLapTimeSec: 0 },
+  'lap-timer': { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
   incidents: { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
   standings: {
     scale: 1,
@@ -498,7 +505,9 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
   },
   trackmap: { scale: 1, opacity: DEFAULT_TRACKMAP_OPACITY },
   tires: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showWearPct: true },
-  flags: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showLabel: false }
+  flags: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showLabel: false },
+  // opacity is unused (no panel background), kept only because BaseOverlaySettings requires it.
+  'delta-bar': { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showDeltaNumber: true, barWidthPx: 360 }
 }
 
 // Main -> renderer broadcast channel for a single overlay's settings, one channel per overlay id
@@ -528,6 +537,7 @@ export const IPC = {
   EDIT_MODE_SET: 'edit-mode:set',
   ACCENT_COLOR_SET: 'accent-color:set',
   COLOR_CORRECTION_MODE_SET: 'color-correction-mode:set',
+  TARGET_LAP_TIME_SET: 'target-lap-time:set',
   OVERLAY_BOUNDS_SET: 'overlay:set-bounds',
   OVERLAY_CONTENT_SIZE_SET: 'overlay:set-content-size',
   OVERLAY_SETTINGS_GET: 'overlay-settings:get',

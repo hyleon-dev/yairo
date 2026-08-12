@@ -1,0 +1,50 @@
+/* No panel background/border here (unlike every other overlay), the bar's own
+   border is the only chrome, always visible regardless of the opacity setting
+   (which doesn't apply to this overlay, see OverlaySettingsPanel.tsx). */
+.delta-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.delta-bar-track {
+  position: relative;
+  height: 28px;
+  border: 2px solid var(--color-text);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.delta-bar-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+.delta-bar-fill--fast {
+  background: var(--color-success);
+}
+.delta-bar-fill--slow {
+  background: var(--color-danger);
+}
+
+.delta-bar-center {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  background: var(--color-text);
+  transform: translateX(-1px);
+}
+
+.delta-bar-number {
+  font-size: var(--font-md);
+  font-weight: 700;
+}
+.delta-bar-number--fast {
+  color: var(--color-success);
+}
+.delta-bar-number--slow {
+  color: var(--color-danger);
+}

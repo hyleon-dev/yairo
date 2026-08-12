@@ -14,6 +14,7 @@ const DEFAULT_CONFIG: AppConfig = {
   controlWindowBounds: null,
   accentColor: DEFAULT_ACCENT_COLOR,
   colorCorrectionMode: DEFAULT_COLOR_CORRECTION_MODE,
+  targetLapTimeSec: 0,
   overlays: [
     {
       id: 'telemetry',
@@ -68,6 +69,12 @@ const DEFAULT_CONFIG: AppConfig = {
       name: 'Flags',
       enabled: false,
       bounds: { x: 1000, y: 100, width: 200, height: 200 }
+    },
+    {
+      id: 'delta-bar',
+      name: 'Delta Bar',
+      enabled: false,
+      bounds: { x: 960, y: 10, width: 280, height: 50 }
     }
   ]
 }
@@ -128,6 +135,12 @@ export class ConfigStore {
     return this.config
   }
 
+  setTargetLapTimeSec(targetLapTimeSec: number): AppConfig {
+    this.config = { ...this.config, targetLapTimeSec }
+    this.persist()
+    return this.config
+  }
+
   private load(): AppConfig {
     try {
       if (existsSync(this.filePath)) {
@@ -138,6 +151,7 @@ export class ConfigStore {
           controlWindowBounds: saved.controlWindowBounds ?? DEFAULT_CONFIG.controlWindowBounds,
           accentColor: saved.accentColor ?? DEFAULT_CONFIG.accentColor,
           colorCorrectionMode: saved.colorCorrectionMode ?? DEFAULT_CONFIG.colorCorrectionMode,
+          targetLapTimeSec: saved.targetLapTimeSec ?? DEFAULT_CONFIG.targetLapTimeSec,
           overlays: mergeOverlays(saved.overlays)
         }
       }

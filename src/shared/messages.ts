@@ -32,7 +32,8 @@ export const messages = {
       protanopia: 'Color correction: Protanopia',
       deuteranopia: 'Color correction: Deuteranopia',
       tritanopia: 'Color correction: Tritanopia'
-    } as Record<ColorCorrectionMode, string>
+    } as Record<ColorCorrectionMode, string>,
+    targetTimeHeader: 'Target Time'
   },
   accentColor: {
     title: 'Accent color',
@@ -97,7 +98,10 @@ export const messages = {
     resetTargetTime: 'Reset target time',
     resetTargetTime_short: 'Reset',
     showLastLapTime: 'Show last lap time',
-    showRealTime: 'Show real time'
+    showRealTime: 'Show real time',
+    showDeltaNumber: 'Show delta number',
+    barWidth: 'Bar width',
+    barWidthUnit: 'px'
   },
   lapTimer: {
     lapLabel: 'LAP',
