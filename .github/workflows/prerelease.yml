@@ -1,19 +1,21 @@
-name: Release
+name: Pre-release
 
-# Triggered by pushing a tag like "v1.2.3": builds the Windows NSIS installer
-# and attaches it to a new GitHub release. Pre-release tags ("v1.2.3-pre1",
-# see prerelease.yml) are excluded, those are handled by their own workflow.
+# Triggered by pushing a tag like "v1.2.3-pre1": builds the Windows NSIS
+# installer and attaches it to a new GitHub pre-release. Mirrors release.yml
+# step for step, the only differences are the tag pattern and marking the
+# GitHub release as a pre-release. release.yml deletes these again (release
+# + tag) once the matching real release ships, see its "Delete old
+# pre-releases" step.
 on:
   push:
     tags:
-      - 'v*'
-      - '!v*-pre*'
+      - 'v*-pre*'
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  prerelease:
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -26,33 +28,19 @@ jobs:
           # sees "tag", not "commit".
           fetch-depth: 0
 
-      # A real release supersedes every pre-release that came before it, so
-      # once we're building one, none of the old pre-release GitHub releases
-      # should stick around. --cleanup-tag also removes the underlying
-      # pre-release git tag on the remote, so it won't show up as the
-      # "previous tag" for the changelog step below either.
-      - name: Delete old pre-releases
-        shell: bash
-        run: |
-          gh release list --json tagName,isPrerelease --jq '.[] | select(.isPrerelease) | .tagName' |
-            while read -r tag; do gh release delete "$tag" --yes --cleanup-tag; done
-        env:
-          GH_TOKEN: ${{ github.token }}
-
       # fetch-depth: 0 alone isn't enough: actions/checkout still creates the
       # local refs/tags/<name> ref pointing directly at the tag's peeled
       # commit SHA (not the annotated tag object).
       # A real "fetch --tags" re-resolves the ref to the actual tag object -
       # --force is required to overwrite  the (wrong) local ref that checkout
-      # already created. --prune --prune-tags additionally drops local tags
-      # (e.g. the pre-release tags just deleted above) that no longer exist
-      # on the remote, so git describe below doesn't still see them.
+      # already created.
       - name: Re-fetch tags as real tag objects
-        run: git fetch --tags --force --prune --prune-tags origin
+        run: git fetch --tags --force origin
 
       # Uses "[<tag>] <annotated tag message>" as the release title, if there
-      # is a message (git tag -a v1.2.0 -m "My Title") - falls back to just
-      # the tag name for plain/lightweight tags (no redundant "[v1.2.0] v1.2.0").
+      # is a message (git tag -a v1.2.0-pre1 -m "My Title") - falls back to
+      # just the tag name for plain/lightweight tags (no redundant
+      # "[v1.2.0-pre1] v1.2.0-pre1").
       # Important: a lightweight tag ref points directly at the commit, so
       # "%(contents)" on it would return that COMMIT's message, not "nothing"
       # - cat-file -t distinguishes an actual tag object ("tag") from a
@@ -88,7 +76,7 @@ jobs:
           # A commit only touching docs/repo-meta/tooling files (README + its
           # screenshots, CI workflows, issue templates, .gitignore, TS/build
           # config, dev-only scripts) is noise for a changelog, skip it.
-          # But only if EVERY changed file matches that, so a commit that 
+          # But only if EVERY changed file matches that, so a commit that
           # mixes in a real code/app change still gets listed.
           is_docs_only_commit() {
             local files
@@ -155,9 +143,10 @@ jobs:
       - name: Build Windows installer
         run: npm run build:win
 
-      - name: Create GitHub release
+      - name: Create GitHub pre-release
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ steps.tag.outputs.title }}
           body: ${{ steps.changelog.outputs.changelog }}
           files: dist/*.exe
+          prerelease: true
