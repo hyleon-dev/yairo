@@ -21,13 +21,24 @@ export function FuelOverlay({ data }: { data: TelemetryData }) {
 
   return (
     <div className="card fuel">
-      <div className="fuel-liters-remaining">
-        <div className="big-number small">{data.fuelLevelL.toFixed(2)}</div>
-        <div className="unit">{m.unit}</div>
-      </div>
+      <div className="fuel-stats-row">
+        <div>
+          <div className="fuel-large-value">
+            <div className="big-number small">{data.fuelLevelL.toFixed(2)}</div>
+            <div className="unit">{m.unit}</div>
+          </div>
 
-      <div className="fuel-laps-remaining">
-        {lastLap ? m.lapsRemaining(lastLap.lapsRemaining) : m.rangeUnknown}
+          <div className="fuel-large-value-sub">
+            {lastLap ? m.lapsRemaining(lastLap.lapsRemaining) : m.rangeUnknown}
+          </div>
+        </div>
+
+        <div>
+          <div  className="fuel-large-value">
+            <div className="big-number small">{stopsRemaining !== null ? `${stopsRemaining}` : '0'}</div>
+          </div>
+          <div className="fuel-large-value-sub">{m.statStopsLeft}</div>
+        </div>
       </div>
 
       <div className="fuel-stats-row" style={{ flexDirection: 'column', gap: '0' }}>
@@ -56,7 +67,6 @@ export function FuelOverlay({ data }: { data: TelemetryData }) {
         </div>
         <div className="fuel-stats-row" style={{ border: '0', paddingTop: '4px' }}>
           <FuelStat label={m.statNextFill} value={nextPitFuelL !== null ? `${nextPitFuelL.toFixed(2)} l` : '–'} />
-          <FuelStat label={m.statStopsLeft} value={stopsRemaining !== null ? `${stopsRemaining}` : '–'} />
         </div>
       </div>
     </div>

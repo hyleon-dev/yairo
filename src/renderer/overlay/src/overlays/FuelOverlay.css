@@ -1,12 +1,17 @@
-.fuel-liters-remaining {
+.fuel-large-value {
   display: flex;
   flex-direction: row;
   align-items: baseline;
   justify-content: center;
   gap: 4px;
+  margin-bottom: 6px;
 }
 
-.fuel-laps-remaining {
+.fuel-large-value .unit {
+  margin-bottom: 0;
+}
+
+.fuel-large-value-sub {
   font-size: var(--font-body-lg);
   color: var(--color-text-muted);
   margin-bottom: 8px;

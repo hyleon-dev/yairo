@@ -129,7 +129,7 @@ export const messages = {
     statPitBy: 'PIT BY',
     statRemaining: '@END',
     statNextFill: 'NEXT FILL',
-    statStopsLeft: 'STOPS',
+    statStopsLeft: 'Stops',
     predictionsLabel: 'Predictions',
     consumptionLabel: 'Usage /Lap'
   },
