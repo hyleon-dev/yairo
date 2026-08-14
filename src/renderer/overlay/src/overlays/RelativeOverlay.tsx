@@ -51,7 +51,8 @@ function DriverRow({
   const rowClass = [
     'rel-row',
     driver.isPlayer && 'rel-row--player',
-    driver.lapsDifference !== 0 && 'rel-row--lapped'
+    driver.lapsDifference > 0 && 'rel-row--overtook',
+    driver.lapsDifference < 0 && 'rel-row--overtaken'
   ]
     .filter(Boolean)
     .join(' ')

@@ -114,10 +114,14 @@
   font-size: var(--font-body-sm);
 }
 
-/* Drivers on a different lap than the player (ahead or behind). The gap
-   value stays a pure track distance, only the lap display is highlighted so
-   it isn't mistaken for "same lap". */
-.rel-row--lapped .col-driver-current-lap {
-  color: var(--color-warning);
-  font-weight: 700;
+/* Drivers a lap ahead (have lapped the player) vs. a lap behind (were lapped
+   by the player), regardless of class. Only number/name are colored, not the
+   whole row. */
+.rel-row--overtook .col-num,
+.rel-row--overtook .col-name {
+  color: var(--color-danger);
+}
+.rel-row--overtaken .col-num,
+.rel-row--overtaken .col-name {
+  color: var(--color-primary-light);
 }
