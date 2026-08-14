@@ -982,7 +982,15 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
   const sorted = [...rows].sort((a, b) => {
     const posA = a.position > 0 ? a.position : Infinity
     const posB = b.position > 0 ? b.position : Infinity
-    return posA - posB
+    if (posA !== posB) return posA - posB
+
+    // Both unclassified, e.g. during the formation lap before anyone has
+    // crossed start/finish yet: fall back to current track distance so the
+    // order still reflects the actual running order instead of Array.sort's
+    // stable fallback (insertion order, effectively car number order).
+    const distA = a.lapsCompleted + a.lapDistPct
+    const distB = b.lapsCompleted + b.lapDistPct
+    return distB - distA
   })
 
   return sorted.map((row, index) => ({
