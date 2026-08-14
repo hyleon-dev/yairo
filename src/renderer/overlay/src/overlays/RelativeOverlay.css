@@ -41,6 +41,10 @@
   font-weight: 700;
 }
 
+.rel-row--pit {
+  opacity: 0.5;
+}
+
 /* Fills missing driver slots (see RelativeOverlay.tsx), so the window
    doesn't shrink when fewer drivers are on track than configured -
    deliberately faint/empty rather than mimicking a real row. */

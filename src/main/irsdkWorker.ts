@@ -1107,6 +1107,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
         stintLaps: stintLaps(carIdx, laps[carIdx] ?? 0),
         lapDistPct: lapDistPct[carIdx] ?? 0,
         estLapTime: driver.CarClassEstLapTime > 0 ? driver.CarClassEstLapTime : 0,
+        isInPit: isInPit(trackSurface[carIdx] ?? -1),
         // Named "isFocused" (not "isPlayer") because playerCarIdx above is
         // actually resolveFocusCarIdx(), while spectating this is the
         // watched car (CamCarIdx), not necessarily our own. Mapped back to
@@ -1167,6 +1168,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
     gapToPlayerSec: row.gapToPlayerSec,
     lapsDifference: row.lap - focusDriver.lap,
     isPlayer: row.isFocused,
+    isInPit: row.isInPit,
     iRating: row.iRating,
     iRatingChange: row.iRatingChange,
     licString: row.licString,
@@ -1177,6 +1179,11 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
   }))
 
   return { drivers }
+}
+
+// irsdk_TrkLoc values 1 (in pit stall) and 2 (approaching pits), see trackSurfaceStatus() below.
+function isInPit(raw: number): boolean {
+  return raw === 1 || raw === 2
 }
 
 // Maps irsdk_TrkLoc (see @irsdk-node/types defines.d.ts) to internal states.

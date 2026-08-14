@@ -233,6 +233,7 @@ export interface RelativeDriver {
   gapToPlayerSec: number // Pure time gap on track, independent of which lap the other driver is on.
   lapsDifference: number // > 0 = driver is that many laps ahead, < 0 = that many laps behind.
   isPlayer: boolean
+  isInPit: boolean
   iRating: number
   // See DriverStanding.iRatingChange.
   iRatingChange: number | null

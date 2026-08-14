@@ -51,6 +51,7 @@ function DriverRow({
   const rowClass = [
     'rel-row',
     driver.isPlayer && 'rel-row--player',
+    driver.isInPit && 'rel-row--pit',
     driver.lapsDifference > 0 && 'rel-row--overtook',
     driver.lapsDifference < 0 && 'rel-row--overtaken'
   ]
