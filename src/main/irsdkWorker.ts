@@ -625,7 +625,12 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
   // Always our OWN car/team, regardless of camera focus (CamCarIdx)
   const currentDriverIncidentCount = raw.PlayerCarDriverIncidentCount?.value?.[0] ?? -1
   const teamIncidentCount = raw.PlayerCarTeamIncidentCount?.value?.[0] ?? -1
-  const incidentLimit = sdk.getWeekendInfo()?.WeekendOptions?.IncidentLimit ?? ''
+  // Despite the declared string type, the YAML parser underneath can hand back
+  // a plain number here (e.g. a bare 17 instead of "17x"), which broke
+  // fmtLimit()'s string methods in IncidentsOverlay.tsx. Coerced explicitly
+  // rather than trusting the SDK type.
+  const rawIncidentLimit = sdk.getWeekendInfo()?.WeekendOptions?.IncidentLimit
+  const incidentLimit = rawIncidentLimit != null ? String(rawIncidentLimit) : ''
 
   if (isDriving) {
     const fuelLevelL = raw.FuelLevel?.value?.[0] ?? 0
