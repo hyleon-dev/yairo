@@ -1082,6 +1082,21 @@ function filterStandingsWindow(drivers: DriverStanding[], hasPlayerAnywhere: boo
     .map((i) => drivers[i])
 }
 
+// Right after either car crosses start/finish, CarIdxLapCompleted can differ by
+// 1 even though both cars are still essentially side by side on track, an
+// artifact of one of them crossing the line a moment before the other rather
+// than a genuine full-lap gap. A one-lap difference is only trusted if the
+// wrapped track-distance gap (gapToPlayerSec, "+ = behind, - = ahead") also
+// puts the other car on the side a real lap gap would: a car a lap ahead
+// closing in to lap us sorts behind us, a car a lap behind that we're
+// closing in on to lap sorts ahead of us. Otherwise it's treated as still on
+// the same lap (0).
+function resolveLapsDifference(rawDiff: number, gapToPlayerSec: number): number {
+  if (rawDiff === 1) return gapToPlayerSec > 0 ? 1 : 0
+  if (rawDiff === -1) return gapToPlayerSec < 0 ? -1 : 0
+  return rawDiff
+}
+
 // Gap to the player is computed ourselves instead of from CarIdxF2Time,
 // this way the Relative overlay updates continuously in any session type instead of only
 // once per lap: track position (completed laps + CarIdxEstTime for
@@ -1175,7 +1190,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
     lap: row.lap,
     stintLaps: row.stintLaps,
     gapToPlayerSec: row.gapToPlayerSec,
-    lapsDifference: row.lap - focusDriver.lap,
+    lapsDifference: resolveLapsDifference(row.lap - focusDriver.lap, row.gapToPlayerSec),
     isPlayer: row.isFocused,
     isInPit: row.isInPit,
     iRating: row.iRating,
