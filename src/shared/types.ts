@@ -191,6 +191,9 @@ export interface DriverStanding {
   // Null if no known manufacturer keyword matched.
   manufacturerLogoKey: string | null
   lastLapTime: number
+  // Laps this driver is behind the class leader's completed lap count.
+  // 0 while on the leader's lap (or ahead, e.g. during a formation lap).
+  lapsDown: number
 }
 
 export interface StandingsClass {

@@ -31,8 +31,9 @@ function gridTemplate(settings: StandingsOverlaySettings): string {
   return cols.join(' ')
 }
 
-function fmtGap(gap: number, position: number): string {
+function fmtGap(gap: number, position: number, lapsDown: number): string {
   if (position === 1) return m.leader
+  if (lapsDown > 0) return `${lapsDown}L`
   if (gap <= 0) return '--:--.--'
   return `+${gap.toFixed(3)}`
 }
@@ -111,7 +112,7 @@ function DriverRow({
       <span className="col-driver-current-lap">{driver.lapsCompleted == -1 ? '-' : driver.lapsCompleted}</span>
       {settings.showStint && <span className="col-stint">{driver.stintLaps}</span>}
       <span className={`col-gap ${driver.position === 1 ? 'gap--leader' : ''}`}>
-        {fmtGap(driver.gapToLeaderSec, driver.position)}
+        {fmtGap(driver.gapToLeaderSec, driver.position, driver.lapsDown)}
       </span>
       {settings.showAvgLapTime && <span className="col-avg">{fmtLapTime(driver.avgLapTimeSec)}</span>}
       {settings.showBestLapTime && <span className={`col-lap ${driver.isClassFastestLap ? 'col-lap--fastest' : ''}`}>{fmtLapTime(driver.bestLapTime)}</span>}

@@ -993,6 +993,13 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
     return distB - distA
   })
 
+  // Track progress (completed laps + current lap's distance), not just completed
+  // lap count. Using completed laps alone would flag a driver as lapped as soon
+  // as the leader crosses start/finish again, even if the driver is only a few
+  // seconds behind and about to complete that same lap themselves.
+  const leader = sorted[0]
+  const leaderProgress = (leader?.lapsCompleted ?? 0) + (leader?.lapDistPct ?? 0)
+
   return sorted.map((row, index) => ({
     carIdx: row.carIdx,
     position: index + 1,
@@ -1012,7 +1019,8 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
     avgLapTimeSec: row.avgLapTimeSec,
     flagIsoCode: row.flagIsoCode,
     manufacturerLogoKey: row.manufacturerLogoKey,
-    lastLapTime: row.lastLapTime
+    lastLapTime: row.lastLapTime,
+    lapsDown: Math.max(0, Math.floor(leaderProgress - (row.lapsCompleted + row.lapDistPct)))
   }))
 }
 
@@ -1049,7 +1057,8 @@ function buildTimeRanking(rows: StandingsRow[]): DriverStanding[] {
     avgLapTimeSec: row.avgLapTimeSec,
     flagIsoCode: row.flagIsoCode,
     manufacturerLogoKey: row.manufacturerLogoKey,
-    lastLapTime: row.lastLapTime
+    lastLapTime: row.lastLapTime,
+    lapsDown: 0 // "laps down" only applies to races, not time-ranked sessions
   }))
 }
 
