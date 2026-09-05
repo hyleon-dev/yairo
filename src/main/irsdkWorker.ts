@@ -803,7 +803,8 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
       position,
       hasLivePosition,
       carNumber: driver?.CarNumber ?? '?',
-      driverName: displayDriverName(carIdx, rawPlayerCarIdx, driver?.UserName ?? `Driver #${carIdx}`),
+      // TeamName mirrors UserName in non-team sessions, so this also covers solo events.
+      displayName: displayDriverName(carIdx, rawPlayerCarIdx, driver?.TeamName || driver?.UserName || `Driver #${carIdx}`),
       lapsCompleted,
       stintLaps: stintLaps(carIdx, lapsCompleted),
       lapDistPct: lapDistPct[carIdx] ?? 0,
@@ -919,7 +920,7 @@ interface StandingsRow {
   position: number
   hasLivePosition: boolean
   carNumber: string
-  driverName: string
+  displayName: string
   lapsCompleted: number
   stintLaps: number
   lapDistPct: number
@@ -1004,7 +1005,7 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
     carIdx: row.carIdx,
     position: index + 1,
     carNumber: row.carNumber,
-    driverName: row.driverName,
+    driverName: row.displayName,
     lapsCompleted: row.lapsCompleted,
     stintLaps: row.stintLaps,
     gapToLeaderSec: row.gapToLeaderSec,
@@ -1042,7 +1043,7 @@ function buildTimeRanking(rows: StandingsRow[]): DriverStanding[] {
     carIdx: row.carIdx,
     position: index + 1,
     carNumber: row.carNumber,
-    driverName: row.driverName,
+    driverName: row.displayName,
     lapsCompleted: row.lapsCompleted,
     stintLaps: row.stintLaps,
     gapToLeaderSec: fastestTime > 0 && row.bestLapTime > 0 ? row.bestLapTime - fastestTime : 0,
