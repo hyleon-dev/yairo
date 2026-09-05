@@ -115,7 +115,7 @@ function DriverRow({
         {fmtGap(driver.gapToLeaderSec, driver.position, driver.lapsDown)}
       </span>
       {settings.showAvgLapTime && <span className="col-avg">{fmtLapTime(driver.avgLapTimeSec)}</span>}
-      {settings.showBestLapTime && <span className={`col-lap ${driver.isClassFastestLap ? 'col-lap--fastest' : ''}`}>{fmtLapTime(driver.bestLapTime)}</span>}
+      {settings.showBestLapTime && <span className={`col-lap ${driver.isClassFastestLap ? 'col-lap--class-fastest' : ''}`}>{fmtLapTime(driver.bestLapTime)}</span>}
       {settings.showLastLapTime && <span className={`col-lap ${driver.lastLapTime != -1 && driver.lastLapTime == driver.bestLapTime ? 'col-lap--fastest' : ''}`}>{fmtLapTime(driver.lastLapTime)}</span>}
     </div>
   )

@@ -183,9 +183,16 @@
   color: var(--color-text-secondary);
   font-size: var(--font-body-sm);
 }
-/* Purple highlight, shared by two different conditions (see StandingsOverlay.tsx):
-   Best column = class-wide fastest lap (isClassFastestLap), Last column = driver's own best lap. */
-.col-lap--fastest {
+/* Chained onto .col-lap (not just the modifier alone) so the higher specificity
+   wins regardless of CSS rule order in the bundle, Vite's CSS HMR doesn't
+   reliably preserve source order between .col-lap and these modifiers. */
+/* Best column: class-wide fastest lap (isClassFastestLap). */
+.col-lap.col-lap--class-fastest {
+  color: var(--color-best);
+  font-weight: 700;
+}
+/* Last column: driver's own best lap. */
+.col-lap.col-lap--fastest {
   color: var(--color-best);
   font-weight: 700;
 }
