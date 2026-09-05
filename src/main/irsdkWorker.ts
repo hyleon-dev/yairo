@@ -1085,16 +1085,18 @@ function filterStandingsWindow(drivers: DriverStanding[], hasPlayerAnywhere: boo
 // Right after either car crosses start/finish, CarIdxLapCompleted can differ by
 // 1 even though both cars are still essentially side by side on track, an
 // artifact of one of them crossing the line a moment before the other rather
-// than a genuine full-lap gap. A one-lap difference is only trusted if the
-// wrapped track-distance gap (gapToPlayerSec, "+ = behind, - = ahead") also
-// puts the other car on the side a real lap gap would: a car a lap ahead
-// closing in to lap us sorts behind us, a car a lap behind that we're
-// closing in on to lap sorts ahead of us. Otherwise it's treated as still on
-// the same lap (0).
-function resolveLapsDifference(rawDiff: number, gapToPlayerSec: number): number {
-  if (rawDiff === 1) return gapToPlayerSec > 0 ? 1 : 0
-  if (rawDiff === -1) return gapToPlayerSec < 0 ? -1 : 0
-  return rawDiff
+// than a genuine full-lap gap. That ambiguity only exists right at the line,
+// so a one-lap difference elsewhere on track (e.g. a car that was just lapped
+// and is now trailing right behind, which can happen anywhere) is always
+// trusted. Checking the gap's sign instead of line proximity doesn't work
+// here: a lapped car can end up on either side of the focus car depending on
+// whether it's about to be lapped or was just lapped a moment ago.
+const LAP_LINE_PROXIMITY_PCT = 0.02
+
+function resolveLapsDifference(rawDiff: number, focusLapDistPct: number, rowLapDistPct: number): number {
+  if (Math.abs(rawDiff) !== 1) return rawDiff
+  const nearLine = (pct: number): boolean => pct < LAP_LINE_PROXIMITY_PCT || pct > 1 - LAP_LINE_PROXIMITY_PCT
+  return nearLine(focusLapDistPct) || nearLine(rowLapDistPct) ? 0 : rawDiff
 }
 
 // Gap to the player is computed ourselves instead of from CarIdxF2Time,
@@ -1103,6 +1105,10 @@ function resolveLapsDifference(rawDiff: number, gapToPlayerSec: number): number 
 // current lap) is converted into a time equivalent and compared to player.
 function buildRelative(raw: TelemetryVarList): RelativeData {
   const driverInfo = sdk.getDriverInfo()
+  const sessionInfo = sdk.getSessionInfo()
+  const currentSessionNum = raw.SessionNum?.value?.[0] ?? 0
+  const currentSession = sessionInfo?.Sessions?.find((s) => s.SessionNum === currentSessionNum)
+  const isRaceSession = (currentSession?.SessionType ?? '').toLowerCase().includes('race')
   const rawPlayerCarIdx = raw.PlayerCarIdx?.value?.[0] ?? -1
   const playerCarIdx = resolveFocusCarIdx(raw, rawPlayerCarIdx)
 
@@ -1190,7 +1196,11 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
     lap: row.lap,
     stintLaps: row.stintLaps,
     gapToPlayerSec: row.gapToPlayerSec,
-    lapsDifference: resolveLapsDifference(row.lap - focusDriver.lap, row.gapToPlayerSec),
+    // Laps aren't synchronized to a race distance in practice/qualifying (drivers pit
+    // whenever), so a lap difference there doesn't mean "lapped" like it does in a race.
+    lapsDifference: isRaceSession
+      ? resolveLapsDifference(row.lap - focusDriver.lap, focusDriver.lapDistPct, row.lapDistPct)
+      : 0,
     isPlayer: row.isFocused,
     isInPit: row.isInPit,
     iRating: row.iRating,
