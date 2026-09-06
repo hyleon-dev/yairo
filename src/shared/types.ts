@@ -175,7 +175,10 @@ export interface DriverStanding {
   // valid iRating (e.g. missing driver data).
   iRatingChange: number | null
   licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
-  licColorHex: string // License class color, taken directly from the SDK (Driver.LicColor) as a CSS hex code.
+  // Official iRacing license class color as a CSS hex code, derived from licString's
+  // letter (licenseColorHex() in irsdkWorker.ts). NOT the SDK's own Driver.LicColor,
+  // which can report the wrong color for a driver's actual license class.
+  licColorHex: string
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
   // Average of every lap time recorded for the CURRENT driver of this car
   // during the current session.
@@ -241,7 +244,10 @@ export interface RelativeDriver {
   // See DriverStanding.iRatingChange.
   iRatingChange: number | null
   licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
-  licColorHex: string // License class color, taken directly from the SDK (Driver.LicColor) as a CSS hex code.
+  // Official iRacing license class color as a CSS hex code, derived from licString's
+  // letter (licenseColorHex() in irsdkWorker.ts). NOT the SDK's own Driver.LicColor,
+  // which can report the wrong color for a driver's actual license class.
+  licColorHex: string
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
   // See DriverStanding.avgLapTimeSec.
   avgLapTimeSec: number

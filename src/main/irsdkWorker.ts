@@ -570,9 +570,27 @@ function buildFuelEstimate(
   }
 }
 
-// e.g. Driver.LicColor and Driver.CarClassColor
+// e.g. Driver.CarClassColor
 function sdkColorHex(raw: number | undefined): string {
   return '#' + ((raw ?? 0) & 0xffffff).toString(16).padStart(6, '0')
+}
+
+// Official iRacing license class colors, keyed by LicString's first letter (e.g. "A 4.99" -> "A").
+// Driver.LicColor from the SDK is not used for this: seen live with an "A"-license
+// driver reporting green (the actual B color) instead of blue, with no consistent
+// pattern (other "A" drivers in the same session had the correct color).
+const LICENSE_COLORS: Record<string, string> = {
+  R: '#E1251B',
+  D: '#FF6600',
+  C: '#FFCC00',
+  B: '#33CC00',
+  A: '#006EFF',
+  P: '#7C00FF'
+}
+
+function licenseColorHex(licString: string | undefined): string {
+  const letter = (licString ?? '').trim().charAt(0).toUpperCase()
+  return LICENSE_COLORS[letter] ?? '#828287'
 }
 
 function driverFlagIsoCode(driver: unknown): string | null {
@@ -815,7 +833,7 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
       className: driver?.CarClassShortName ?? '?',
       iRating: driver?.IRating ?? 0,
       licString: driver?.LicString ?? '',
-      licColorHex: sdkColorHex(driver?.LicColor),
+      licColorHex: licenseColorHex(driver?.LicString),
       classColorHex: sdkColorHex(driver?.CarClassColor),
       avgLapTimeSec: avgLapTimeSec(driver?.UserID),
       flagIsoCode: driverFlagIsoCode(driver),
@@ -1148,7 +1166,7 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
         iRating: driver.IRating,
         iRatingChange: classPosition?.iRatingChange ?? null,
         licString: driver.LicString ?? '',
-        licColorHex: sdkColorHex(driver.LicColor),
+        licColorHex: licenseColorHex(driver.LicString),
         classColorHex: sdkColorHex(driver.CarClassColor),
         avgLapTimeSec: avgLapTimeSec(driver.UserID),
         lastLapTime: lastLapTimes[carIdx] ?? -1
