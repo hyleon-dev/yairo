@@ -2,6 +2,7 @@ import { parentPort } from 'worker_threads'
 import {
   IRacingSDK,
   type DriverInfo,
+  type SessionInfo,
   type SessionList,
   type SessionResultsPosition,
   type TelemetryVarList,
@@ -593,6 +594,19 @@ function licenseColorHex(licString: string | undefined): string {
   return LICENSE_COLORS[letter] ?? '#828287'
 }
 
+// "Carry Over" as a session's SessionTrackRubberState just means "same as the
+// previous session ended at", not an actual grip level. Walks backwards
+// through the weekend's sessions (Practice/Qualify/Race, ...) until a concrete
+// (non carry-over) state is found.
+function resolveGripState(sessions: SessionInfo[] | undefined, sessionNum: number): string {
+  const bySessionNum = new Map((sessions ?? []).map((s) => [s.SessionNum, s]))
+  for (let num = sessionNum; num >= 0; num--) {
+    const state = bySessionNum.get(num)?.SessionTrackRubberState ?? ''
+    if (state.trim().toLowerCase() !== 'carry over') return state
+  }
+  return ''
+}
+
 function driverFlagIsoCode(driver: unknown): string | null {
   return flairNameToIsoCode((driver as { FlairName?: string } | undefined)?.FlairName)
 }
@@ -911,13 +925,16 @@ function buildStandings(raw: TelemetryVarList): StandingsData {
     // Strongest (fastest) class first, matching iRacing's own multiclass results ordering.
     .sort((a, b) => b.strengthOfField - a.strengthOfField)
 
+  const currentSessionNum = raw.SessionNum?.value?.[0] ?? 0
+  const currentSession = sessionInfo?.Sessions?.find((s) => s.SessionNum === currentSessionNum)
+
   const sessionTimeRemain = raw?.SessionTimeRemain?.value?.[0] ?? 0
   const trackTemp = raw?.TrackTempCrew?.value?.[0] ?? 0
   const trackTempUnit = raw?.TrackTempCrew?.unit ?? ''
   const airTemp = raw?.AirTemp?.value?.[0] ?? 0
   const airTempUnit = raw?.AirTemp?.unit ?? ''
-  const grip = sessionInfo?.Sessions?.[0]?.SessionTrackRubberState ?? ''
-  const sessionType = sessionInfo?.Sessions?.[0]?.SessionType ?? ''
+  const grip = resolveGripState(sessionInfo?.Sessions, currentSessionNum)
+  const sessionType = currentSession?.SessionType ?? ''
 
   return {
     trackName: weekendInfo?.TrackDisplayName ?? '',
