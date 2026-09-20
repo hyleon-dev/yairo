@@ -12,7 +12,8 @@ interface Dot {
   y: number
 }
 
-// Plain circle fallback for tracks not in the bundled dataset (e.g. a new track), just to keep pit-status/spacing visible.
+// Plain circle fallback for tracks not in the bundled dataset, for example a new track.
+// This still keeps pit status and spacing visible.
 const FALLBACK_VIEW_BOX = '0 0 200 200'
 const FALLBACK_CENTER = 100
 const FALLBACK_RADIUS = 80
@@ -30,9 +31,10 @@ export function TrackMapOverlay({ data }: { data: TrackMapData }) {
       const totalLength = pathEl.getTotalLength()
       setDots(
         data.drivers.map((driver) => {
-          // The raw path's own arc-length parameterization doesn't start at the start/finish line
-          // and may run opposite to the direction of travel, direction/offset calibrated with
-          // formula used by xikxp1/iRaceHUD's TrackMapCanvas.svelte against the same asset format.
+          // The raw path's arc-length parameter does not start at the start/finish line.
+          // It may also run opposite to the direction of travel. Direction and offset are
+          // calibrated with the formula from xikxp1/iRaceHUD's TrackMapCanvas.svelte,
+          // which uses the same asset format.
           const offsetLapDistPct = (1 + shape.offset + shape.direction * driver.lapDistPct) % 1
           const point = pathEl.getPointAtLength(offsetLapDistPct * totalLength)
           return { driver, x: point.x, y: point.y }
@@ -41,7 +43,7 @@ export function TrackMapOverlay({ data }: { data: TrackMapData }) {
       return
     }
 
-    // No calibration data for this track, place dots by raw lapDistPct around a circle instead
+    // No calibration data for this track. Place dots by raw lapDistPct around a circle instead.
     setDots(
       data.drivers.map((driver) => {
         const angle = driver.lapDistPct * Math.PI * 2 - Math.PI / 2
@@ -90,8 +92,8 @@ export function TrackMapOverlay({ data }: { data: TrackMapData }) {
       <svg viewBox={TRACK_MAP_VIEW_BOX} className="trackmap-svg">
         <path ref={pathRef} d={shape.path} className="trackmap-outline" />
         {
-          // Raw SVG markup from iRacing's own start/finish marker asset,
-          // already positioned in this same coordinate space.
+          // Raw SVG markup from iRacing's own start/finish marker asset.
+          // It is already positioned in this same coordinate space.
         }
         {shape.startFinishMarkup && (
           <g className="trackmap-start-finish" dangerouslySetInnerHTML={{ __html: shape.startFinishMarkup }} />

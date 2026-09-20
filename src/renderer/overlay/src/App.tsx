@@ -95,9 +95,9 @@ export default function App() {
   const { telemetry, standings, relative, trackMap, flags, editMode, settings, targetLapTimeSec } = useOverlayBridge(overlayId)
   const contentRef = useReportContentSize(overlayId, editMode, settings.scale)
 
-  // Overrides both panel-background variants (--panel-bg for most overlays,
-  // --panel-bg-light for trackmap) with the same alpha, so
-  // this works regardless of which one the current overlay's CSS uses.
+  // Sets both panel-background variants (--panel-bg for most overlays,
+  // --panel-bg-light for trackmap) to the same alpha. This way it works
+  // no matter which variant the current overlay's CSS uses.
   useEffect(() => {
     const rgba = `rgba(var(--color-background-rgb), ${settings.opacity})`
     document.documentElement.style.setProperty('--panel-bg', rgba)
@@ -108,8 +108,9 @@ export default function App() {
     <div className={`overlay-root ${editMode ? 'edit-mode' : ''}`}>
       {editMode && <div className="edit-label">{overlayId}</div>}
       {
-        // "zoom" instead of "transform: scale()", because zoom actually changes the layout size,
-        // that's what lets the ResizeObserver in useReportContentSize pick up a scale change.
+        // Uses "zoom" instead of "transform: scale()". Zoom actually changes
+        // the layout size. That's what lets the ResizeObserver in
+        // useReportContentSize pick up a scale change.
       }
       <div ref={contentRef} className="overlay-content" style={{ zoom: settings.scale }}>
         {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, flags, settings, targetLapTimeSec)}
@@ -144,9 +145,10 @@ function renderOverlayContent(
     return <FlagsOverlay data={flags ?? EMPTY_FLAGS} settings={settings as FlagsOverlaySettings} />
   }
 
-  // Telemetry/Fuel/Lap-Timer/Incidents/Tires are tied to a car; without one
-  // (not connected yet, not in/watching a car, spectating without fuel/tire
-  // data) they fall back to zeroed/empty data instead of hiding the overlay.
+  // Telemetry/Fuel/Lap-Timer/Incidents/Tires are tied to a car. If there is
+  // no car (not connected yet, not in/watching a car, spectating without
+  // fuel/tire data), they fall back to zeroed/empty data instead of hiding
+  // the overlay.
   const telemetryData = telemetry ?? EMPTY_TELEMETRY
 
   switch (id) {

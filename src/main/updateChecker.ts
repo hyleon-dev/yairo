@@ -3,8 +3,8 @@ import type { UpdateStatus } from '../shared/types'
 const GITHUB_REPO = 'hyleon-dev/yairo'
 const LATEST_RELEASE_URL = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`
 
-// Numeric major.minor.patch comparison, missing/non-numeric parts treated as 0.
-// Good enough for our own "vX.Y.Z" tags, no need for a full semver dependency.
+// Numeric major.minor.patch comparison. Missing or non-numeric parts count as 0.
+// Good enough for our own "vX.Y.Z" tags. No need for a full semver dependency.
 function isNewerVersion(latest: string, current: string): boolean {
   const parse = (v: string) => v.replace(/^v/, '').split('.').map((part) => parseInt(part, 10) || 0)
   const [latestParts, currentParts] = [parse(latest), parse(current)]
@@ -18,7 +18,7 @@ function isNewerVersion(latest: string, current: string): boolean {
 }
 
 // Never throws. Offline, rate-limited, or "no release published yet" all
-// just mean "no update available", this is a non-critical convenience feature.
+// just mean "no update available". This is a non-critical convenience feature.
 export async function checkForUpdate(currentVersion: string): Promise<UpdateStatus> {
   try {
     const res = await fetch(LATEST_RELEASE_URL, {

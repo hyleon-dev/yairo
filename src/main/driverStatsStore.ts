@@ -4,17 +4,15 @@ import { dirname, join } from 'path'
 import type { DriverLapTimeEntry, DriverRecord, DriverStatsData } from '../shared/types'
 
 // Persists driver data, keyed by iRacing CustID.
-// Unlike overlaySettingsStore.ts, everything is stored in ONE file here.
+// Unlike overlaySettingsStore.ts, this uses ONE file for everything.
 //
-// Lifetime: data should only apply to CURRENT iRacing session, not
-// accumulate indefinitely across sessions:
-// iRating/Safety Rating from three weeks ago aren't a meaningful comparison anymore.
-// At the same time, a longer endurance race should NOT simply wipe data on
-// app close or a server disconnect. Instead, dat has an expiry timestamp
-// (`sessionExpiresAt`) that gets pushed forward continuously while telemetry
-// is live, based on the remaining session time.
-// Only on next (re)connect or app start do we check whether that timestamp has
-// passed: then is the old session safely considered outdated and the history can be deleted.
+// Lifetime: the data must apply only to the CURRENT iRacing session. It must not build up across sessions.
+// iRating and Safety Rating from three weeks ago are not a useful comparison anymore.
+// But a long endurance race must NOT lose its data on app close or a server disconnect.
+// Instead, the data gets an expiry timestamp (`sessionExpiresAt`). This timestamp keeps moving
+// forward while telemetry is live, based on the remaining session time.
+// The app checks this timestamp only on the next (re)connect or app start.
+// If the timestamp has passed, the old session is outdated and its history gets deleted.
 
 const GRACE_PERIOD_MS = 30 * 60 * 1000 // buffer after the computed session end
 

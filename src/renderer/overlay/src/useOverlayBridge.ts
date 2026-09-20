@@ -29,7 +29,7 @@ export interface OverlayBridgeState {
   targetLapTimeSec: number
 }
 
-// Applied directly here (rather than returned as state) so every overlay
+// Applied directly here, not returned as state. This way every overlay
 // window picks up a live accent color change without every overlay's App
 // needing its own effect for it.
 function applyAccentColor(hex: string): void {
@@ -37,9 +37,10 @@ function applyAccentColor(hex: string): void {
   document.documentElement.style.setProperty('--color-accent-rgb', hexToRgbTriplet(hex))
 }
 
-// Only ever called from subscribeViaElectron (the real overlay window this user is looking at),
-// deliberately never from subscribeViaWebSocket, so a stream viewer hitting the OBS/browser
-// URL keeps seeing normal colors.
+// Only ever called from subscribeViaElectron, the real overlay window this
+// user is looking at. Deliberately never called from subscribeViaWebSocket.
+// This way a stream viewer hitting the OBS/browser URL keeps seeing normal
+// colors.
 function applyColorCorrectionMode(mode: ColorCorrectionMode): void {
   if (!document.getElementById(COLOR_CORRECTION_FILTER_SVG_ID)) {
     document.body.insertAdjacentHTML('beforeend', COLOR_CORRECTION_FILTER_SVG_MARKUP)
@@ -168,9 +169,10 @@ function subscribeViaWebSocket(
         }
         break
       case IPC.CONFIG_UPDATED:
-        // accentColor is a branding choice, applied for OBS/browser viewers too.
-        // colorCorrectionMode is a personal accessibility setting, intentionally
-        // NOT applied here, see applyColorCorrectionMode()'s doc comment above.
+        // accentColor is a branding choice. It is applied for OBS/browser
+        // viewers too. colorCorrectionMode is a personal accessibility
+        // setting. It is intentionally NOT applied here, see
+        // applyColorCorrectionMode()'s doc comment above.
         applyAccentColor((payload as AppConfig).accentColor)
         setTargetLapTimeSec((payload as AppConfig).targetLapTimeSec)
         break

@@ -31,9 +31,9 @@ function wearColor(pct: number): string {
   return mix(COLOR_DARK, COLOR_YELLOW, pct / 50)
 }
 
-// Oriented like looking down at the car from above,
-// gauges sit at the outer edge of their side,
-// temperature towards the middle.
+// Oriented like looking down at the car from above.
+// Gauges sit at the outer edge of their side.
+// Temperature sits towards the middle.
 function TireGauge({
   corner,
   wheel,
@@ -93,7 +93,8 @@ function TireGauge({
 }
 
 export function TiresOverlay({ data, settings }: { data: TelemetryData; settings: TiresOverlaySettings }) {
-  // Tire data is only meaningful on pit road (see isOnPitRoad's doc comment), hidden via .tires--idle otherwise.
+  // Tire data is only meaningful on pit road (see isOnPitRoad's doc comment).
+  // Otherwise it is hidden via .tires--idle.
   const isIdle = !data.isOnPitRoad
   return (
     <div className={`card tires-grid ${isIdle ? 'tires--idle' : ''}`}>

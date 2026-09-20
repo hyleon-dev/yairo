@@ -1,7 +1,7 @@
 import type {DriverStanding, RelativeDriver, RelativeOverlaySettings, StandingsOverlaySettings} from "../../../shared/types";
 
-// Round indicator light with a label "punched out" as a dark negative,
-// lights up in the given color when active. Outline stays visible when off.
+// Round indicator light with a label "punched out" as a dark negative.
+// Lights up in the given color when active. Outline stays visible when off.
 export function HintLed({ label, active, color }: { label: string; active: boolean; color: 'blue' | 'red' }) {
   return (
     <div className={`hint-led hint-led--${color} ${active ? 'hint-led--lit' : ''}`}>

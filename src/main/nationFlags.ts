@@ -1,12 +1,12 @@
 import countries from 'flag-icons/country.json'
 
 // Resolves a driver's iRacing "FlairName" (nationality, shown next to their
-// name in Standings if enabled) to a flag-icons ISO code (see
-// https://github.com/lipis/flag-icons, bundled via the "flag-icons" npm
-// package, node_modules/flag-icons/country.json is its own name->code
-// table). Not verified against a real FlairName value from a live session
-// (no confirmed sample at the time this was written). If a name doesn't
-// resolve and it clearly should, add it to FLAIR_NAME_ALIASES below.
+// name in Standings if enabled) to a flag-icons ISO code.
+// See https://github.com/lipis/flag-icons, bundled via the "flag-icons" npm
+// package. node_modules/flag-icons/country.json is its own name->code table.
+// Not verified against a real FlairName value from a live session (no
+// confirmed sample at the time this was written).
+// If a name doesn't resolve and it clearly should, add it to FLAIR_NAME_ALIASES below.
 
 interface FlagCountry {
   code: string
@@ -19,9 +19,9 @@ function normalize(name: string): string {
 
 const NAME_TO_CODE = new Map<string, string>((countries as FlagCountry[]).map((c) => [normalize(c.name), c.code]))
 
-// iRacing's FlairName wording for some countries is expected not to match
+// iRacing's FlairName wording for some countries does not always match
 // flag-icons' official ISO short name 1:1 (e.g. common/short forms vs. full
-// official names, alternate spellings), mapped here to the flag-icons name.
+// official names, alternate spellings). Mapped here to the flag-icons name.
 const FLAIR_NAME_ALIASES: Record<string, string> = {
   usa: 'united states of america',
   'united states': 'united states of america',

@@ -78,8 +78,8 @@ if (useFakeSdk) {
   console.log('[irsdk] IRSDK_MOCK=1 - using FakeIRacingSDK instead of the real iRacing connection')
 }
 
-// Screenshot/README mode: keeps using real telemetry,
-// but swaps every other driver's name for a random fake one, so no real.
+// Screenshot/README mode: keeps using real telemetry, but swaps every other
+// driver's name for a random fake one. This keeps real names out of screenshots.
 // Own car keeps its real name.
 const anonymizeNames = process.env.ANONYMIZE_DRIVER_NAMES === '1'
 if (anonymizeNames) {
@@ -180,8 +180,9 @@ function publishTelemetry(): void {
 const SESSION_HEARTBEAT_INTERVAL_MS = 10_000 // enough to keep the driver-history expiry date fresh
 let lastSessionHeartbeatAt = 0
 
-// Sends remaining session time main process (not every 30Hz tick), 
-// so driverStatsStore.ts can pushing back driver-history expiry date as long as telemetry is coming in
+// Sends the remaining session time to the main process (not every 30Hz tick).
+// This lets driverStatsStore.ts keep pushing back the driver-history expiry
+// date, as long as telemetry keeps coming in.
 function maybeSendSessionHeartbeat(raw: TelemetryVarList): void {
   const now = Date.now()
   if (now - lastSessionHeartbeatAt < SESSION_HEARTBEAT_INTERVAL_MS) return
@@ -209,8 +210,8 @@ function checkLapCompletions(raw: TelemetryVarList): DriverLapCompletedEvent[] {
   const trackId = weekendInfo?.TrackID ?? -1
   const trackName = weekendInfo?.TrackDisplayName ?? ''
 
-  // Average lap time is scoped to the current session only, e.g. switching
-  // from Qualify to Race must not carry qualifying laps into the race average.
+  // Average lap time is scoped to the current session only. For example,
+  // switching from Qualify to Race must not carry qualifying laps into the race average.
   if (lastLapStatsSessionNum !== null && currentSessionNum !== lastLapStatsSessionNum) {
     lapTimeStatsByCustId.clear()
   }
@@ -266,9 +267,9 @@ function avgLapTimeSec(custId: number | undefined): number {
 // irsdk_TrkLoc enum value for "sitting in own pit stall"
 const TRK_LOC_IN_PIT_STALL = 1
 
-// Tracks last completed-lap count when a car is pitting,
-// stays frozen after leaving pits and marks start of current stint
-// No entry this session => stint counts from session start
+// Tracks the completed-lap count from when a car enters the pits. Stays
+// frozen after leaving pits and marks the start of the current stint.
+// No entry this session means the stint counts from session start.
 const lastPitLapByCarIdx = new Map<number, number>()
 let lastStintSessionNum: number | null = null
 
@@ -399,7 +400,7 @@ function trackFuelConsumption(raw: TelemetryVarList): void {
     fuelPerLapHistory = []
   }
 
-  // New lap just started, this fuel level is the baseline for it.
+  // New lap just started. This fuel level is the baseline for it.
   lastFuelLapSample = { lap, fuelLevel }
 }
 
@@ -412,7 +413,7 @@ function buildFuelLapEstimate(
   if (consumptionPerLapL <= 0) return null
 
   // margin/pitByLap deliberately use lapStartFuelLevelL (a stable snapshot),
-  // not the live fuelLevelL, see FuelLapEstimate's doc comment for why.
+  // not the live fuelLevelL. See FuelLapEstimate's doc comment for why.
   const fullLapsRemaining = Math.floor(lapStartFuelLevelL / consumptionPerLapL)
 
   return {
@@ -426,28 +427,28 @@ function buildFuelLapEstimate(
 // Sanity ceilings for "this dimension doesn't actually limit the session"
 // (e.g. SessionLapsRemainEx in a purely time-limited race, or SessionTimeRemain
 // in a purely lap-limited one). Not verified against iRacing's exact sentinel
-// values for those cases, just defensive caps well beyond any real race.
+// values for those cases. Just defensive caps well beyond any real race.
 const UNLIMITED_LAPS_THRESHOLD = 100_000
 const UNLIMITED_SECONDS_THRESHOLD = 24 * 60 * 60 // 24h, longer than any real enduro
 
 // Whether the session has a real end at all (a lap or time limit). Checked
 // directly on the raw SDK fields, independent of whether we can currently
-// price that in as a lap count (the leader's pace might not be known yet
-// early in a session, that's a separate "unknown pace" case, see
-// leaderLapTimeSec()).
+// price that in as a lap count. The leader's pace might not be known yet
+// early in a session. That's a separate "unknown pace" case, see leaderLapTimeSec().
 function sessionHasRealEnd(raw: TelemetryVarList): boolean {
   const lapsByCount = raw.SessionLapsRemainEx?.value?.[0] ?? Number.POSITIVE_INFINITY
   const timeRemainSec = raw.SessionTimeRemain?.value?.[0] ?? Number.POSITIVE_INFINITY
   return lapsByCount < UNLIMITED_LAPS_THRESHOLD || timeRemainSec < UNLIMITED_SECONDS_THRESHOLD
 }
 
-// Race leader's own pace, the one that actually determines when the
+// Race leader's own pace. This is what actually determines when the
 // checkered flag comes out, regardless of whose estimate we're computing.
-// Falls back to their best lap early in a run/out-lap, and if they haven't
-// set ANY lap time yet (e.g. still on their out-lap), to CarClassEstLapTime,
-// the SDK's own estimated lap time for their car class, available from the
-// start of the session rather than only once a lap has actually been driven.
-// -1 only if there's no leader entry at all to look any of this up on.
+// Falls back to their best lap early in a run or out-lap. If they haven't
+// set ANY lap time yet (e.g. still on their out-lap), falls back further to
+// CarClassEstLapTime, the SDK's own estimated lap time for their car class.
+// CarClassEstLapTime is available from the start of the session, not only
+// once a lap has actually been driven.
+// Returns -1 only if there's no leader entry at all to look this up on.
 function leaderLapTimeSec(raw: TelemetryVarList, driverInfo: DriverInfo | null): number {
   const leaderCarIdx = raw.CarIdxPosition?.value?.findIndex((p) => p === 1) ?? -1
   if (leaderCarIdx < 0) return -1
@@ -459,13 +460,14 @@ function leaderLapTimeSec(raw: TelemetryVarList, driverInfo: DriverInfo | null):
   return estimate > 0 ? estimate : -1
 }
 
-// Real-world seconds left before the session ends, covering both lap- and
-// time-limited races. SessionLapsRemainEx is tied to the race LEADER
-// crossing the line, not to our own lap count, so if we're a lap (or more)
-// behind, that many "laps to go" corresponds to MORE real seconds than the
-// same number of our own laps would take. Converted via the leader's own
-// pace (not ours) before comparing against SessionTimeRemain (already real
-// seconds), whichever ends the session sooner wins.
+// Real-world seconds left before the session ends, covering both lap-limited
+// and time-limited races.
+// SessionLapsRemainEx is tied to the race LEADER crossing the line, not to
+// our own lap count. So if we are a lap (or more) behind, that many "laps to
+// go" corresponds to MORE real seconds than the same number of our own laps
+// would take.
+// Converted via the leader's own pace, not ours, before comparing against
+// SessionTimeRemain (already real seconds). Whichever ends the session sooner wins.
 function estimateSecondsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo | null): number {
   const lapsByCount = raw.SessionLapsRemainEx?.value?.[0] ?? Number.POSITIVE_INFINITY
   const timeRemainSec = raw.SessionTimeRemain?.value?.[0] ?? Number.POSITIVE_INFINITY
@@ -478,11 +480,12 @@ function estimateSecondsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo 
   return Math.min(secondsByLaps, timeRemainSec)
 }
 
-// Laps WE will still drive before the session ends. Real seconds remaining
-// (see estimateSecondsRemaining()) converted via OUR OWN pace, since that's
-// what determines how many more laps we personally get to complete (and
-// therefore how much fuel we still need). null if the session has no real
-// end (see sessionHasRealEnd()) or without a usable pace of our own yet.
+// Laps WE will still drive before the session ends.
+// Takes the real seconds remaining (see estimateSecondsRemaining()) and
+// converts it via OUR OWN pace. Our own pace determines how many more laps
+// we personally get to complete, and therefore how much fuel we still need.
+// Returns null if the session has no real end (see sessionHasRealEnd()), or
+// if we don't have a usable pace of our own yet.
 function estimateLapsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo | null, lastLapTimeSec: number): number | null {
   if (lastLapTimeSec <= 0 || !sessionHasRealEnd(raw)) return null
 
@@ -492,13 +495,13 @@ function estimateLapsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo | n
   return secondsRemaining / lastLapTimeSec
 }
 
-// "Laps to go" for the race as a whole (leader-anchored), e.g. for the
-// Standings header, shown regardless of who's focused/spectating. Same real
-// seconds remaining as estimateLapsRemaining(), just converted back via the
-// LEADER's own pace instead of a specific driver's. null if the session has
-// no real end at all (hide the display), NOT if the leader simply hasn't
-// set a real lap time yet (leaderLapTimeSec() covers that with its own
-// CarClassEstLapTime fallback instead).
+// "Laps to go" for the race as a whole (leader-anchored). Used for e.g. the
+// Standings header, shown regardless of who is focused or spectating.
+// Uses the same real seconds remaining as estimateLapsRemaining(), just
+// converted back via the LEADER's own pace instead of a specific driver's.
+// Returns null only if the session has no real end at all (hide the display).
+// NOT if the leader simply hasn't set a real lap time yet, leaderLapTimeSec()
+// already covers that case with its own CarClassEstLapTime fallback.
 function estimateRaceLapsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo | null): number | null {
   if (!sessionHasRealEnd(raw)) return null
 
@@ -511,9 +514,10 @@ function estimateRaceLapsRemaining(raw: TelemetryVarList, driverInfo: DriverInfo
   return secondsRemaining / pace
 }
 
-// Additional pit stops needed for fuel before the session ends, assuming a
-// full refill every stop, the simplest strategy, and the only one possible
-// without knowing the driver's actual planned fill amounts ahead of time.
+// Additional pit stops needed for fuel before the session ends. Assumes a
+// full refill every stop.
+// This is the simplest strategy, and the only one possible without knowing
+// the driver's actual planned fill amounts ahead of time.
 function estimateStopsRemaining(
   raw: TelemetryVarList,
   driver: DriverInfo | null,
@@ -553,18 +557,18 @@ function buildFuelEstimate(
 
   const lastLapConsumption = fuelPerLapHistory[fuelPerLapHistory.length - 1]
   const avgConsumption = fuelPerLapHistory.reduce((sum, v) => sum + v, 0) / fuelPerLapHistory.length
-  // No dedicated "current pace" telemetry var, last completed lap is the
-  // closest estimate, falling back to the best lap early in a run/out-lap.
+  // No dedicated "current pace" telemetry var. Last completed lap is the
+  // closest estimate. Falls back to the best lap early in a run or out-lap.
   const lastLapTimeSec = raw.LapLastLapTime?.value?.[0] ?? raw.LapBestLapTime?.value?.[0] ?? -1
 
   return {
     lastLap: buildFuelLapEstimate(lastLapConsumption, fuelLevelL, lapStartFuelLevelL, currentLap),
     avgLast5: buildFuelLapEstimate(avgConsumption, fuelLevelL, lapStartFuelLevelL, currentLap),
-    // Own car only, straight passthrough of iRacing's own pit service menu
-    // value, live-tracks "Auto Fill" if the driver enabled it there,
-    // otherwise whatever amount is currently dialed in manually.
+    // Own car only. Straight passthrough of iRacing's own pit service menu value.
+    // Live-tracks "Auto Fill" if the driver enabled it there. Otherwise
+    // whatever amount is currently dialed in manually.
     nextPitFuelL: raw.PitSvFuel?.value?.[0] ?? null,
-    // Uses the average-of-5 consumption rather than last-lap: this projects
+    // Uses the average-of-5 consumption rather than last-lap. This projects
     // across many remaining laps, so a stable rate matters more here than
     // reacting fast to a single outlier lap.
     stopsRemaining: estimateStopsRemaining(raw, driver, avgConsumption, fuelLevelL, lastLapTimeSec)
@@ -577,9 +581,9 @@ function sdkColorHex(raw: number | undefined): string {
 }
 
 // Official iRacing license class colors, keyed by LicString's first letter (e.g. "A 4.99" -> "A").
-// Driver.LicColor from the SDK is not used for this: seen live with an "A"-license
-// driver reporting green (the actual B color) instead of blue, with no consistent
-// pattern (other "A" drivers in the same session had the correct color).
+// Driver.LicColor from the SDK is not used for this. Seen live: an "A"-license
+// driver reported green (the actual B color) instead of blue.
+// No consistent pattern found, other "A" drivers in the same session had the correct color.
 const LICENSE_COLORS: Record<string, string> = {
   R: '#E1251B',
   D: '#FF6600',
@@ -643,8 +647,8 @@ function estimateSpeedKph(carIdx: number, raw: TelemetryVarList, trackMeters: nu
 // irsdk_EngineWarnings bit for "pit speed limiter engaged"
 const ENGINE_WARNING_PIT_SPEED_LIMITER = 16
 
-// iRacing doesn't expose each car's own low-fuel dash warning threshold via telemetry,
-// approximated here with a fixed percentage instead.
+// iRacing doesn't expose each car's own low-fuel dash warning threshold via
+// telemetry. Approximated here with a fixed percentage instead.
 const LOW_FUEL_PCT_THRESHOLD = 0.1
 
 function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): TelemetryData {
@@ -658,9 +662,9 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
   const currentDriverIncidentCount = raw.PlayerCarDriverIncidentCount?.value?.[0] ?? -1
   const teamIncidentCount = raw.PlayerCarTeamIncidentCount?.value?.[0] ?? -1
   // Despite the declared string type, the YAML parser underneath can hand back
-  // a plain number here (e.g. a bare 17 instead of "17x"), which broke
-  // fmtLimit()'s string methods in IncidentsOverlay.tsx. Coerced explicitly
-  // rather than trusting the SDK type.
+  // a plain number here (e.g. a bare 17 instead of "17x").
+  // This broke fmtLimit()'s string methods in IncidentsOverlay.tsx. Coerced
+  // explicitly here rather than trusting the SDK type.
   const rawIncidentLimit = sdk.getWeekendInfo()?.WeekendOptions?.IncidentLimit
   const incidentLimit = rawIncidentLimit != null ? String(rawIncidentLimit) : ''
 
@@ -733,22 +737,22 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
     lap: raw.CarIdxLap?.value?.[focusCarIdx] ?? 0,
     lapDistPct: raw.CarIdxLapDistPct?.value?.[focusCarIdx] ?? 0,
     isOnTrack: true,
-    // No exact "current lap time" available per vehicle,
-    // time since the last start/finish crossing is closest approximation.
+    // No exact "current lap time" available per vehicle. Time since the
+    // last start/finish crossing is the closest approximation.
     lapCurrentTime: raw.CarIdxEstTime?.value?.[focusCarIdx] ?? -1,
     lapLastTime: raw.CarIdxLastLapTime?.value?.[focusCarIdx] ?? -1,
     lapBestTime: raw.CarIdxBestLapTime?.value?.[focusCarIdx] ?? -1,
-    // No precise delta-to-best-lap per track point possible,
-    // iRacing only computes that internally for our own car
+    // No precise delta-to-best-lap per track point is possible.
+    // iRacing only computes that internally for our own car.
     lapDeltaToBest: 0,
     lapDeltaToBestValid: false,
     // Tires aren't meaningful while spectating anyway (see ZERO_TIRES below).
     isOnPitRoad: false,
     pitLimiterActive: false,
     lowFuelWarning: false,
-    // iRacing reports CurDriverIncidentCount as -1 for other drivers,
-    // pass -1 through rather than normalizing to 0,
-    // so UI can distinguish "unavailable" from "0 incidents".
+    // iRacing reports CurDriverIncidentCount as -1 for other drivers. Pass -1
+    // through rather than normalizing to 0.
+    // This lets the UI tell "unavailable" apart from "0 incidents".
     incidentCount: focusDriver?.CurDriverIncidentCount ?? -1,
     isSpectatingOther: true,
     fuelEstimate: null,
@@ -759,9 +763,9 @@ function buildTelemetry(raw: TelemetryVarList, driver: DriverInfo|null): Telemet
   }
 }
 
-// When not actively driving own car, Standings and Relative
-// should focus on car the camera is following (CamCarIdx).
-// While driving, focus always stays on own car.
+// When not actively driving our own car, Standings and Relative should focus
+// on the car the camera is following (CamCarIdx).
+// While driving, focus always stays on our own car.
 function resolveFocusCarIdx(raw: TelemetryVarList, rawPlayerCarIdx: number): number {
   const isDriving = raw.IsOnTrack?.value?.[0] ?? false
   if (isDriving) return rawPlayerCarIdx
@@ -788,9 +792,9 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
   const positions = raw.CarIdxPosition?.value ?? []
   const laps = raw.CarIdxLapCompleted?.value ?? []
   const lapDistPct = raw.CarIdxLapDistPct?.value ?? []
-  // TODO SDK doc only says "race time behind leader", not verified whether this
-  //  is scoped to the car's own class or the overall race leader in a
-  //  multiclass session
+  // TODO SDK doc only says "race time behind leader". Not verified whether
+  //  this is scoped to the car's own class or the overall race leader in a
+  //  multiclass session.
   const gapToLeader = raw.CarIdxF2Time?.value ?? []
   const bestLapTimes = raw.CarIdxBestLapTime?.value ?? []
   const lastLapTimes = raw.CarIdxLastLapTime?.value ?? []
@@ -805,9 +809,10 @@ function computeRankedClasses(raw: TelemetryVarList): RankedStandingsClass[] {
 
   const driverByCarIdx = new Map((driverInfo?.Drivers ?? []).map((d) => [d.CarIdx, d]))
 
-  // Roster = all currently connected drivers (excluding spectators/pace car).
-  // UNION all CarIdx from the session results, so drivers missing (e.g. IsSpectator)
-  // are being added to the list (with less data).
+  // Roster = all currently connected drivers (excluding spectators/pace car),
+  // UNION all CarIdx from the session results.
+  // This adds back drivers missing from the live roster (e.g. IsSpectator),
+  // with less data available for them.
   const carIdxs = new Set<number>()
   for (const driver of driverInfo?.Drivers ?? []) {
     if (!driver.IsSpectator && !driver.CarIsPaceCar) carIdxs.add(driver.CarIdx)
@@ -996,10 +1001,10 @@ function computeStrengthOfField(iRatings: number[]): number {
 // (no longer live) driver is sorted to the end, otherwise two drivers would
 // show the same position.
 //
-// `rows` here is already filtered to a single class (see buildStandings),
-// the position values themselves are overall race positions (needed for
-// correct sort order/collision resolution across ALL classes), but get
-// renumbered 1..N within this class at the end (class P1, not overall position).
+// `rows` here is already filtered to a single class (see buildStandings).
+// The position values themselves are overall race positions. This is needed
+// for correct sort order and collision resolution across ALL classes.
+// They get renumbered 1..N within this class at the end (class P1, not overall position).
 function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
   const takenPositions = new Set(rows.filter((r) => r.hasLivePosition).map((r) => r.position))
   let nextFallbackPosition = rows.reduce((max, r) => Math.max(max, r.position), 0) + 1
@@ -1021,9 +1026,10 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
     if (posA !== posB) return posA - posB
 
     // Both unclassified, e.g. during the formation lap before anyone has
-    // crossed start/finish yet: fall back to current track distance so the
-    // order still reflects the actual running order instead of Array.sort's
-    // stable fallback (insertion order, effectively car number order).
+    // crossed start/finish yet.
+    // Fall back to current track distance, so the order still reflects the
+    // actual running order. Otherwise it would use Array.sort's stable
+    // fallback (insertion order, effectively car number order).
     const distA = a.lapsCompleted + a.lapDistPct
     const distB = b.lapsCompleted + b.lapDistPct
     return distB - distA
@@ -1061,8 +1067,9 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
 }
 
 // Practice/Qualifying/Testing: rank = fastest lap time (matching how iRacing
-// itself displays it). Stays stable even after a disconnect since
-// bestLapTime is already preserved above via the ResultsPositions fallback.
+// itself displays it).
+// Stays stable even after a disconnect, because bestLapTime is already
+// preserved above via the ResultsPositions fallback.
 function buildTimeRanking(rows: StandingsRow[]): DriverStanding[] {
   const sorted = [...rows].sort((a, b) => {
     const timeA = a.bestLapTime > 0 ? a.bestLapTime : Infinity
@@ -1118,15 +1125,16 @@ function filterStandingsWindow(drivers: DriverStanding[], hasPlayerAnywhere: boo
     .map((i) => drivers[i])
 }
 
-// Right after either car crosses start/finish, CarIdxLapCompleted can differ by
-// 1 even though both cars are still essentially side by side on track, an
-// artifact of one of them crossing the line a moment before the other rather
-// than a genuine full-lap gap. That ambiguity only exists right at the line,
-// so a one-lap difference elsewhere on track (e.g. a car that was just lapped
-// and is now trailing right behind, which can happen anywhere) is always
-// trusted. Checking the gap's sign instead of line proximity doesn't work
-// here: a lapped car can end up on either side of the focus car depending on
-// whether it's about to be lapped or was just lapped a moment ago.
+// Right after either car crosses start/finish, CarIdxLapCompleted can differ
+// by 1, even though both cars are still essentially side by side on track.
+// This is an artifact of one car crossing the line a moment before the other.
+// It is not a genuine full-lap gap.
+// That ambiguity only exists right at the line. So a one-lap difference
+// elsewhere on track is always trusted (e.g. a car that was just lapped and
+// is now trailing right behind, which can happen anywhere).
+// Checking the gap's sign instead of line proximity does not work here. A
+// lapped car can end up on either side of the focus car, depending on
+// whether it is about to be lapped or was just lapped a moment ago.
 const LAP_LINE_PROXIMITY_PCT = 0.02
 
 function resolveLapsDifference(rawDiff: number, focusLapDistPct: number, rowLapDistPct: number): number {
@@ -1135,10 +1143,11 @@ function resolveLapsDifference(rawDiff: number, focusLapDistPct: number, rowLapD
   return nearLine(focusLapDistPct) || nearLine(rowLapDistPct) ? 0 : rawDiff
 }
 
-// Gap to the player is computed ourselves instead of from CarIdxF2Time,
-// this way the Relative overlay updates continuously in any session type instead of only
-// once per lap: track position (completed laps + CarIdxEstTime for
-// current lap) is converted into a time equivalent and compared to player.
+// Gap to the player is computed ourselves instead of from CarIdxF2Time. This
+// way the Relative overlay updates continuously in any session type, instead
+// of only once per lap.
+// Track position (completed laps + CarIdxEstTime for current lap) is
+// converted into a time equivalent and compared to the player.
 function buildRelative(raw: TelemetryVarList): RelativeData {
   const driverInfo = sdk.getDriverInfo()
   const sessionInfo = sdk.getSessionInfo()
@@ -1155,10 +1164,10 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
   const lastLapTimes = raw.CarIdxLastLapTime?.value ?? []
 
   // driverInfo.Drivers doesn't reliably mark a driver as a spectator after
-  // they leave the server, they can stay listed with frozen lap data.
-  // CarIdxTrackSurface === -1 (NotInWorld) is reliable and used in
-  // addition to IsSpectator/CarIsPaceCar for filtering,
-  // otherwise disconnected drivers would stay visible.
+  // they leave the server. They can stay listed with frozen lap data.
+  // CarIdxTrackSurface === -1 (NotInWorld) is reliable, and used in addition
+  // to IsSpectator/CarIsPaceCar for filtering. Otherwise disconnected
+  // drivers would stay visible.
   const rows = (driverInfo?.Drivers ?? [])
     .filter((driver) => !driver.IsSpectator && !driver.CarIsPaceCar && (trackSurface[driver.CarIdx] ?? -1) !== -1)
     .map((driver) => {
@@ -1175,10 +1184,11 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
         estLapTime: driver.CarClassEstLapTime > 0 ? driver.CarClassEstLapTime : 0,
         isInPit: isInPit(trackSurface[carIdx] ?? -1),
         // Named "isFocused" (not "isPlayer") because playerCarIdx above is
-        // actually resolveFocusCarIdx(), while spectating this is the
-        // watched car (CamCarIdx), not necessarily our own. Mapped back to
-        // the public "isPlayer" field name below (RelativeDriver.isPlayer),
-        // which the frontend uses regardless of which car it refers to.
+        // actually resolveFocusCarIdx(). While spectating, this is the
+        // watched car (CamCarIdx), not necessarily our own.
+        // Mapped back to the public "isPlayer" field name below
+        // (RelativeDriver.isPlayer). The frontend uses that name regardless
+        // of which car it refers to.
         isFocused: carIdx === playerCarIdx,
         iRating: driver.IRating,
         iRatingChange: classPosition?.iRatingChange ?? null,
@@ -1195,12 +1205,12 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
     return { drivers: [] }
   }
 
-  // Using track distance from car in focus to other cars to calculate gap time.
-  // Always picking shorter distance (max value = half a lap distance)
-  // todo, find a way to compensate for braking in corners
-  //  (e.g. when car1 brakes and car2 behind is still on straight
-  //  it gets 'closer' but in reality, because car2 will also brake at
-  //  the corner, the gap stays the same)
+  // Using track distance from the car in focus to other cars, to calculate gap time.
+  // Always picks the shorter distance (max value = half a lap distance).
+  // todo: find a way to compensate for braking in corners.
+  //  (e.g. when car1 brakes and car2 behind is still on the straight, it
+  //  gets 'closer'. But in reality the gap stays the same, because car2
+  //  will also brake at the corner.)
   const withGap = rows.map((row) => {
     let pctDiff = row.lapDistPct - focusDriver.lapDistPct
     if (pctDiff > 0.5) pctDiff -= 1
@@ -1215,9 +1225,9 @@ function buildRelative(raw: TelemetryVarList): RelativeData {
     }
   })
 
-  // Sort by gap time (not track distance and ignoring lap count),
-  // so drivers with a negative time (ahead) end up on top and positive time (behind)
-  // at the bottom, like iRacing's own Relative box.
+  // Sort by gap time, not track distance, and ignore lap count.
+  // Drivers with a negative time (ahead) end up on top, positive time
+  // (behind) at the bottom. This matches iRacing's own Relative box.
   withGap.sort((a, b) => a.gapToPlayerSec - b.gapToPlayerSec)
 
   const focusIndex = withGap.findIndex((row) => row.isFocused)

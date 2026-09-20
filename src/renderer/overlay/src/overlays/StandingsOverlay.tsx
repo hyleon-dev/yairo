@@ -9,17 +9,17 @@ import {Clock, Earth, Flag, Road, RotateCw, ThermometerSun} from "lucide-react";
 
 const m = messages.standings
 
-// The iRating/SR columns are toggleable independently (see OverlaySettingsPanel.tsx),
-// grid column widths are computed instead of fixed in CSS, so the header and
-// data rows stay aligned regardless of combination.
+// The iRating/SR columns can be toggled independently (see OverlaySettingsPanel.tsx).
+// Grid column widths are computed, not fixed in CSS. This keeps the header and
+// data rows aligned for every combination.
 function gridTemplate(settings: StandingsOverlaySettings): string {
   const cols = ['22px', '32px']
   if (settings.showNationFlag) cols.push('18px')
   if (settings.showManufacturerLogo) cols.push('24px')
   cols.push('1fr')
-  // iRating and its change (when shown) live in a single cell (see iRating()
-  // below), not two separate grid columns, so this must stay one push,
-  // just wider when the change badge needs room too.
+  // iRating and its change (when shown) share a single cell (see iRating() below).
+  // They are not two separate grid columns. So this stays one push, just wider
+  // when the change badge needs room.
   if (settings.showIRating) cols.push(settings.showIRatingChange ? '82px' : '42px')
   if (settings.showSafetyRating) cols.push('54px')
   cols.push('32px')
@@ -158,8 +158,8 @@ function ClassBlock({ cls, settings }: { cls: StandingsClass; settings: Standing
 
       <div className="drivers">
         {cls.drivers.map((d, i) => {
-          // When positions are hidden (e.g. top 3 shown, then the field around the player),
-          // a separator indicates that drivers are intentionally hidden rather than rows being missing.
+          // Positions can be hidden, for example top 3 shown, then the field around the player.
+          // A separator then shows that drivers are hidden on purpose, not missing rows.
           const prev = cls.drivers[i - 1]
           const skipped = prev && d.position - prev.position > 1
           return (

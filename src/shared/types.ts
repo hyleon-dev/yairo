@@ -29,22 +29,22 @@ export interface TelemetryData {
   lapLastTime: number // s, -1 if no lap driven yet
   lapBestTime: number // s, -1 if no valid best yet
   lapDeltaToBest: number // s, positive = slower than best lap
-  // Mirrors the SDK's LapDeltaToBestLap_OK: false right after a new best lap
-  // (iRacing needs a completed reference lap to compare live splits against,
-  // so it can't show a delta for the very lap that just set the record) or
-  // while spectating. lapDeltaToBest is meaningless (usually just 0) when this
-  // is false, UI should hide the delta rather than showing a fake "on pace".
+  // Mirrors the SDK's LapDeltaToBestLap_OK. It is false right after a new best lap,
+  // or while spectating. Reason: iRacing needs a completed reference lap to compare
+  // live splits against. It can't show a delta for the very lap that just set the
+  // record. When this is false, lapDeltaToBest is meaningless (usually just 0).
+  // The UI should hide the delta instead of showing a fake "on pace".
   lapDeltaToBestValid: boolean
-  // Mirrors the SDK's OnPitRoad: true anywhere between the pit lane's entry
-  // and exit cones (driving through OR stopped in our stall), false on the
-  // racing surface, and always false while spectating (tires aren't
-  // meaningful for another car either way, see TiresData).
+  // Mirrors the SDK's OnPitRoad. True anywhere between the pit lane's entry and
+  // exit cones (driving through, or stopped in our stall). False on the racing
+  // surface. Always false while spectating (tires are not meaningful for another
+  // car either way, see TiresData).
   isOnPitRoad: boolean
-  // Mirrors the SDK's EngineWarnings pit speed limiter bit, always false while spectating.
+  // Mirrors the SDK's EngineWarnings pit speed limiter bit. Always false while spectating.
   pitLimiterActive: boolean
-  // Approximation of a car's own low-fuel dash warning (e.g. GT3): iRacing doesn't expose that
-  // per-car threshold via telemetry, so this fires below a fixed fuel percentage instead.
-  // Always false while spectating.
+  // Approximation of a car's own low-fuel dash warning (e.g. GT3). iRacing does not
+  // expose that per-car threshold via telemetry. So this fires below a fixed fuel
+  // percentage instead. Always false while spectating.
   lowFuelWarning: boolean
   // true when this data is from the driver being watched (spectating), not our own car.
   isSpectatingOther: boolean
@@ -53,8 +53,8 @@ export interface TelemetryData {
   fuelEstimate: FuelEstimate | null
   incidentCount: number
   // Incidents of whoever is CURRENTLY driving our team car (SDK: PlayerCarDriverIncidentCount).
-  // Unlike incidentCount, this doesn't follow the camera, so in a driver swap it keeps
-  // showing the driving teammate even while spectating. -1 = not available yet.
+  // Unlike incidentCount, this does not follow the camera. In a driver swap, it keeps
+  // showing the driving teammate, even while spectating. -1 = not available yet.
   currentDriverIncidentCount: number
   // Team incidents this session (SDK: PlayerCarTeamIncidentCount),
   // identical to currentDriverIncidentCount in solo events
@@ -90,38 +90,38 @@ export interface TiresData {
 export interface FuelLapEstimate {
   // L, consumption per lap in this scenario.
   consumptionPerLapL: number
-  // How many more laps the current (live) fuel level covers in this scenario,
-  // ticks down continuously as fuel burns, incl. mid-lap.
+  // How many more laps the current (live) fuel level covers in this scenario.
+  // Ticks down continuously as fuel burns, including mid-lap.
   lapsRemaining: number
-  // L, left over after the last fully possible lap
-  // (safety margin, if pitting exactly at "pitByLap").
-  // Unlike lapsRemaining, this (and pitByLap) is only recomputed once per lap,
-  // from the fuel level as of THIS lap's start, not live/mid-lap. Otherwise
-  // it turns into a sawtooth: falls in lockstep with the live tank level,
-  // then jumps back up by a full consumptionPerLapL whenever that live level
-  // happens to cross a multiple-of-consumption threshold mid-lap (unrelated
-  // to actual lap boundaries). Confusing, not a stable "pit-plan buffer".
+  // L, left over after the last fully possible lap (a safety margin, if pitting
+  // exactly at "pitByLap").
+  // Unlike lapsRemaining, this value (and pitByLap) is only recomputed once per lap,
+  // from the fuel level at THIS lap's start. It does not update live or mid-lap.
+  // Reason: live updates would turn it into a sawtooth. It would fall in lockstep
+  // with the live tank level, then jump back up by a full consumptionPerLapL
+  // whenever the live level crosses a multiple-of-consumption threshold mid-lap.
+  // That threshold crossing is unrelated to actual lap boundaries, so the jump
+  // would be confusing. This is not meant to be a stable "pit-plan buffer".
   marginLiters: number
   // Absolute lap number by which to pit at the latest. Same once-per-lap
   // stability as marginLiters, for the same reason.
   pitByLap: number
 }
 
-// iRacing itself provides neither consumption nor a range estimate, computed here from
-// the per-lap fuel-level history (see trackFuelConsumption() in irsdkWorker.ts).
+// iRacing itself provides neither consumption nor a range estimate. Both are computed
+// here from the per-lap fuel-level history (see trackFuelConsumption() in irsdkWorker.ts).
 export interface FuelEstimate {
   lastLap: FuelLapEstimate | null
   avgLast5: FuelLapEstimate | null
-  // L, amount that will be added at the next pit stop, straight from iRacing's
-  // own pit service menu (PitSvFuel telemetry var), tracks "Auto Fill" live
-  // if the driver has that enabled, otherwise whatever amount is currently
-  // dialed in manually. null while not driving our own car.
+  // L, amount that will be added at the next pit stop. Comes straight from iRacing's
+  // own pit service menu (PitSvFuel telemetry var). Tracks "Auto Fill" live if the
+  // driver has that enabled. Otherwise it is whatever amount is currently dialed in
+  // manually. null while not driving our own car.
   nextPitFuelL: number | null
-  // How many more pit stops for fuel are needed before the session ends,
-  // assuming a full refill every stop (see estimateStopsRemaining() in
-  // irsdkWorker.ts for the underlying laps-to-go/consumption math). null
-  // without a consumption estimate yet, or if the session has no usable
-  // end (laps or time) to project against.
+  // How many more pit stops for fuel are needed before the session ends. Assumes
+  // a full refill every stop (see estimateStopsRemaining() in irsdkWorker.ts for
+  // the underlying laps-to-go/consumption math). null without a consumption
+  // estimate yet, or if the session has no usable end (laps or time) to project against.
   stopsRemaining: number | null
 }
 
@@ -159,36 +159,35 @@ export interface DriverStanding {
   driverName: string
   lapsCompleted: number
   // Laps since the last pit stop (or since session start if not pitted yet).
-  // iRacing doesn't provide this itself, computed from the last completed lap
-  // count observed while in the pits.
-  // (see updateStintTracking() in irsdkWorker.ts).
+  // iRacing does not provide this itself. It is computed from the last completed
+  // lap count observed while in the pits (see updateStintTracking() in irsdkWorker.ts).
   stintLaps: number
   gapToLeaderSec: number // from CarIdxF2Time: deficit to the leader, in s
   bestLapTime: number // s, <= 0 if no valid time yet
   isClassFastestLap: boolean
   isPlayer: boolean
   iRating: number
-  // Estimated iRating change if the race ended right now with drivers in
-  // their CURRENT live position order (see iratingCalculator.ts). NOT a
-  // finish-position prediction, purely based on where everyone stands at
-  // this instant. null outside a race session, or if this driver has no
-  // valid iRating (e.g. missing driver data).
+  // Estimated iRating change if the race ended right now, with drivers in their
+  // CURRENT live position order (see iratingCalculator.ts). This is NOT a
+  // finish-position prediction. It is based only on where everyone stands at this
+  // instant. null outside a race session, or if this driver has no valid iRating
+  // (e.g. missing driver data).
   iRatingChange: number | null
   licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
-  // Official iRacing license class color as a CSS hex code, derived from licString's
-  // letter (licenseColorHex() in irsdkWorker.ts). NOT the SDK's own Driver.LicColor,
-  // which can report the wrong color for a driver's actual license class.
+  // Official iRacing license class color as a CSS hex code. Derived from licString's
+  // letter (licenseColorHex() in irsdkWorker.ts). This is NOT the SDK's own
+  // Driver.LicColor, which can report the wrong color for a driver's actual license class.
   licColorHex: string
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
-  // Average of every lap time recorded for the CURRENT driver of this car
+  // Average of every lap time recorded for the CURRENT driver of this car,
   // during the current session.
-  // Not from the SDK: accumulated lap by lap in irsdkWorker.ts,
-  // keyed by Driver.UserID so a team driver swap doesn't mix drivers' laps.
-  // -1 if this driver hasn't completed a lap yet.
+  // Not from the SDK. Accumulated lap by lap in irsdkWorker.ts, keyed by
+  // Driver.UserID so a team driver swap does not mix drivers' laps.
+  // -1 if this driver has not completed a lap yet.
   avgLapTimeSec: number
   // Resolved from the driver's iRacing "FlairName" (nationality) via
-  // flairNameToIsoCode() in nationFlags.ts, a flag-icons ISO code (e.g. "de"),
-  // or null if there's no flag data or the name didn't resolve to one.
+  // flairNameToIsoCode() in nationFlags.ts. Gives a flag-icons ISO code (e.g. "de").
+  // null if there is no flag data, or the name did not resolve to one.
   flagIsoCode: string | null
   // Resolved from the car's CarScreenName.
   // Null if no known manufacturer keyword matched.
@@ -211,10 +210,10 @@ export interface StandingsData {
   trackName: string
   sessionType: string
   remainingTimeSecs: number
-  // Estimated laps to go for the race as a whole (leader-anchored, not tied
-  // to whoever is focused/spectating), see estimateRaceLapsRemaining() in
-  // irsdkWorker.ts. null outside a session with a real end (laps or time),
-  // or before the leader has a known lap time yet.
+  // Estimated laps to go for the race as a whole. Leader-anchored, not tied to
+  // whoever is focused/spectating (see estimateRaceLapsRemaining() in irsdkWorker.ts).
+  // null outside a session with a real end (laps or time), or before the leader has
+  // a known lap time yet.
   lapsRemaining: number | null
   airTemp: number
   airTempUnit: string
@@ -244,9 +243,9 @@ export interface RelativeDriver {
   // See DriverStanding.iRatingChange.
   iRatingChange: number | null
   licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
-  // Official iRacing license class color as a CSS hex code, derived from licString's
-  // letter (licenseColorHex() in irsdkWorker.ts). NOT the SDK's own Driver.LicColor,
-  // which can report the wrong color for a driver's actual license class.
+  // Official iRacing license class color as a CSS hex code. Derived from licString's
+  // letter (licenseColorHex() in irsdkWorker.ts). This is NOT the SDK's own
+  // Driver.LicColor, which can report the wrong color for a driver's actual license class.
   licColorHex: string
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
   // See DriverStanding.avgLapTimeSec.
@@ -306,8 +305,8 @@ export interface FlagsData {
 
 // --- Driver Stats (persistent driver history, keyed by iRacing CustID) ----
 //
-// iRacing itself doesn't expose an average/median lap time per driver, so
-// every completed lap of every driver is recorded here, to be aggregated later.
+// iRacing itself does not expose an average/median lap time per driver. So every
+// completed lap of every driver is recorded here, to be aggregated later.
 
 export interface DriverLapTimeEntry {
   lapTimeSec: number
@@ -363,10 +362,10 @@ export interface OverlayConfig {
 }
 
 // 'none' = no correction. The others apply a daltonization filter (see
-// shared/colorCorrectionFilters.ts), only ever applied in the Control Center and
-// the real Electron overlay windows, deliberately NOT for OBS/browser clients
-// (see useOverlayBridge.ts). A streamer's viewers should see normal colors
-// even if the streamer themselves uses this for their own screen.
+// shared/colorCorrectionFilters.ts). This only ever runs in the Control Center and
+// the real Electron overlay windows. It deliberately does NOT run for OBS/browser
+// clients (see useOverlayBridge.ts). A streamer's viewers should see normal colors,
+// even if the streamer uses this for their own screen.
 export type ColorCorrectionMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia'
 
 export const DEFAULT_COLOR_CORRECTION_MODE: ColorCorrectionMode = 'none'
@@ -381,9 +380,9 @@ export interface AppConfig {
   // in theme.css on every window (Control Center + overlays).
   accentColor: string
   colorCorrectionMode: ColorCorrectionMode
-  // s, <= 0 = no target set. Global rather than per-overlay so every overlay
-  // that compares against a target lap (Lap Timer, Delta Bar, ...) shares one
-  // value, set once in the Control Center instead of separately per overlay.
+  // s, <= 0 = no target set. Global rather than per-overlay, so every overlay that
+  // compares against a target lap (Lap Timer, Delta Bar, ...) shares one value.
+  // Set once in the Control Center, instead of separately per overlay.
   targetLapTimeSec: number
 }
 

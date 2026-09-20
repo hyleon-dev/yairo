@@ -12,9 +12,9 @@ export function computeLapDelta(data: TelemetryData, targetLapTimeSec: number): 
   return currentTime - targetLapTimeSec * data.lapDistPct
 }
 
-// Without a target, we depend on the SDK's own delta, which isn't valid right
-// after a new best lap (see lapDeltaToBestValid's doc comment), false rather
-// than showing a misleading "+0.000" during that window.
+// Without a target, this depends on the SDK's own delta. That delta is not
+// valid right after a new best lap (see lapDeltaToBestValid's doc comment).
+// Return false in that case, instead of showing a misleading "+0.000".
 export function isLapDeltaValid(data: TelemetryData, targetLapTimeSec: number): boolean {
   return !data.isSpectatingOther && (targetLapTimeSec > 0 || data.lapDeltaToBestValid)
 }

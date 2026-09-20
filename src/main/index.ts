@@ -191,9 +191,9 @@ function registerIpcHandlers(): void {
   // Query the result of the startup update check (see checkForUpdate() below)
   ipcMain.handle(IPC.UPDATE_STATUS_GET, () => updateStatus)
 
-  // Control Center's update banner link, only ever a release URL under our
-  // own repo (comes from the GitHub API response, see updateChecker.ts),
-  // but validated again here before handing it to the OS.
+  // Control Center's update banner link. It always points to a release URL
+  // in our own repo (see updateChecker.ts for the GitHub API response),
+  // but is validated again here before it goes to the OS.
   ipcMain.handle(IPC.UPDATE_OPEN_RELEASE, (_evt, url: string) => {
     if (url.startsWith('https://github.com/hyleon-dev/yairo/')) shell.openExternal(url)
   })
@@ -238,14 +238,14 @@ function registerIpcHandlers(): void {
   )
 }
 
-// Announce current settings once at startup: to the worker (Relative window
-// size) and as a WebSocket snapshot for browser clients that connect
-// later, which would otherwise never learn about them
-// until the first manual change in the Control Center.
+// Announce current settings once at startup. Sends them to the worker
+// (Relative window size) and as a WebSocket snapshot for browser clients
+// that connect later. Without this, those clients would not learn the
+// settings until the first manual change in the Control Center.
 function seedOverlaySettings(): void {
-  // So a browser/OBS client connecting before the next config change still
-  // gets the persisted accent color instead of theme.css's built-in default
-  // (Electron windows don't need this, they fetch getConfig() themselves).
+  // A browser/OBS client that connects before the next config change still
+  // gets the saved accent color, not theme.css's built-in default.
+  // (Electron windows don't need this. They fetch getConfig() themselves.)
   broadcastToAll(IPC.CONFIG_UPDATED, configStore.get())
 
   for (const overlay of configStore.get().overlays) {

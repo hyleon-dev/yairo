@@ -1,29 +1,31 @@
-// One-off local tool, not part of the Electron app itself. Converts the raw
-// downloaded track map assets (resources/trackmap-assets/) into the compact per-track data
-// file the app actually ships and bundles: src/renderer/overlay/src/trackmaps/data.json.
+// One-off local tool. Not part of the Electron app itself.
+// Converts the raw downloaded track map assets (resources/trackmap-assets/) into the
+// compact per-track data file the app ships and bundles:
+// src/renderer/overlay/src/trackmaps/data.json.
 //
-// Needs track_info.json (activePath per track), track_settings.json
-// (direction/offset calibration per track, plus an optional customTrackPath
-// override), and start_finish/<id>.svg (start/finish marker, already
-// positioned in the same 1920x1080 coordinate space as activePath. No
-// direction/offset calibration is needed for it, unlike the per-car dot
-// placement along the track path).
+// Needs three inputs:
+// - track_info.json: activePath per track.
+// - track_settings.json: direction/offset calibration per track, plus an optional
+//   customTrackPath override.
+// - start_finish/<id>.svg: the start/finish marker. It is already positioned in the
+//   same 1920x1080 coordinate space as activePath, so it needs no direction/offset
+//   calibration, unlike the per-car dot placement along the track path.
 //
-// The start/finish marker SVGs aren't all built the same way. Some use a
-// plain <path>, others <rect>/<polygon>, and a handful reference a
-// <symbol> via <use> (with its own viewBox + a translate/rotate/scale
-// transform). Rather than hand-parse every variant, the raw inner SVG markup
-// (everything between <svg> and </svg>, defs/style/symbol included) is
-// stored as-is and injected directly into a <g> at render time;
-// the browser's own SVG engine then resolves <use>/<symbol> correctly for free.
+// The start/finish marker SVGs are not all built the same way. Some use a plain
+// <path>, others use <rect>/<polygon>, and a few reference a <symbol> via <use>
+// (with its own viewBox and a translate/rotate/scale transform). Rather than
+// hand-parse every variant, the raw inner SVG markup is stored as-is (everything
+// between <svg> and </svg>, defs/style/symbol included) and injected directly into
+// a <g> at render time. The browser's own SVG engine then resolves <use>/<symbol>
+// for free.
 //
-// A handful of tracks (Suzuka, Monza, Charlotte Roval, all figure-eight-ish
-// or with a tricky pit/infield loop) ship a customTrackPath in
-// track_settings.json instead of relying on the plain activePath. direction/
-// offset for those tracks were evidently calibrated against customTrackPath,
-// not activePath, using activePath there desyncs the arc-length
-// parameterization from the calibration (cars drifting backwards, pit lane
-// cars misplaced). Prefer customTrackPath whenever present.
+// A few tracks ship a customTrackPath in track_settings.json instead of using the
+// plain activePath (Suzuka, Monza, Charlotte Roval, and other figure-eight-like
+// tracks, or tracks with a tricky pit/infield loop). Their direction/offset values
+// were calibrated against customTrackPath, not activePath. Using activePath there
+// would desync the arc-length parameterization from the calibration: cars would
+// drift backwards, and pit lane cars would be misplaced. Prefer customTrackPath
+// whenever it is present.
 //
 // Usage: npm run build-trackmaps
 const fs = require('node:fs')

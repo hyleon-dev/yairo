@@ -3,9 +3,11 @@ import trackMapData from './data.json'
 export interface TrackMapShape {
   // SVG path "d" data (iRacing's official "active" track map layer)
   path: string
-  // 1 or -1, whether increasing lapDistPct moves forward or backward alongthe path's own arc-length parameterization
+  // 1 or -1, whether increasing lapDistPct moves forward or backward along
+  // the path's own arc-length parameterization
   direction: number
-  // 0..1 - where the start/finish line sits along the path's own arc-length parameterization (the raw path does not start there)
+  // 0..1, position of the start/finish line along the path's own arc-length
+  // parameterization. The raw path does not start there.
   offset: number
   // Raw inner SVG markup for the start/finish marker (iRacing's official
   // marker layer, path/rect/polygon/use+symbol depending on the track),

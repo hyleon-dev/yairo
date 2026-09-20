@@ -12,8 +12,8 @@ const CENTER = (GRID_SIZE - 1) / 2
 type Pattern = (row: number, col: number, phase: number) => boolean
 
 const ALL_ON: Pattern = () => true
-// Shifting `phase` by one each animation tick flips every column's parity,
-// which reads as the whole board "jumping" one column to the left/right.
+// Shifting `phase` by one each tick flips every column's parity.
+// This looks like the whole board jumping one column left or right.
 const CHECKERED: Pattern = (row, col, phase) => (row + col + phase) % 2 === 0
 // Diagonal band (top-left to bottom-right)
 const DIAGONAL_BAND: Pattern = (row, col) => Math.abs(row - col) <= 1
@@ -35,8 +35,8 @@ interface FlagVisual {
   pattern: Pattern
   blink: boolean
   animated: boolean
-  // Black-category flags are easy to miss as a plain dark square,
-  // hence the extra border (see CSS) and a per-LED outline.
+  // Black-category flags are easy to miss as a plain dark square.
+  // That is why there is an extra border (see CSS) and a per-LED outline.
   alert: boolean
   ledBorder?: string
 }
@@ -55,8 +55,8 @@ const NONE_VISUAL: FlagVisual = {
   alert: false
 }
 
-// Only one flag is displayed at a time, like a physical flag panel.
-// Priority order follows order in code (first flag checked will be displayed before every flag below).
+// Only one flag shows at a time, like a real flag panel.
+// The code checks flags in order. The first match wins over every flag below it.
 function decodeFlags(flags: number): FlagVisual {
   const has = (bit: number) => (flags & bit) !== 0
 

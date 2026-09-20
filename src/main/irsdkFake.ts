@@ -2,11 +2,12 @@ import type { Driver, DriverInfo, SessionList, TelemetryVariable, TelemetryVarLi
 import { FLAG_BITS } from '../shared/types'
 
 // Simulated race session for local dev without iRacing running (see
-// "npm run dev:mock", IRSDK_MOCK=1 in irsdkWorker.ts). Mirrors only the SDK
-// fields irsdkWorker.ts actually reads, everything else on
-// TelemetryVarList/DriverInfo/WeekendInfo/SessionList stays unfilled, hence
-// the "as unknown as" casts below. Kept simple on purpose (no pit stops, no
-// session changes, no spectating, always in your own car).
+// "npm run dev:mock", IRSDK_MOCK=1 in irsdkWorker.ts).
+// Mirrors only the SDK fields that irsdkWorker.ts actually reads. Everything
+// else on TelemetryVarList/DriverInfo/WeekendInfo/SessionList stays empty,
+// hence the "as unknown as" casts below.
+// Kept simple on purpose: no pit stops, no session changes, no spectating,
+// always in your own car.
 
 const TRACK_ID = 239 // Autodromo Nazionale Monza (GP layout), see trackmaps/data.json
 const TRACK_LENGTH_M = 5793
@@ -40,9 +41,10 @@ const DRIVER_NAMES = [
   'Mia Schulz'
 ]
 
-// Matches DRIVER_NAMES by index, for testing the Standings "nation flag"
-// setting (see nationFlags.ts). '' for one driver on purpose, so the
-// "no flag data" fallback (empty spot) is also visible in dev mode.
+// Matches DRIVER_NAMES by index. For testing the Standings "nation flag"
+// setting (see nationFlags.ts).
+// One driver has '' on purpose, so the "no flag data" fallback (empty spot)
+// is also visible in dev mode.
 const DRIVER_FLAIR_NAMES = [
   'Vietnam',
   'Germany',
@@ -172,8 +174,8 @@ export class FakeIRacingSDK {
     return true
   }
 
-  // Timeouts so the fake runs at the same rate (~30Hz) as a real connect,
-  // otherwise the setImmediate() loop in irsdkWorker.ts would spin unthrottled
+  // Timeouts keep the fake running at the same rate (~30Hz) as a real connect.
+  // Otherwise the setImmediate() loop in irsdkWorker.ts would spin unthrottled
   // and flood the main process with messages.
   waitForData(timeoutMs = 16): boolean {
     const elapsed = Date.now() - this.lastTickAt
@@ -246,7 +248,8 @@ export class FakeIRacingSDK {
     const currentLapTime = player.lapDistPct * player.currentLapPaceSec
 
     const tireWearFrac = this.tireWearPct / 100 // SDK gives 0..1 despite its "%" unit label
-    // Front tires run a bit hotter than rear, varies slightly with track position, just for visual variety.
+    // Front tires run a bit hotter than rear. This varies slightly with track
+    // position, just for visual variety.
     const baseTireTemp = 75 + 15 * Math.sin(player.lapDistPct * Math.PI * 4)
 
     const raw: Record<string, TelemetryVariable<unknown>> = {
@@ -257,7 +260,7 @@ export class FakeIRacingSDK {
       TrackTempCrew: scalarVar(28, 'C'),
 
       IsOnTrack: scalarVar(true),
-      // Fake driver never pits, matches CarIdxTrackSurface's own
+      // Fake driver never pits. This matches CarIdxTrackSurface's own
       // "always on track" simplification below.
       OnPitRoad: scalarVar(false),
       PlayerCarIdx: scalarVar(PLAYER_CAR_IDX),
@@ -273,7 +276,7 @@ export class FakeIRacingSDK {
       Clutch: scalarVar(clutchEngaged),
       FuelLevel: scalarVar(this.fuelLevel),
       FuelLevelPct: scalarVar(this.fuelLevel / this.fuelTankMaxL),
-      // Fake driver never engages the limiter, matches OnPitRoad always being false above.
+      // Fake driver never engages the limiter. This matches OnPitRoad always being false above.
       EngineWarnings: scalarVar(0),
       // Fixed "top off to full" plan, so the Fuel overlay's next-fill display
       // has a non-empty value to show in dev mode.
@@ -285,8 +288,8 @@ export class FakeIRacingSDK {
       LapBestLapTime: scalarVar(player.bestLapTime),
       LapDeltaToBestLap: scalarVar(player.bestLapTime > 0 ? player.lastLapTime - player.bestLapTime : 0),
       // Real iRacing only flags this valid once a reference lap exists AND
-      // at least one lap has been driven against it, mocked here as "a best
-      // lap exists and this isn't the lap that just set it".
+      // at least one lap has been driven against it.
+      // Mocked here as "a best lap exists and this isn't the lap that just set it".
       LapDeltaToBestLap_OK: scalarVar(player.bestLapTime > 0 && player.lapsCompleted > 0),
 
       CarIdxLapDistPct: arrayVar(this.drivers.map((d) => d.lapDistPct)),
@@ -334,7 +337,7 @@ export class FakeIRacingSDK {
 
   getDriverInfo(): DriverInfo | null {
     // FlairName isn't in @irsdk-node/types' Driver interface (see
-    // nationFlags.ts), widened here so the fake SDK can still supply it.
+    // nationFlags.ts). Widened here so the fake SDK can still supply it.
     const drivers: (Partial<Driver> & { FlairName?: string })[] = this.drivers.map((d) => ({
       CarIdx: d.carIdx,
       UserName: d.name,

@@ -1,29 +1,28 @@
-// One-off local tool, not part of the Electron app itself. Builds the
-// manufacturer logo registry the app actually ships and bundles:
-// src/renderer/overlay/src/manufacturerLogos/data.json (base64 data-URI per
-// manufacturer). Two sources, checked in this order per manufacturer:
+// One-off local tool. Not part of the Electron app itself.
+// Builds the manufacturer logo registry the app ships and bundles:
+// src/renderer/overlay/src/manufacturerLogos/data.json (base64 data-URI per manufacturer).
+// Checks two sources per manufacturer, in this order:
 //
-// 1. resources/manufacturer-logos/<key>.svg or .png are local files the user
-//    supplied by hand, gitignored and not in this repo (same pattern as
-//    resources/trackmap-assets/). Takes priority if present, so it also
-//    doubles as a way to override any of the downloaded ones below.
-// 2. @avto-dev/vehicle-logotypes' hosted image CDN. Its npm package only
-//    ships a JSON file with remote image URLs, no local files, see
+// 1. resources/manufacturer-logos/<key>.svg or .png. These are local files the user
+//    supplied by hand. They are gitignored and not in this repo (same pattern as
+//    resources/trackmap-assets/). This source takes priority if present. It can also
+//    override any of the downloaded logos below.
+// 2. @avto-dev/vehicle-logotypes' hosted image CDN. Its npm package only ships a JSON
+//    file with remote image URLs, no local files. See
 //    https://github.com/avto-dev/vehicle-logotypes.
 //
-// Either way the network fetch (or local read) only ever happens here, when
-// re-generating the registry. The running app stays fully offline.
+// The network fetch (or local read) only happens here, when re-generating the
+// registry. The running app stays fully offline.
 //
-// Keys here are shared with src/main/manufacturerLogos.ts (CarScreenName
-// keyword matching), both use the same canonical slug per manufacturer.
+// Keys here are shared with src/main/manufacturerLogos.ts (CarScreenName keyword
+// matching). Both use the same canonical slug per manufacturer.
 //
-// Dallara, RAY, Skip Barber, Williams F1 aren't in avto-dev's dataset at
-// all. They're niche racing constructors/spec-series brands, not retail car
-// manufacturers, so no general-purpose logo library carries them. "generic"
-// (iRacing's own placeholder badge for unbadged/unmatched cars, see
-// manufacturerLogoKey()'s fallback) isn't a manufacturer either. All five
-// are local-only, only bundled once/if a matching file shows up in
-// resources/manufacturer-logos/.
+// Dallara, RAY, Skip Barber, and Williams F1 are not in avto-dev's dataset. They are
+// niche racing constructors or spec-series brands, not retail car manufacturers. No
+// general-purpose logo library carries them. "generic" is not a manufacturer either
+// (it is iRacing's own placeholder badge for unbadged/unmatched cars, see
+// manufacturerLogoKey()'s fallback). All five keys are local-only. They are only
+// bundled if a matching file shows up in resources/manufacturer-logos/.
 //
 // Usage: npm run build-manufacturer-logos
 const fs = require('node:fs')
@@ -44,11 +43,11 @@ const SLUG_OVERRIDES = {
 const LOCAL_ONLY_KEYS = ['dallara', 'ray', 'skip-barber', 'williams-f1', 'generic']
 
 // Our canonical keys. Must stay in sync with MANUFACTURER_KEYWORDS in
-// src/main/manufacturerLogos.ts (LOCAL_ONLY_KEYS aside, "generic" is matched
-// there too, as the no-brand-detected fallback).
+// src/main/manufacturerLogos.ts. This also applies to LOCAL_ONLY_KEYS: "generic" is
+// matched there too, as the no-brand-detected fallback.
 const MANUFACTURER_KEYS = [
-  'acura', 'aston-martin', 'audi', 'bmw', 'buick', 'cadillac', 'chevrolet',
-  'ferrari', 'ford', 'holden', 'honda', 'hyundai', 'kia', 'lamborghini',
+  'acura', 'aston-martin', 'audi', 'bmw', 'buick', 'cadillac', 'caterham',
+  'chevrolet', 'ferrari', 'ford', 'holden', 'honda', 'hyundai', 'kia', 'lamborghini',
   'ligier', 'lotus', 'mazda', 'mclaren', 'mercedes', 'nissan', 'pontiac',
   'porsche', 'radical', 'ram', 'renault', 'riley', 'ruf', 'subaru', 'toyota',
   'volkswagen',

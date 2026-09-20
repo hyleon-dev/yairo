@@ -43,7 +43,7 @@ export function OverlaySettingsPanel({overlay, settings, onChange}: Props) {
             <span className="overlay-setting-label">{m.scale}</span>
           </label>
           {
-            // delta-bar has no panel background at all, opacity would be a dead control there.
+            // delta-bar has no panel background at all. Opacity would be a dead control there.
           }
           {overlay.id !== 'delta-bar' && (
               <label className="overlay-setting">
@@ -196,9 +196,9 @@ function StandingsSettings({
   )
 }
 
-// iR/SR are toggleable independently in both Standings AND Relative.
-// Both settings types share the same two fields (DriverRatingOverlaySettings),
-// hence one shared small panel for both.
+// iR/SR toggle independently in both Standings AND Relative.
+// Both settings types share the same two fields (DriverRatingOverlaySettings).
+// So there is one shared small panel for both.
 function DriverRatingSettings({
                                 settings,
                                 onChange
@@ -343,11 +343,11 @@ function LastLapTimeSettings({
   )
 }
 
-// Displayed/stored as one total-seconds float (targetLapTimeSec, matching
-// every other lap time in the codebase), decomposed into min/sec/ms here
-// purely for the three input fields. <= 0 (all three at 0) means "not set".
-// Global setting (see App.tsx), shared by every overlay comparing against
-// either the best lap or this same target lap time (Lap Timer, Delta Bar, ...).
+// Stored as one total-seconds float (targetLapTimeSec), like every other lap
+// time in the codebase. Split into min/sec/ms here only for the three input
+// fields. <= 0 (all three at 0) means "not set".
+// Global setting (see App.tsx). Shared by every overlay that compares against
+// the best lap or this target lap time (Lap Timer, Delta Bar, ...).
 export function TargetLapTimeInputs({
                                 targetLapTimeSec,
                                 onChange

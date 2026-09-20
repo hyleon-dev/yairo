@@ -31,7 +31,7 @@ export declare interface IrsdkService {
   ): boolean
 }
 
-// Runs the actual irsdk-node connection in a worker thread, see irsdkWorker.ts for why.
+// Runs the actual irsdk-node connection in a worker thread. See irsdkWorker.ts for why.
 export class IrsdkService extends EventEmitter {
   private worker: Worker | null = null
 

@@ -6,9 +6,9 @@ import { iRating } from '../overlay-elements'
 
 const m = messages.relative
 
-// The iRating/SR columns are toggleable independently (see OverlaySettingsPanel.tsx),
-// grid column widths are computed instead of fixed in CSS, so the header and
-// data rows stay aligned regardless of combination.
+// The iRating/SR columns can be toggled independently (see OverlaySettingsPanel.tsx).
+// Grid column widths are computed, not fixed in CSS. This keeps the header and
+// data rows aligned for every combination.
 function gridTemplate(settings: RelativeOverlaySettings): string {
   const cols = ['22px', '32px', '1fr']
   if (settings.showIRating) cols.push(settings.showIRatingChange ? '82px' : '42px')
@@ -80,9 +80,9 @@ function DriverRow({
   )
 }
 
-// If fewer drivers are on track ahead/behind than configured, placeholder rows fill the gap
-// instead of letting the window shrink. Real drivers always take priority, so placeholders
-// end up on the outside (top for missing "ahead", bottom for missing "behind").
+// If fewer drivers are ahead/behind than configured, placeholder rows fill the gap.
+// The window does not shrink. Real drivers always come first, so placeholders end up
+// on the outside: top for missing "ahead", bottom for missing "behind".
 function PlaceholderRow({ settings, template }: { settings: RelativeOverlaySettings; template: string }) {
   return (
     <div className="rel-row rel-row--placeholder" style={{ gridTemplateColumns: template }}>

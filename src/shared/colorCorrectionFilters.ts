@@ -2,21 +2,21 @@ import type { ColorCorrectionMode } from './types'
 
 type CorrectableMode = Exclude<ColorCorrectionMode, 'none'>
 
-// Daltonization correction matrices, one flattened linear feColorMatrix per
-// deficiency type. Derived by composing (RGB->LMS) * (per-deficiency LMS
-// simulation) * (LMS->RGB) into one 3x3 "how the eye would perceive this
-// color" matrix S, then folding in the standard error-redistribution step
-// used by daltonization (redistribute the color information lost to S into
-// the channels the person can still perceive) into a single combined
-// correction matrix C = I + E*(I - S), where
-//   E = [[0,0,0],[0.7,1,0],[0.7,0,1]]
-// (i.e. leave the red channel untouched, push the lost signal into green/blue).
-// Reference matrices (RGB<->LMS, per-deficiency simulation, E) taken from
-// joergdietrich/daltonize (itself implementing Fidaner/Lin/Ozguven 2005),
-// composed down to one matrix per type so this can run as a single
-// feColorMatrix instead of a multi-pass filter. Operates directly on sRGB
-// (not linearized), matching that reference implementation's convention,
-// hence color-interpolation-filters="sRGB" on the <filter> that uses these.
+// Daltonization correction matrices, one flattened feColorMatrix per deficiency type.
+// Build steps:
+// 1. Compose (RGB->LMS) * (per-deficiency LMS simulation) * (LMS->RGB) into one 3x3
+//    matrix S. S shows how the eye would perceive this color.
+// 2. Daltonization adds an error-redistribution step. It pushes the color information
+//    lost to S into the channels the person can still perceive.
+// 3. Combined correction matrix: C = I + E*(I - S), where E = [[0,0,0],[0.7,1,0],[0.7,0,1]].
+//    E leaves the red channel untouched. It pushes the lost signal into green and blue.
+// Reference matrices (RGB<->LMS, per-deficiency simulation, E) come from
+// joergdietrich/daltonize, which implements Fidaner/Lin/Ozguven 2005. They are composed
+// here into one matrix per type, so this runs as a single feColorMatrix instead of a
+// multi-pass filter.
+// This operates directly on sRGB, not linearized color, matching the reference
+// implementation. That is why color-interpolation-filters="sRGB" is set on the
+// <filter> that uses these.
 export const COLOR_CORRECTION_FILTER_MATRICES: Record<CorrectableMode, string> = {
   protanopia:
     '1 0 0 0 0 ' +

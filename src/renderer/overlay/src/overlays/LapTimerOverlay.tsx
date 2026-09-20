@@ -36,9 +36,9 @@ export function LapTimerOverlay({ data, targetLapTimeSec }: { data: TelemetryDat
       <div className="time-current">{fmtTime(data.lapCurrentTime)}</div>
 
       {
-        // Delta to our own best lap (or target, once set) only exists for our
-        // own car, no value while spectating, instead of incorrectly showing
-        // 0 as "exactly on pace".
+        // Delta to our own best lap (or target, once set) only works for our own car.
+        // It does not work while spectating. We hide it then, so it does not
+        // wrongly show 0 as "exactly on pace".
       }
       {showDelta && <DeltaIndicator delta={computeLapDelta(data, targetLapTimeSec)} />}
 

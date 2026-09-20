@@ -1,4 +1,4 @@
-// Estimates the iRating change a driver would receive if the race ended with drivers in their current position order.
+// Estimates the iRating change a driver would get, if the race ended now with drivers in their current position order.
 // Ported from here: https://github.com/SIMRacingApps/SIMRacingApps/issues/209#issuecomment-531877336.
 // Deviations of +/-1 iRating point (occasionally more) from the real result are expected.
 
@@ -18,10 +18,10 @@ function pairwiseWinProbability(rI: number, rJ: number): number {
 
 // oldIRatings must already be ordered by current position (index 0 = leader).
 // Returns the estimated iRating change per entry, same order/length as the input.
-// null for an entry with no valid iRating (r <= 0), still counted as an
-// opponent for everyone else's expected score, just no change computed for itself.
+// null for an entry with no valid iRating (r <= 0). That entry still counts as an
+// opponent for everyone else's expected score, it just gets no change computed for itself.
 // Unlike the source script, there's no DNS handling here. Live position order
-// doesn't tell us who will actually start/finish, every entry is treated as a starter.
+// doesn't tell us who will actually start or finish. Every entry is treated as a starter.
 export function estimateIratingChanges(oldIRatings: number[]): (number | null)[] {
   const n = oldIRatings.length
   if (n < 2) return oldIRatings.map(() => null)

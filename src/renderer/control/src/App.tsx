@@ -22,9 +22,8 @@ import {Camera, Check, Link, X} from "lucide-react";
 
 const m = messages.control
 
-// Live-applies an accent color to the Control Center's own CSS variables
-// (used both for a persisted config.accentColor and for the picker's preview
-// while the user is still choosing).
+// Applies an accent color live to the Control Center's own CSS variables.
+// Used for the saved config.accentColor and for the picker's live preview.
 function previewAccentColor(hex: string): void {
   document.documentElement.style.setProperty('--color-accent', hex)
   document.documentElement.style.setProperty('--color-accent-rgb', hexToRgbTriplet(hex))
@@ -49,15 +48,15 @@ export default function App() {
 
   useEffect(() => {
     window.overlayApi.getConfig().then(setConfig)
-    // Actively query current connection status instead of only waiting
-    // for next connected/disconnected event,
-    // if iRacing was already running before this window,
-    // the worker can connect immediately, and the one-off broadcast would
-    // be missed before this listener is registered
+    // Query the current connection status once at start.
+    // Do not just wait for the next connected/disconnected event.
+    // iRacing may already be running when this window opens.
+    // Then the worker connects right away, before this listener is registered,
+    // and the one-off broadcast would be missed.
     window.overlayApi.getConnectionStatus().then(setConnection)
     window.overlayApi.getUpdateStatus().then(setUpdateStatus)
-    // Set once via OVERLAY_SCREENSHOTS=1 env var at app start (see main/index.ts),
-    // doesn't change at runtime, so no subscription needed.
+    // Set once via OVERLAY_SCREENSHOTS=1 env var at app start (see main/index.ts).
+    // Does not change at runtime, so no subscription is needed.
     window.overlayApi.getScreenshotsEnabled().then(setScreenshotsEnabled)
 
     const unsubConfig = window.overlayApi.onConfigUpdated(setConfig)
@@ -71,8 +70,8 @@ export default function App() {
     }
   }, [])
 
-  // Load/watch settings for all overlays once the configuration (and thus
-  // the list of overlay ids) is known
+  // Load and watch settings for all overlays once the config is known.
+  // The config holds the list of overlay ids.
   useEffect(() => {
     if (!config) return
 
@@ -88,8 +87,8 @@ export default function App() {
     return () => unsubs.forEach((unsub) => unsub())
   }, [config?.overlays.map((o) => o.id).join(',')])
 
-  // Applied live here (not just from the picker popup) so settings persisted
-  // in a previous session also take effect on startup.
+  // Applied live here too, not just from the picker popup.
+  // This way settings saved in an earlier session also take effect on startup.
   useEffect(() => {
     if (!config) return
     previewAccentColor(config.accentColor)
