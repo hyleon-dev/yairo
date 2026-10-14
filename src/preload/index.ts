@@ -11,9 +11,11 @@ import type {
   OverlayId,
   OverlayScreenshotResult,
   RelativeData,
+  SimulatorId,
   StandingsData,
   TelemetryData,
   TrackMapData,
+  TrackShape,
   UpdateStatus
 } from '../shared/types'
 
@@ -26,6 +28,8 @@ const api = {
   getConnectionStatus: (): Promise<ConnectionStatus> => ipcRenderer.invoke(IPC.CONNECTION_STATUS_GET),
 
   getUpdateStatus: (): Promise<UpdateStatus> => ipcRenderer.invoke(IPC.UPDATE_STATUS_GET),
+
+  getTrackShape: (): Promise<TrackShape | null> => ipcRenderer.invoke(IPC.TRACK_SHAPE_GET),
 
   openReleasePage: (url: string): Promise<void> => ipcRenderer.invoke(IPC.UPDATE_OPEN_RELEASE, url),
 
@@ -47,6 +51,8 @@ const api = {
 
   setTargetLapTimeSec: (targetLapTimeSec: number): Promise<AppConfig> =>
     ipcRenderer.invoke(IPC.TARGET_LAP_TIME_SET, targetLapTimeSec),
+
+  setSimulator: (simulator: SimulatorId): Promise<AppConfig> => ipcRenderer.invoke(IPC.SIMULATOR_SET, simulator),
 
   copyToClipboard: (text: string): Promise<void> => ipcRenderer.invoke(IPC.CLIPBOARD_WRITE, text),
 
@@ -92,6 +98,12 @@ const api = {
     const listener = (_e: Electron.IpcRendererEvent, data: TrackMapData) => cb(data)
     ipcRenderer.on(IPC.TRACKMAP_UPDATE, listener)
     return () => ipcRenderer.removeListener(IPC.TRACKMAP_UPDATE, listener)
+  },
+
+  onTrackShape: (cb: (data: TrackShape | null) => void) => {
+    const listener = (_e: Electron.IpcRendererEvent, data: TrackShape | null) => cb(data)
+    ipcRenderer.on(IPC.TRACK_SHAPE_UPDATE, listener)
+    return () => ipcRenderer.removeListener(IPC.TRACK_SHAPE_UPDATE, listener)
   },
 
   onFlags: (cb: (data: FlagsData) => void) => {

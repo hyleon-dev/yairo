@@ -17,12 +17,12 @@
 // Keys here are shared with src/main/manufacturerLogos.ts (CarScreenName keyword
 // matching). Both use the same canonical slug per manufacturer.
 //
-// Dallara, RAY, Skip Barber, and Williams F1 are not in avto-dev's dataset. They are
-// niche racing constructors or spec-series brands, not retail car manufacturers. No
-// general-purpose logo library carries them. "generic" is not a manufacturer either
-// (it is iRacing's own placeholder badge for unbadged/unmatched cars, see
-// manufacturerLogoKey()'s fallback). All five keys are local-only. They are only
-// bundled if a matching file shows up in resources/manufacturer-logos/.
+// Dallara, Duqueine, Oreca, RAY, Skip Barber, and Williams F1 are not in avto-dev's dataset. They
+// are niche racing constructors or spec-series brands, not retail car manufacturers. No
+// general-purpose logo library carries them. "generic_<sim>" is not a manufacturer either.
+// It is the placeholder badge per sim for unmatched cars, see manufacturerLogoKey()'s
+// fallback. These keys are local-only. They are only bundled if a matching file shows up
+// in resources/manufacturer-logos/.
 //
 // Usage: npm run build-manufacturer-logos
 const fs = require('node:fs')
@@ -40,15 +40,16 @@ const SLUG_OVERRIDES = {
 
 // Keys with no avto-dev equivalent, local-only (resources/manufacturer-logos/
 // or nothing), see header comment.
-const LOCAL_ONLY_KEYS = ['dallara', 'ray', 'skip-barber', 'williams-f1', 'generic']
+const LOCAL_ONLY_KEYS = ['dallara', 'duqueine', 'oreca', 'ray', 'skip-barber', 'williams-f1', 'generic_iracing', 'generic_lmu']
 
 // Our canonical keys. Must stay in sync with MANUFACTURER_KEYWORDS in
-// src/main/manufacturerLogos.ts. This also applies to LOCAL_ONLY_KEYS: "generic" is
-// matched there too, as the no-brand-detected fallback.
+// src/main/manufacturerLogos.ts. This also applies to LOCAL_ONLY_KEYS: "generic_<sim>"
+// is used there too, as the no-brand-detected fallback.
 const MANUFACTURER_KEYS = [
-  'acura', 'aston-martin', 'audi', 'bmw', 'buick', 'cadillac', 'caterham',
-  'chevrolet', 'ferrari', 'ford', 'holden', 'honda', 'hyundai', 'kia', 'lamborghini',
-  'ligier', 'lotus', 'mazda', 'mclaren', 'mercedes', 'nissan', 'pontiac',
+  'acura', 'alpine', 'aston-martin', 'audi', 'bmw', 'buick', 'cadillac', 'caterham',
+  'chevrolet', 'corvette', 'ferrari', 'ford', 'genesis', 'ginetta', 'holden', 'honda', 'hyundai',
+  'kia', 'lamborghini',
+  'ligier', 'lotus', 'mazda', 'mclaren', 'mercedes', 'nissan', 'peugeot', 'pontiac',
   'porsche', 'radical', 'ram', 'renault', 'riley', 'ruf', 'subaru', 'toyota',
   'volkswagen',
   ...LOCAL_ONLY_KEYS

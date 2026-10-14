@@ -4,9 +4,12 @@ import { join, dirname } from 'path'
 import {
   DEFAULT_ACCENT_COLOR,
   DEFAULT_COLOR_CORRECTION_MODE,
+  DEFAULT_SIMULATOR,
+  SIMULATOR_IDS,
   type AppConfig,
   type ColorCorrectionMode,
-  type OverlayConfig
+  type OverlayConfig,
+  type SimulatorId
 } from '../shared/types'
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -15,6 +18,7 @@ const DEFAULT_CONFIG: AppConfig = {
   accentColor: DEFAULT_ACCENT_COLOR,
   colorCorrectionMode: DEFAULT_COLOR_CORRECTION_MODE,
   targetLapTimeSec: 0,
+  simulator: DEFAULT_SIMULATOR,
   overlays: [
     {
       id: 'telemetry',
@@ -75,6 +79,12 @@ const DEFAULT_CONFIG: AppConfig = {
       name: 'Delta Bar',
       enabled: false,
       bounds: { x: 960, y: 10, width: 280, height: 50 }
+    },
+    {
+      id: 'damage',
+      name: 'Damage',
+      enabled: false,
+      bounds: { x: 1220, y: 100, width: 160, height: 220 }
     }
   ]
 }
@@ -89,82 +99,113 @@ function mergeOverlays(saved: OverlayConfig[] | undefined): OverlayConfig[] {
   })
 }
 
+// What config.json holds. Overlay layout and target lap time are kept per simulator,
+// AppConfig only exposes the active simulator's values.
+interface StoredConfig extends Omit<AppConfig, 'overlays' | 'targetLapTimeSec'> {
+  overlaysBySim: Record<SimulatorId, OverlayConfig[]>
+  targetLapTimeSecBySim: Record<SimulatorId, number>
+}
+
+function perSim<T>(value: (sim: SimulatorId) => T): Record<SimulatorId, T> {
+  return Object.fromEntries(SIMULATOR_IDS.map((sim) => [sim, value(sim)])) as Record<SimulatorId, T>
+}
+
+const DEFAULT_STORED: StoredConfig = {
+  editMode: DEFAULT_CONFIG.editMode,
+  controlWindowBounds: DEFAULT_CONFIG.controlWindowBounds,
+  accentColor: DEFAULT_CONFIG.accentColor,
+  colorCorrectionMode: DEFAULT_CONFIG.colorCorrectionMode,
+  simulator: DEFAULT_CONFIG.simulator,
+  overlaysBySim: perSim(() => DEFAULT_CONFIG.overlays),
+  targetLapTimeSecBySim: perSim(() => DEFAULT_CONFIG.targetLapTimeSec)
+}
+
 export class ConfigStore {
   private filePath: string
-  private config: AppConfig
+  private stored: StoredConfig
 
   constructor() {
     this.filePath = join(app.getPath('userData'), 'config.json')
-    this.config = this.load()
+    this.stored = this.load()
+    // Writes an older file in the new per-simulator format right away.
+    if (existsSync(this.filePath)) this.persist()
   }
 
   get(): AppConfig {
-    return this.config
+    const { overlaysBySim, targetLapTimeSecBySim, ...global } = this.stored
+    return {
+      ...global,
+      overlays: overlaysBySim[global.simulator],
+      targetLapTimeSec: targetLapTimeSecBySim[global.simulator]
+    }
   }
 
   setOverlay(id: string, patch: Partial<OverlayConfig>): AppConfig {
-    this.config = {
-      ...this.config,
-      overlays: this.config.overlays.map((o) => (o.id === id ? { ...o, ...patch } : o))
-    }
-    this.persist()
-    return this.config
+    const { simulator, overlaysBySim } = this.stored
+    const overlays = overlaysBySim[simulator].map((o) => (o.id === id ? { ...o, ...patch } : o))
+    return this.update({ overlaysBySim: { ...overlaysBySim, [simulator]: overlays } })
   }
 
   setEditMode(editMode: boolean): AppConfig {
-    this.config = { ...this.config, editMode }
-    this.persist()
-    return this.config
+    return this.update({ editMode })
   }
 
   setControlWindowBounds(bounds: OverlayConfig['bounds']): AppConfig {
-    this.config = { ...this.config, controlWindowBounds: bounds }
-    this.persist()
-    return this.config
+    return this.update({ controlWindowBounds: bounds })
   }
 
   setAccentColor(accentColor: string): AppConfig {
-    this.config = { ...this.config, accentColor }
-    this.persist()
-    return this.config
+    return this.update({ accentColor })
   }
 
   setColorCorrectionMode(colorCorrectionMode: ColorCorrectionMode): AppConfig {
-    this.config = { ...this.config, colorCorrectionMode }
-    this.persist()
-    return this.config
+    return this.update({ colorCorrectionMode })
   }
 
   setTargetLapTimeSec(targetLapTimeSec: number): AppConfig {
-    this.config = { ...this.config, targetLapTimeSec }
-    this.persist()
-    return this.config
+    const { simulator, targetLapTimeSecBySim } = this.stored
+    return this.update({ targetLapTimeSecBySim: { ...targetLapTimeSecBySim, [simulator]: targetLapTimeSec } })
   }
 
-  private load(): AppConfig {
+  setSimulator(simulator: SimulatorId): AppConfig {
+    return this.update({ simulator })
+  }
+
+  private update(patch: Partial<StoredConfig>): AppConfig {
+    this.stored = { ...this.stored, ...patch }
+    this.persist()
+    return this.get()
+  }
+
+  private load(): StoredConfig {
     try {
       if (existsSync(this.filePath)) {
         const raw = readFileSync(this.filePath, 'utf-8')
-        const saved = JSON.parse(raw) as Partial<AppConfig>
+        // Older files have a single overlays/targetLapTimeSec. Both sims start from those.
+        const saved = JSON.parse(raw) as Partial<StoredConfig> & Partial<Pick<AppConfig, 'overlays' | 'targetLapTimeSec'>>
         return {
-          editMode: saved.editMode ?? DEFAULT_CONFIG.editMode,
-          controlWindowBounds: saved.controlWindowBounds ?? DEFAULT_CONFIG.controlWindowBounds,
-          accentColor: saved.accentColor ?? DEFAULT_CONFIG.accentColor,
-          colorCorrectionMode: saved.colorCorrectionMode ?? DEFAULT_CONFIG.colorCorrectionMode,
-          targetLapTimeSec: saved.targetLapTimeSec ?? DEFAULT_CONFIG.targetLapTimeSec,
-          overlays: mergeOverlays(saved.overlays)
+          editMode: saved.editMode ?? DEFAULT_STORED.editMode,
+          controlWindowBounds: saved.controlWindowBounds ?? DEFAULT_STORED.controlWindowBounds,
+          accentColor: saved.accentColor ?? DEFAULT_STORED.accentColor,
+          colorCorrectionMode: saved.colorCorrectionMode ?? DEFAULT_STORED.colorCorrectionMode,
+          simulator:
+            saved.simulator && SIMULATOR_IDS.includes(saved.simulator) ? saved.simulator : DEFAULT_STORED.simulator,
+          overlaysBySim: perSim((sim) => mergeOverlays(saved.overlaysBySim?.[sim] ?? saved.overlays)),
+          targetLapTimeSecBySim: perSim(
+            (sim) => saved.targetLapTimeSecBySim?.[sim] ?? saved.targetLapTimeSec ?? DEFAULT_CONFIG.targetLapTimeSec
+          )
         }
       }
     } catch (err) {
       console.error('Could not load config.json, using defaults:', err)
     }
-    return DEFAULT_CONFIG
+    return DEFAULT_STORED
   }
 
   private persist(): void {
     try {
       mkdirSync(dirname(this.filePath), { recursive: true })
-      writeFileSync(this.filePath, JSON.stringify(this.config, null, 2), 'utf-8')
+      writeFileSync(this.filePath, JSON.stringify(this.stored, null, 2), 'utf-8')
     } catch (err) {
       console.error('Could not save config.json:', err)
     }

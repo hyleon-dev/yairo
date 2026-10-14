@@ -26,6 +26,15 @@
   stroke-linecap: round;
 }
 
+.trackmap-outline--world {
+  /* Screen pixels (non-scaling-stroke), about as wide as the iRacing maps. */
+  stroke-width: 5;
+}
+.trackmap-pitlane {
+  stroke-width: 2;
+  stroke: rgba(var(--color-white-rgb), 0.2);
+}
+
 .trackmap-start-finish {
   /* Fill color comes from the marker asset's own embedded <style>, only opacity is set here. */
   opacity: 0.85;
@@ -43,6 +52,11 @@
 .trackmap-marker--pit {
   opacity: 0.75;
   filter: brightness(0.75);
+}
+
+.trackmap--idle {
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .trackmap--fallback {

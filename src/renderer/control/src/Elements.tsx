@@ -1,5 +1,7 @@
-import { useEffect, useRef, type RefObject } from 'react'
+import { useContext, useEffect, useRef, type RefObject } from 'react'
 import {Info} from "lucide-react";
+import type { Hint } from '../../../shared/messages'
+import { SimulatorContext } from './simulatorContext'
 
 function useWheelStep(
     ref: RefObject<HTMLInputElement>,
@@ -36,6 +38,16 @@ export function ToggleSwitch(
         <span className="checkbox-slide__label">{label}</span>
       </label>
   );
+}
+
+// Info button with every hint that applies to the active sim. Renders nothing if none apply.
+export function SimHints({hints}: { hints: readonly Hint[] | undefined }) {
+  const simulator = useContext(SimulatorContext)
+  const texts = (hints ?? [])
+      .filter((hint) => !hint.simulators || hint.simulators.includes(simulator))
+      .map((hint) => hint.text)
+  if (texts.length === 0) return null
+  return <InfoHint text={texts.join('\n\n')}/>
 }
 
 export function InfoHint({text}: { text: string }) {

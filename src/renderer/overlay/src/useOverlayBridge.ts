@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   DEFAULT_OVERLAY_SETTINGS,
+  DEFAULT_SIMULATOR,
   IPC,
   overlaySettingsChannel,
   type AnyOverlaySettings,
@@ -10,9 +11,11 @@ import {
   type FlagsData,
   type OverlayId,
   type RelativeData,
+  type SimulatorId,
   type StandingsData,
   type TelemetryData,
-  type TrackMapData
+  type TrackMapData,
+  type TrackShape
 } from '../../../shared/types'
 import { hexToRgbTriplet } from '../../../shared/color'
 import { COLOR_CORRECTION_FILTER_SVG_ID, COLOR_CORRECTION_FILTER_SVG_MARKUP, colorCorrectionFilterId } from '../../../shared/colorCorrectionFilters'
@@ -22,11 +25,14 @@ export interface OverlayBridgeState {
   standings: StandingsData | null
   relative: RelativeData | null
   trackMap: TrackMapData | null
+  trackShape: TrackShape | null
   flags: FlagsData | null
   editMode: boolean
   settings: AnyOverlaySettings
   // s, <= 0 = no target set. Global (part of AppConfig), see its doc comment in shared/types.ts.
   targetLapTimeSec: number
+  // Selected sim from the config. Payloads carry their own sim, this covers the time without data.
+  simulator: SimulatorId
 }
 
 // Applied directly here, not returned as state. This way every overlay
@@ -57,21 +63,24 @@ export function useOverlayBridge(overlayId: OverlayId): OverlayBridgeState {
   const [standings, setStandings] = useState<StandingsData | null>(null)
   const [relative, setRelative] = useState<RelativeData | null>(null)
   const [trackMap, setTrackMap] = useState<TrackMapData | null>(null)
+  const [trackShape, setTrackShape] = useState<TrackShape | null>(null)
   const [flags, setFlags] = useState<FlagsData | null>(null)
   const [editMode, setEditMode] = useState(false)
   const [settings, setSettings] = useState<AnyOverlaySettings>(DEFAULT_OVERLAY_SETTINGS[overlayId])
   const [targetLapTimeSec, setTargetLapTimeSec] = useState(0)
+  const [simulator, setSimulator] = useState<SimulatorId>(DEFAULT_SIMULATOR)
 
   useEffect(() => {
     const setters = {
-      setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec
+      setTelemetry, setStandings, setRelative, setTrackMap, setTrackShape, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
+      setSimulator
     }
     return window.overlayApi
       ? subscribeViaElectron(overlayId, setters)
       : subscribeViaWebSocket(overlayId, setters)
   }, [overlayId])
 
-  return { telemetry, standings, relative, trackMap, flags, editMode, settings, targetLapTimeSec }
+  return { telemetry, standings, relative, trackMap, trackShape, flags, editMode, settings, targetLapTimeSec, simulator }
 }
 
 interface Setters {
@@ -79,26 +88,33 @@ interface Setters {
   setStandings: (d: StandingsData | null) => void
   setRelative: (d: RelativeData | null) => void
   setTrackMap: (d: TrackMapData | null) => void
+  setTrackShape: (d: TrackShape | null) => void
   setFlags: (d: FlagsData | null) => void
   setEditMode: (v: boolean) => void
   setSettings: (s: AnyOverlaySettings) => void
   setTargetLapTimeSec: (v: number) => void
+  setSimulator: (v: SimulatorId) => void
 }
 
 function subscribeViaElectron(
   overlayId: OverlayId,
-  { setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec }: Setters
+  {
+    setTelemetry, setStandings, setRelative, setTrackMap, setTrackShape, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
+    setSimulator
+  }: Setters
 ): () => void {
   const unsubTelemetry = window.overlayApi.onTelemetry(setTelemetry)
   const unsubStandings = window.overlayApi.onStandings(setStandings)
   const unsubRelative = window.overlayApi.onRelative(setRelative)
   const unsubTrackMap = window.overlayApi.onTrackMap(setTrackMap)
+  const unsubTrackShape = window.overlayApi.onTrackShape(setTrackShape)
   const unsubFlags = window.overlayApi.onFlags(setFlags)
   const unsubConfig = window.overlayApi.onConfigUpdated((cfg: AppConfig) => {
     setEditMode(cfg.editMode)
     applyAccentColor(cfg.accentColor)
     applyColorCorrectionMode(cfg.colorCorrectionMode)
     setTargetLapTimeSec(cfg.targetLapTimeSec)
+    setSimulator(cfg.simulator)
   })
   const unsubSettings = window.overlayApi.onOverlaySettings(overlayId, setSettings)
   const unsubConnection = window.overlayApi.onConnectionStatus((status: ConnectionStatus) => {
@@ -116,14 +132,17 @@ function subscribeViaElectron(
     applyAccentColor(cfg.accentColor)
     applyColorCorrectionMode(cfg.colorCorrectionMode)
     setTargetLapTimeSec(cfg.targetLapTimeSec)
+    setSimulator(cfg.simulator)
   })
   window.overlayApi.getOverlaySettings(overlayId).then(setSettings)
+  window.overlayApi.getTrackShape().then(setTrackShape)
 
   return () => {
     unsubTelemetry()
     unsubStandings()
     unsubRelative()
     unsubTrackMap()
+    unsubTrackShape()
     unsubFlags()
     unsubConfig()
     unsubSettings()
@@ -133,7 +152,10 @@ function subscribeViaElectron(
 
 function subscribeViaWebSocket(
     overlayId: OverlayId,
-    {setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec}: Setters
+    {
+      setTelemetry, setStandings, setRelative, setTrackMap, setTrackShape, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
+      setSimulator
+    }: Setters
 ): () => void {
   // No edit mode/dragging in the browser
   setEditMode(false)
@@ -156,6 +178,9 @@ function subscribeViaWebSocket(
       case IPC.TRACKMAP_UPDATE:
         setTrackMap(payload as TrackMapData)
         break
+      case IPC.TRACK_SHAPE_UPDATE:
+        setTrackShape(payload as TrackShape | null)
+        break
       case IPC.FLAGS_UPDATE:
         setFlags(payload as FlagsData)
         break
@@ -175,6 +200,7 @@ function subscribeViaWebSocket(
         // applyColorCorrectionMode()'s doc comment above.
         applyAccentColor((payload as AppConfig).accentColor)
         setTargetLapTimeSec((payload as AppConfig).targetLapTimeSec)
+        setSimulator((payload as AppConfig).simulator)
         break
       case settingsChannel:
         setSettings(payload as AnyOverlaySettings)

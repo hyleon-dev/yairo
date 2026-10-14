@@ -1,4 +1,4 @@
-import type { TelemetryData } from '../../../../shared/types'
+import { SIM_FEATURES, type FuelOverlaySettings, type TelemetryData } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import './FuelOverlay.css'
 
@@ -13,19 +13,24 @@ function FuelStat({ label, value }: { label: string; value: string }) {
   )
 }
 
-export function FuelOverlay({ data }: { data: TelemetryData }) {
+export function FuelOverlay({ data, settings }: { data: TelemetryData; settings: FuelOverlaySettings }) {
   const lastLap = data.fuelEstimate?.lastLap ?? null
   const avgLast5 = data.fuelEstimate?.avgLast5 ?? null
-  const nextPitFuelL = data.fuelEstimate?.nextPitFuelL ?? null
+  const nextPitFill = data.fuelEstimate?.nextPitFill ?? null
+  const pitStopTimeSec = data.fuelEstimate?.pitStopTimeSec ?? null
   const stopsRemaining = data.fuelEstimate?.stopsRemaining ?? null
+  const lapHistory = data.fuelEstimate?.lapHistory ?? []
+  const isVirtualEnergy = data.virtualEnergyPct !== null
+  const level = data.virtualEnergyPct ?? data.fuelLevelL
+  const amount = (value: number) => (isVirtualEnergy ? `${value.toFixed(2)} %` : `${value.toFixed(2)} l`)
 
   return (
     <div className="card fuel">
       <div className="fuel-stats-row">
         <div>
           <div className="fuel-large-value">
-            <div className="big-number small">{data.fuelLevelL.toFixed(2)}</div>
-            <div className="unit">{m.unit}</div>
+            <div className="big-number small">{level.toFixed(isVirtualEnergy ? 1 : 2)}</div>
+            <div className="unit">{isVirtualEnergy ? m.unitVirtualEnergy : m.unit}</div>
           </div>
 
           <div className="fuel-large-value-sub">
@@ -48,11 +53,11 @@ export function FuelOverlay({ data }: { data: TelemetryData }) {
         <div className="fuel-stats-row" style={{ border: '0', paddingTop: '0' }}>
           <FuelStat
               label={m.statLastConsumption}
-              value={lastLap ? `${lastLap.consumptionPerLapL.toFixed(2)} l` : '–'}
+              value={lastLap ? amount(lastLap.consumptionPerLap) : '–'}
           />
           <FuelStat
               label={m.statLast5Consumption}
-              value={avgLast5 ? `${avgLast5.consumptionPerLapL.toFixed(2)} l` : '–'}
+              value={avgLast5 ? amount(avgLast5.consumptionPerLap) : '–'}
           />
         </div>
       </div>
@@ -63,12 +68,27 @@ export function FuelOverlay({ data }: { data: TelemetryData }) {
         </label>
         <div className="fuel-stats-row" style={{ border: '0', paddingTop: '0' }}>
           <FuelStat label={m.statPitBy} value={lastLap ? `L${lastLap.pitByLap}` : '–'} />
-          <FuelStat label={m.statRemaining} value={lastLap ? `${lastLap.marginLiters.toFixed(2)} l` : '–'} />
+          <FuelStat label={m.statRemaining} value={lastLap ? amount(lastLap.margin) : '–'} />
         </div>
         <div className="fuel-stats-row" style={{ border: '0', paddingTop: '4px' }}>
-          <FuelStat label={m.statNextFill} value={nextPitFuelL !== null ? `${nextPitFuelL.toFixed(2)} l` : '–'} />
+          <FuelStat label={m.statNextFill} value={nextPitFill !== null ? amount(nextPitFill) : '–'} />
+          {SIM_FEATURES[data.sim].pitStopEstimate && (
+            <FuelStat label={m.statPitTime} value={pitStopTimeSec !== null ? `${pitStopTimeSec.toFixed(1)} s` : '–'} />
+          )}
         </div>
       </div>
+
+      {settings.showLapHistory && (
+        <div className="fuel-stats-row" style={{ flexDirection: 'column', gap: '0' }}>
+          <label style={{ fontSize: 'var(--font-md)' }}>{m.historyLabel}</label>
+          <div className="fuel-stats-row fuel-history-row" style={{ border: '0', paddingTop: '0' }}>
+            {lapHistory.length === 0 && <FuelStat label="–" value="–" />}
+            {lapHistory.map((entry) => (
+              <FuelStat key={entry.lap} label={m.historyLap(entry.lap)} value={amount(entry.consumption)} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

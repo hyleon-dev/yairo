@@ -1,9 +1,9 @@
 // One-off local tool. Not part of the running app.
 // Connects to the live iRacing SDK and waits for a session. Then it writes a full
 // snapshot of all raw SDK data (telemetry + driver/weekend/session info) to
-// sdk-dump.json in the project root. Use this to explore which fields the local
+// dump_iracing.json in the project root. Use this to explore which fields the local
 // iRacing SDK provides, without attaching a debugger. Overwrites any existing
-// sdk-dump.json from a previous run.
+// dump_iracing.json from a previous run.
 //
 // Runs via Electron's own Node runtime (ELECTRON_RUN_AS_NODE=1, see the "dump-sdk"
 // script in package.json) instead of plain "node". Reason: irsdk-node is a native
@@ -20,7 +20,7 @@ const { IRacingSDK } = require('irsdk-node')
 const POLL_INTERVAL_MS = 1000 / 30
 const RECONNECT_INTERVAL_MS = 2000
 const TIMEOUT_MS = 15_000
-const outPath = path.join(__dirname, '..', 'sdk-dump.json')
+const outPath = path.join(__dirname, '..', 'dump_iracing.json')
 
 const sdk = new IRacingSDK({ autoEnableTelemetry: true })
 sdk.startSDK()
@@ -28,7 +28,7 @@ sdk.startSDK()
 const deadline = Date.now() + TIMEOUT_MS
 let lastStartAttempt = Date.now()
 
-console.log('[dump-sdk] waiting for iRacing...')
+console.log('[dump-iracing] waiting for iRacing...')
 
 function tick() {
   const hasData = sdk.waitForData(POLL_INTERVAL_MS)
@@ -41,12 +41,12 @@ function tick() {
       sessionInfo: sdk.getSessionInfo()
     }
     fs.writeFileSync(outPath, JSON.stringify(dump, null, 2), 'utf-8')
-    console.log(`[dump-sdk] wrote ${outPath}`)
+    console.log(`[dump-iracing] wrote ${outPath}`)
     process.exit(0)
   }
 
   if (Date.now() > deadline) {
-    console.error('[dump-sdk] timed out waiting for iRacing - is it running with an active session?')
+    console.error('[dump-iracing] timed out waiting for iRacing - is it running with an active session?')
     process.exit(1)
   }
 

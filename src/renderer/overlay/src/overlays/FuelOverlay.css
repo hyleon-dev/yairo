@@ -26,6 +26,10 @@
   border-top: 1px solid rgba(var(--color-white-rgb), 0.07);
 }
 
+.fuel-history-row {
+  gap: 10px;
+}
+
 .fuel-stat {
   display: flex;
   flex-direction: column;

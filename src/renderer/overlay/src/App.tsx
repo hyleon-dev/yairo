@@ -4,15 +4,18 @@ import type {
   DeltaBarOverlaySettings,
   FlagsData,
   FlagsOverlaySettings,
+  FuelOverlaySettings,
   OverlayId,
   RelativeData,
+  SimulatorId,
   RelativeOverlaySettings,
   StandingsData,
   StandingsOverlaySettings,
   TelemetryData,
   TelemetryOverlaySettings,
   TiresOverlaySettings,
-  TrackMapData
+  TrackMapData,
+  TrackShape
 } from '../../../shared/types'
 import { useOverlayBridge } from './useOverlayBridge'
 import { useReportContentSize } from './useReportContentSize'
@@ -26,11 +29,12 @@ import { TrackMapOverlay } from './overlays/TrackMapOverlay'
 import { TiresOverlay } from './overlays/TiresOverlay'
 import { FlagsOverlay } from './overlays/FlagsOverlay'
 import { DeltaBarOverlay } from './overlays/DeltaBarOverlay'
+import { DamageOverlay } from './overlays/DamageOverlay'
 
 // Fallback data shown before the first message for this overlay has arrived.
 const EMPTY_WHEEL = { wearPct: 0, tempC: 0, tempUnit: 'C' }
 
-const EMPTY_TELEMETRY: TelemetryData = {
+const EMPTY_TELEMETRY: Omit<TelemetryData, 'sim'> = {
   speedKph: 0,
   rpm: 0,
   rpmIdle: 0,
@@ -43,6 +47,7 @@ const EMPTY_TELEMETRY: TelemetryData = {
   brakePct: 0,
   clutchPct: 0,
   fuelLevelL: 0,
+  virtualEnergyPct: null,
   lap: 0,
   lapDistPct: 0,
   isOnTrack: false,
@@ -60,10 +65,13 @@ const EMPTY_TELEMETRY: TelemetryData = {
   currentDriverIncidentCount: -1,
   teamIncidentCount: -1,
   incidentLimit: '-',
-  tires: { lf: EMPTY_WHEEL, rf: EMPTY_WHEEL, lr: EMPTY_WHEEL, rr: EMPTY_WHEEL }
+  tires: { lf: EMPTY_WHEEL, rf: EMPTY_WHEEL, lr: EMPTY_WHEEL, rr: EMPTY_WHEEL },
+  hasTireData: false,
+  damage: null,
+  trackLimits: null
 }
 
-const EMPTY_STANDINGS: StandingsData = {
+const EMPTY_STANDINGS: Omit<StandingsData, 'sim'> = {
   trackName: '-',
   sessionType: '-',
   remainingTimeSecs: 0,
@@ -76,14 +84,14 @@ const EMPTY_STANDINGS: StandingsData = {
   classes: []
 }
 
-const EMPTY_RELATIVE: RelativeData = { drivers: [] }
+const EMPTY_RELATIVE: Omit<RelativeData, 'sim'> = { drivers: [] }
 
 // trackId -1 = sentinel for "no session data yet", distinct from a real but
 // uncalibrated trackId (see TrackMapOverlay.tsx, which only shows its "no
 // map available" hint for trackId >= 0).
-const EMPTY_TRACKMAP: TrackMapData = { trackId: -1, trackName: '-', drivers: [] }
+const EMPTY_TRACKMAP: Omit<TrackMapData, 'sim'> = { trackId: -1, trackName: '-', drivers: [] }
 
-const EMPTY_FLAGS: FlagsData = { flags: 0 }
+const EMPTY_FLAGS: Omit<FlagsData, 'sim'> = { flags: 0 }
 
 function useOverlayId(): OverlayId {
   const params = new URLSearchParams(window.location.search)
@@ -92,8 +100,12 @@ function useOverlayId(): OverlayId {
 
 export default function App() {
   const overlayId = useOverlayId()
-  const { telemetry, standings, relative, trackMap, flags, editMode, settings, targetLapTimeSec } = useOverlayBridge(overlayId)
+  const { telemetry, standings, relative, trackMap, trackShape, flags, editMode, settings, targetLapTimeSec, simulator } =
+    useOverlayBridge(overlayId)
   const contentRef = useReportContentSize(overlayId, editMode, settings.scale)
+  // LMU sends no data outside a session (main menu). Hidden then, but keeps its size for edit mode.
+  const isLmuIdle =
+    simulator === 'lmu' && !editMode && !hasOverlayData(overlayId, telemetry, standings, relative, trackShape, flags)
 
   // Sets both panel-background variants (--panel-bg for most overlays,
   // --panel-bg-light for trackmap) to the same alpha. This way it works
@@ -112,11 +124,37 @@ export default function App() {
         // the layout size. That's what lets the ResizeObserver in
         // useReportContentSize pick up a scale change.
       }
-      <div ref={contentRef} className="overlay-content" style={{ zoom: settings.scale }}>
-        {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, flags, settings, targetLapTimeSec)}
+      <div
+        ref={contentRef}
+        className={`overlay-content ${isLmuIdle ? 'overlay-content--idle' : ''}`}
+        style={{ zoom: settings.scale }}
+      >
+        {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, trackShape, flags, settings, targetLapTimeSec, simulator)}
       </div>
     </div>
   )
+}
+
+function hasOverlayData(
+  id: OverlayId,
+  telemetry: TelemetryData | null,
+  standings: StandingsData | null,
+  relative: RelativeData | null,
+  trackShape: TrackShape | null,
+  flags: FlagsData | null
+): boolean {
+  switch (id) {
+    case 'standings':
+      return standings !== null
+    case 'relative':
+      return relative !== null
+    case 'trackmap':
+      return trackShape !== null
+    case 'flags':
+      return flags !== null
+    default:
+      return telemetry !== null
+  }
 }
 
 function renderOverlayContent(
@@ -125,43 +163,51 @@ function renderOverlayContent(
   standings: StandingsData | null,
   relative: RelativeData | null,
   trackMap: TrackMapData | null,
+  trackShape: TrackShape | null,
   flags: FlagsData | null,
   settings: AnyOverlaySettings,
-  targetLapTimeSec: number
+  targetLapTimeSec: number,
+  sim: SimulatorId
 ) {
   if (id === 'standings') {
-    return <StandingsOverlay data={standings ?? EMPTY_STANDINGS} settings={settings as StandingsOverlaySettings} />
+    return (
+      <StandingsOverlay data={standings ?? { ...EMPTY_STANDINGS, sim }} settings={settings as StandingsOverlaySettings} />
+    )
   }
 
   if (id === 'relative') {
-    return <RelativeOverlay data={relative ?? EMPTY_RELATIVE} settings={settings as RelativeOverlaySettings} />
+    return (
+      <RelativeOverlay data={relative ?? { ...EMPTY_RELATIVE, sim }} settings={settings as RelativeOverlaySettings} />
+    )
   }
 
   if (id === 'trackmap') {
-    return <TrackMapOverlay data={trackMap ?? EMPTY_TRACKMAP} />
+    return <TrackMapOverlay data={trackMap ?? { ...EMPTY_TRACKMAP, sim }} trackShape={trackShape} />
   }
 
   if (id === 'flags') {
-    return <FlagsOverlay data={flags ?? EMPTY_FLAGS} settings={settings as FlagsOverlaySettings} />
+    return <FlagsOverlay data={flags ?? { ...EMPTY_FLAGS, sim }} settings={settings as FlagsOverlaySettings} />
   }
 
   // Telemetry/Fuel/Lap-Timer/Incidents/Tires are tied to a car. If there is
   // no car (not connected yet, not in/watching a car, spectating without
   // fuel/tire data), they fall back to zeroed/empty data instead of hiding
   // the overlay.
-  const telemetryData = telemetry ?? EMPTY_TELEMETRY
+  const telemetryData = telemetry ?? { ...EMPTY_TELEMETRY, sim }
 
   switch (id) {
     case 'telemetry':
       return <TelemetryOverlay data={telemetryData} settings={settings as TelemetryOverlaySettings} />
     case 'fuel':
-      return <FuelOverlay data={telemetryData} />
+      return <FuelOverlay data={telemetryData} settings={settings as FuelOverlaySettings} />
     case 'lap-timer':
       return <LapTimerOverlay data={telemetryData} targetLapTimeSec={targetLapTimeSec} />
     case 'incidents':
       return <IncidentsOverlay data={telemetryData} />
     case 'tires':
       return <TiresOverlay data={telemetryData} settings={settings as TiresOverlaySettings} />
+    case 'damage':
+      return <DamageOverlay data={telemetryData} />
     case 'delta-bar':
       return (
         <DeltaBarOverlay

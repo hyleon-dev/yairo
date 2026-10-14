@@ -1,9 +1,9 @@
 import type { Driver, DriverInfo, SessionList, TelemetryVariable, TelemetryVarList, WeekendInfo } from 'irsdk-node'
-import { FLAG_BITS } from '../shared/types'
+import { FLAG_BITS } from '../../../shared/types'
 
 // Simulated race session for local dev without iRacing running (see
-// "npm run dev:mock", IRSDK_MOCK=1 in irsdkWorker.ts).
-// Mirrors only the SDK fields that irsdkWorker.ts actually reads. Everything
+// "npm run dev:mock", IRSDK_MOCK=1 in iracingSource.ts).
+// Mirrors only the SDK fields that iracingSource.ts actually reads. Everything
 // else on TelemetryVarList/DriverInfo/WeekendInfo/SessionList stays empty,
 // hence the "as unknown as" casts below.
 // Kept simple on purpose: no pit stops, no session changes, no spectating,
@@ -175,7 +175,7 @@ export class FakeIRacingSDK {
   }
 
   // Timeouts keep the fake running at the same rate (~30Hz) as a real connect.
-  // Otherwise the setImmediate() loop in irsdkWorker.ts would spin unthrottled
+  // Otherwise the setImmediate() loop in simWorker.ts would spin unthrottled
   // and flood the main process with messages.
   waitForData(timeoutMs = 16): boolean {
     const elapsed = Date.now() - this.lastTickAt
@@ -299,6 +299,10 @@ export class FakeIRacingSDK {
       CarIdxBestLapTime: arrayVar(this.drivers.map((d) => d.bestLapTime)),
       CarIdxEstTime: arrayVar(this.drivers.map((d) => d.lapDistPct * d.currentLapPaceSec)),
       CarIdxTrackSurface: arrayVar(this.drivers.map(() => 3)), // always "on track", no pit stops
+      // One driver gets a drive-through every other 10 s, for the Standings penalty flag.
+      CarIdxSessionFlags: arrayVar(
+        this.drivers.map((_, i) => (i === 3 && Math.floor(this.simTimeSec / 10) % 2 === 1 ? FLAG_BITS.black : 0))
+      ),
       CarIdxRPM: arrayVar(this.drivers.map((d, i) => (i === PLAYER_CAR_IDX ? rpm : 6000))),
       CarIdxGear: arrayVar(this.drivers.map((d, i) => (i === PLAYER_CAR_IDX ? gear : 4))),
       CarIdxPosition: arrayVar(positions),

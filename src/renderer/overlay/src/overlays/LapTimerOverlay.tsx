@@ -58,6 +58,17 @@ export function LapTimerOverlay({ data, targetLapTimeSec }: { data: TelemetryDat
           </div>
         )}
       </div>
+
+      {data.trackLimits && (
+        <div className="lap-row track-limits">
+          <span className="lap-label">{m.trackLimits}</span>
+          <span
+            className={`track-limits-val ${data.trackLimits.points >= data.trackLimits.penaltyAtPoints - 1 ? 'track-limits-val--warn' : ''}`}
+          >
+            {m.trackLimitsValue(data.trackLimits.points, data.trackLimits.penaltyAtPoints)}
+          </span>
+        </div>
+      )}
     </div>
   )
 }

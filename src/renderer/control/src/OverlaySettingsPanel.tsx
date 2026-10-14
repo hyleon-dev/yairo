@@ -1,18 +1,22 @@
-import type {
-  AnyOverlaySettings,
-  AvgLapTimeOverlaySettings, BestLapTimeOverlaySettings,
-  DeltaBarOverlaySettings,
-  FlagsOverlaySettings,
-  LastLapTimeOverlaySettings,
-  OverlayConfig,
-  RelativeOverlaySettings,
-  StandingsOverlaySettings,
-  StintOverlaySettings,
-  TelemetryOverlaySettings,
-  TiresOverlaySettings
+import { useContext } from 'react'
+import {
+  SIM_FEATURES,
+  type AnyOverlaySettings,
+  type AvgLapTimeOverlaySettings, type BestLapTimeOverlaySettings,
+  type DeltaBarOverlaySettings,
+  type FlagsOverlaySettings,
+  type FuelOverlaySettings,
+  type LastLapTimeOverlaySettings,
+  type OverlayConfig,
+  type RelativeOverlaySettings,
+  type StandingsOverlaySettings,
+  type StintOverlaySettings,
+  type TelemetryOverlaySettings,
+  type TiresOverlaySettings
 } from '../../../shared/types'
 import {messages} from '../../../shared/messages'
-import {ToggleSwitch, SuffixNumberInput, NumberInput, InfoHint} from "./Elements";
+import {ToggleSwitch, SuffixNumberInput, NumberInput, SimHints} from "./Elements";
+import { SimulatorContext } from './simulatorContext'
 
 const m = messages.overlaySettings
 
@@ -74,6 +78,10 @@ export function OverlaySettingsPanel({overlay, settings, onChange}: Props) {
 
         {overlay.id === 'telemetry' && (
             <TelemetrySettings settings={settings as TelemetryOverlaySettings} onChange={onChange}/>
+        )}
+
+        {overlay.id === 'fuel' && (
+            <FuelSettings settings={settings as FuelOverlaySettings} onChange={onChange}/>
         )}
 
         {overlay.id === 'flags' && (
@@ -187,12 +195,42 @@ function StandingsSettings({
           <BestLapTimeSettings settings={settings} onChange={onChange}/>
           <LastLapTimeSettings settings={settings} onChange={onChange}/>
         </span>
+        <PitStopsAndPenaltiesSettings settings={settings} onChange={onChange}/>
         <ToggleSwitch
           checked={settings.showRealTime}
           onChange={(checked) => onChange({showRealTime: checked})}
           label={m.showRealTime}
         />
       </>
+  )
+}
+
+function PitStopsAndPenaltiesSettings({
+                                        settings,
+                                        onChange
+                                      }: {
+  settings: StandingsOverlaySettings
+  onChange: (patch: Partial<AnyOverlaySettings>) => void
+}) {
+  const features = SIM_FEATURES[useContext(SimulatorContext)]
+  if (!features.pitStopCounts && !features.penaltyFlags) return null
+  return (
+      <span className="multi-settings-row">
+        {features.pitStopCounts && (
+            <ToggleSwitch
+                checked={settings.showPitStops}
+                onChange={(checked) => onChange({showPitStops: checked})}
+                label={m.showPitStops}
+            />
+        )}
+        {features.penaltyFlags && (
+            <ToggleSwitch
+                checked={settings.showPenalties}
+                onChange={(checked) => onChange({showPenalties: checked})}
+                label={m.showPenalties}
+            />
+        )}
+      </span>
   )
 }
 
@@ -206,6 +244,9 @@ function DriverRatingSettings({
   settings: RelativeOverlaySettings | StandingsOverlaySettings
   onChange: (patch: Partial<AnyOverlaySettings>) => void
 }) {
+  const simulator = useContext(SimulatorContext)
+  if (!SIM_FEATURES[simulator].driverRatings) return null
+
   return (
       <>
         <ToggleSwitch
@@ -276,6 +317,22 @@ function FlagsSettings({
   )
 }
 
+function FuelSettings({
+                        settings,
+                        onChange
+                      }: {
+  settings: FuelOverlaySettings
+  onChange: (patch: Partial<AnyOverlaySettings>) => void
+}) {
+  return (
+      <ToggleSwitch
+          checked={settings.showLapHistory}
+          onChange={(checked) => onChange({showLapHistory: checked})}
+          label={m.showLapHistory}
+      />
+  )
+}
+
 function StintSettings({
                          settings,
                          onChange
@@ -290,7 +347,7 @@ function StintSettings({
             onChange={(checked) => onChange({showStint: checked})}
             label={m.showStint}
         />
-        <InfoHint text={m.showStintHint}/>
+        <SimHints hints={m.showStintHints}/>
       </span>
   )
 }

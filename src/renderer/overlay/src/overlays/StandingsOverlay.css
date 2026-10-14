@@ -196,6 +196,22 @@
   color: var(--color-best);
   font-weight: 700;
 }
+.col-count {
+  text-align: right;
+  color: var(--color-text-secondary);
+  font-size: var(--font-body-sm);
+}
+/* Black flag like iRacing's drive-through flag, only while a penalty is outstanding. */
+.col-penalty {
+  display: flex;
+  justify-content: center;
+}
+.penalty-flag {
+  width: 13px;
+  height: 13px;
+  fill: #0d0d10;
+  stroke: #f5f5f5;
+}
 .col-avg {
   text-align: right;
   color: var(--color-text-muted);

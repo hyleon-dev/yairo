@@ -1,5 +1,11 @@
 import { Fragment } from 'react'
-import type { DriverStanding, StandingsClass, StandingsData, StandingsOverlaySettings } from '../../../../shared/types'
+import {
+  SIM_FEATURES,
+  type DriverStanding,
+  type StandingsClass,
+  type StandingsData,
+  type StandingsOverlaySettings
+} from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import { classPositionGradient, licBadgeStyle } from '../sdkColors'
 import { manufacturerLogoDataUri } from '../manufacturerLogos/registry'
@@ -28,6 +34,8 @@ function gridTemplate(settings: StandingsOverlaySettings): string {
   if (settings.showAvgLapTime) cols.push('70px')
   if (settings.showBestLapTime) cols.push('80px')
   if (settings.showLastLapTime) cols.push('80px')
+  if (settings.showPitStops) cols.push('28px')
+  if (settings.showPenalties) cols.push('18px')
   return cols.join(' ')
 }
 
@@ -105,7 +113,7 @@ function DriverRow({
       <span className="col-name">{driver.driverName}</span>
       {settings.showIRating && iRating({ driver, settings })}
       {settings.showSafetyRating && (
-        <span className="col-sr" style={licBadgeStyle(driver.licColorHex)}>
+        <span className="col-sr" style={driver.licColorHex ? licBadgeStyle(driver.licColorHex) : undefined}>
           {driver.licString || '-'}
         </span>
       )}
@@ -117,6 +125,10 @@ function DriverRow({
       {settings.showAvgLapTime && <span className="col-avg">{fmtLapTime(driver.avgLapTimeSec)}</span>}
       {settings.showBestLapTime && <span className={`col-lap ${driver.isClassFastestLap ? 'col-lap--class-fastest' : ''}`}>{fmtLapTime(driver.bestLapTime)}</span>}
       {settings.showLastLapTime && <span className={`col-lap ${driver.lastLapTime != -1 && driver.lastLapTime == driver.bestLapTime ? 'col-lap--fastest' : ''}`}>{fmtLapTime(driver.lastLapTime)}</span>}
+      {settings.showPitStops && <span className="col-count">{driver.pitStops ?? '–'}</span>}
+      {settings.showPenalties && (
+        <span className="col-penalty">{driver.penalties ? <Flag className="penalty-flag" /> : null}</span>
+      )}
     </div>
   )
 }
@@ -140,6 +152,8 @@ function ColumnLabels({ settings, template }: { settings: StandingsOverlaySettin
       {settings.showAvgLapTime && <span className="col-avg">{m.columnAvgLap}</span>}
       {settings.showBestLapTime && <span className="col-lap">{m.columnBest}</span>}
       {settings.showLastLapTime && <span className="col-lap">{m.columnLast}</span>}
+      {settings.showPitStops && <span className="col-count">{m.columnPitStops}</span>}
+      {settings.showPenalties && <span className="col-penalty" />}
     </div>
   )
 }
@@ -198,6 +212,8 @@ function PlaceholderRow({
       {settings.showAvgLapTime && <span className="col-avg">–</span>}
       {settings.showBestLapTime && <span className="col-lap">–</span>}
       {settings.showLastLapTime && <span className="col-lap">–</span>}
+      {settings.showPitStops && <span className="col-count">–</span>}
+      {settings.showPenalties && <span className="col-penalty" />}
     </div>
   )
 }
@@ -223,7 +239,15 @@ function EmptyClassBlock({ settings }: { settings: StandingsOverlaySettings }) {
 // ===================================
 // === Overlay Header
 // ===================================
-export function StandingsOverlay({ data, settings }: { data: StandingsData; settings: StandingsOverlaySettings }) {
+export function StandingsOverlay({ data, settings: userSettings }: { data: StandingsData; settings: StandingsOverlaySettings }) {
+  const features = SIM_FEATURES[data.sim]
+  const settings = {
+    ...userSettings,
+    ...(!features.driverRatings && { showIRating: false, showIRatingChange: false, showSafetyRating: false }),
+    ...(!features.pitStopCounts && { showPitStops: false }),
+    ...(!features.penaltyFlags && { showPenalties: false })
+  }
+
   return (
     <div className="standings">
       <div className="header">
@@ -233,9 +257,15 @@ export function StandingsOverlay({ data, settings }: { data: StandingsData; sett
         {data.lapsRemaining != null && <span className="header-data"><Flag className="header-icon" /> ~{fmtLapsRemaining(data.lapsRemaining)}L</span>}
         <span className="header-data"><ThermometerSun className="header-icon" /> {fmtTemp(data.airTemp, data.airTempUnit)}</span>
         <span className="header-data"><Road className="header-icon" /> {fmtTemp(data.trackTemp, data.trackTempUnit)}</span>
-        <span className="header-data"><span className="header-data-name">{m.gripLabel}</span> {fmtGrip(data.grip)}</span>
-        <span className="overlay-spacer"/>
-        <span className="header-data"><Earth className="header-icon" /> {new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span>
+        {features.trackGrip && (
+          <span className="header-data"><span className="header-data-name">{m.gripLabel}</span> {fmtGrip(data.grip)}</span>
+        )}
+        {settings.showRealTime && (
+          <>
+            <span className="overlay-spacer"/>
+            <span className="header-data"><Earth className="header-icon" /> {new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</span>
+          </>
+        )}
       </div>
 
       {data.classes.length === 0 ? (

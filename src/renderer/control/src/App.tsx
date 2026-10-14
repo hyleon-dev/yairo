@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import {
   OVERLAY_SERVER_PORT,
+  isOverlaySupported,
   type AnyOverlaySettings,
   type AppConfig,
   type ColorCorrectionMode,
   type ConnectionStatus,
   type OverlayId,
+  type SimulatorId,
   type UpdateStatus
 } from '../../../shared/types'
 import { hexToRgbTriplet } from '../../../shared/color'
@@ -17,7 +19,9 @@ import {
 import { messages } from '../../../shared/messages'
 import { OverlaySettingsPanel, TargetLapTimeInputs } from './OverlaySettingsPanel'
 import { AccentColorPopup } from './AccentColorPopup'
-import {InfoHint, ToggleSwitch} from "./Elements";
+import { SimulatorPicker } from './SimulatorPicker'
+import {SimHints, ToggleSwitch} from "./Elements";
+import { SimulatorContext } from "./simulatorContext";
 import {Camera, Check, Link, X} from "lucide-react";
 
 const m = messages.control
@@ -38,7 +42,7 @@ function applyColorCorrectionMode(mode: ColorCorrectionMode): void {
 
 export default function App() {
   const [config, setConfig] = useState<AppConfig | null>(null)
-  const [connection, setConnection] = useState<ConnectionStatus>({ connected: false })
+  const [connection, setConnection] = useState<ConnectionStatus>({ connected: false, needsSetup: false })
   const [settings, setSettings] = useState<Partial<Record<OverlayId, AnyOverlaySettings>>>({})
   const [copiedOverlayId, setCopiedOverlayId] = useState<OverlayId | null>(null)
   const [screenshotOverlayId, setScreenshotOverlayId] = useState<{ id: OverlayId; ok: boolean } | null>(null)
@@ -124,6 +128,13 @@ export default function App() {
     window.overlayApi.setTargetLapTimeSec(targetLapTimeSec)
   }
 
+  const handleSimulatorChange = (simulator: SimulatorId) => {
+    if (simulator === config.simulator) return
+    window.overlayApi.setSimulator(simulator).then(setConfig)
+  }
+
+  const simName = m.simulators[config.simulator].name
+
   const handleCopyUrl = (id: OverlayId) => {
     const url = `http://127.0.0.1:${OVERLAY_SERVER_PORT}/overlays/${id}`
     window.overlayApi.copyToClipboard(url)
@@ -139,115 +150,127 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <div className="app-content">
-        {updateStatus?.available && (
-          <div className="update-banner">
-            <span>{m.updateAvailable(updateStatus.latestVersion ?? '')}</span>
+    <SimulatorContext.Provider value={config.simulator}>
+      <div className="app">
+        <div className="app-content">
+          {updateStatus?.available && (
+            <div className="update-banner">
+              <span>{m.updateAvailable(updateStatus.latestVersion ?? '')}</span>
+              <button
+                type="button"
+                className="update-banner-link"
+                onClick={() => updateStatus.url && window.overlayApi.openReleasePage(updateStatus.url)}
+              >
+                {m.updateAvailableLink}
+              </button>
+            </div>
+          )}
+          <header>
+            <h1>{m.appTitle}</h1>
+            <span className={`status ${connection.connected ? 'ok' : 'off'}`}>
+              {connection.connected ? m.connected(simName) : m.disconnected(simName)}
+            </span>
+          </header>
+
+          <section>
+            <h2>{m.simulatorHeading}</h2>
+            <SimulatorPicker
+              value={config.simulator}
+              connected={connection.connected}
+              needsSetup={connection.needsSetup}
+              onChange={handleSimulatorChange}
+            />
+          </section>
+
+          <section>
+            <h2>{m.targetTimeHeader}</h2>
+
+            <TargetLapTimeInputs
+                targetLapTimeSec={config.targetLapTimeSec}
+                onChange={handleTargetLapTimeChange}
+            />
+          </section>
+
+          <section>
+            <h2>{m.overlaysHeading}</h2>
+            <ul className="overlay-list">
+              {config.overlays.filter((overlay) => isOverlaySupported(config.simulator, overlay.id)).map((overlay) => (
+
+                <li key={overlay.id}>
+                  <div className="overlay-item-header">
+                    <ToggleSwitch
+                        checked={overlay.enabled}
+                        onChange={(checked) => toggleOverlay(overlay.id, checked)}
+                        label={overlay.name}
+                    />
+                    <SimHints hints={m.overlayHints[overlay.id]}/>
+                    <div className="overlay-spacer"></div>
+                    <button type="button" className="overlay-in-line-button" onClick={() => handleCopyUrl(overlay.id)}>
+                      {copiedOverlayId === overlay.id ? <Check style={{ color: 'var(--color-success)' }} /> : <Link />}
+                    </button>
+                    {screenshotsEnabled && (
+                      <button type="button" className="overlay-in-line-button" onClick={() => handleScreenshot(overlay.id)}>
+                        {screenshotOverlayId?.id === overlay.id
+                          ? screenshotOverlayId.ok
+                            ? <Check style={{ color: 'var(--color-success)' }} />
+                            : <X style={{ color: 'var(--color-danger)' }}  />
+                          : <Camera />}
+                      </button>
+                    )}
+                  </div>
+
+                  <OverlaySettingsPanel
+                    overlay={overlay}
+                    settings={settings[overlay.id]}
+                    onChange={(patch) => updateOverlaySettings(overlay.id, patch)}
+                  />
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <footer className="app-footer">
+          <div className="app-footer-actions">
+            <button onClick={toggleEditMode}>{config.editMode ? m.editModeExit : m.editModeEnter}</button>
             <button
               type="button"
-              className="update-banner-link"
-              onClick={() => updateStatus.url && window.overlayApi.openReleasePage(updateStatus.url)}
+              className="accent-color-btn"
+              onClick={() => setAccentColorPickerOpen(true)}
+              title={m.accentColorBtn}
             >
-              {m.updateAvailableLink}
+              <span className="accent-color-swatch" style={{ background: config.accentColor }} />
+              {m.accentColorBtn}
             </button>
+            <select
+              className="color-correction-select"
+              value={config.colorCorrectionMode}
+              title={m.colorCorrectionLabel}
+              aria-label={m.colorCorrectionLabel}
+              onChange={(e) => handleColorCorrectionModeChange(e.target.value as ColorCorrectionMode)}
+            >
+              {(Object.keys(m.colorCorrectionOptions) as ColorCorrectionMode[]).map((mode) => (
+                <option key={mode} value={mode}>
+                  {m.colorCorrectionOptions[mode]}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
-        <header>
-          <h1>{m.appTitle}</h1>
-          <span className={`status ${connection.connected ? 'ok' : 'off'}`}>
-            {connection.connected ? m.connected : m.disconnected}
-          </span>
-        </header>
+          {updateStatus && <span className="app-version">{m.versionLabel(updateStatus.currentVersion)}</span>}
+        </footer>
 
-        <section>
-          <h2>{m.targetTimeHeader}</h2>
-
-          <TargetLapTimeInputs
-              targetLapTimeSec={config.targetLapTimeSec}
-              onChange={handleTargetLapTimeChange}
+        {accentColorPickerOpen && (
+          <AccentColorPopup
+            initialColor={config.accentColor}
+            onPreview={(hex) => {
+              previewAccentColor(hex)
+              window.overlayApi.setAccentColor(hex)
+            }}
+            onSave={() => setAccentColorPickerOpen(false)}
+            onCancel={() => setAccentColorPickerOpen(false)}
           />
-        </section>
-
-        <section>
-          <h2>{m.overlaysHeading}</h2>
-          <ul className="overlay-list">
-            {config.overlays.map((overlay) => (
-
-              <li key={overlay.id}>
-                <div className="overlay-item-header">
-                  <ToggleSwitch
-                      checked={overlay.enabled}
-                      onChange={(checked) => toggleOverlay(overlay.id, checked)}
-                      label={overlay.name}
-                  />
-                  {m.overlayHints[overlay.id] && <InfoHint text={m.overlayHints[overlay.id]!}/>}
-                  <div className="overlay-spacer"></div>
-                  <button type="button" className="overlay-in-line-button" onClick={() => handleCopyUrl(overlay.id)}>
-                    {copiedOverlayId === overlay.id ? <Check style={{ color: 'var(--color-success)' }} /> : <Link />}
-                  </button>
-                  {screenshotsEnabled && (
-                    <button type="button" className="overlay-in-line-button" onClick={() => handleScreenshot(overlay.id)}>
-                      {screenshotOverlayId?.id === overlay.id
-                        ? screenshotOverlayId.ok
-                          ? <Check style={{ color: 'var(--color-success)' }} />
-                          : <X style={{ color: 'var(--color-danger)' }}  />
-                        : <Camera />}
-                    </button>
-                  )}
-                </div>
-
-                <OverlaySettingsPanel
-                  overlay={overlay}
-                  settings={settings[overlay.id]}
-                  onChange={(patch) => updateOverlaySettings(overlay.id, patch)}
-                />
-              </li>
-            ))}
-          </ul>
-        </section>
+        )}
       </div>
-
-      <footer className="app-footer">
-        <div className="app-footer-actions">
-          <button onClick={toggleEditMode}>{config.editMode ? m.editModeExit : m.editModeEnter}</button>
-          <button
-            type="button"
-            className="accent-color-btn"
-            onClick={() => setAccentColorPickerOpen(true)}
-            title={m.accentColorBtn}
-          >
-            <span className="accent-color-swatch" style={{ background: config.accentColor }} />
-            {m.accentColorBtn}
-          </button>
-          <select
-            className="color-correction-select"
-            value={config.colorCorrectionMode}
-            title={m.colorCorrectionLabel}
-            aria-label={m.colorCorrectionLabel}
-            onChange={(e) => handleColorCorrectionModeChange(e.target.value as ColorCorrectionMode)}
-          >
-            {(Object.keys(m.colorCorrectionOptions) as ColorCorrectionMode[]).map((mode) => (
-              <option key={mode} value={mode}>
-                {m.colorCorrectionOptions[mode]}
-              </option>
-            ))}
-          </select>
-        </div>
-        {updateStatus && <span className="app-version">{m.versionLabel(updateStatus.currentVersion)}</span>}
-      </footer>
-
-      {accentColorPickerOpen && (
-        <AccentColorPopup
-          initialColor={config.accentColor}
-          onPreview={(hex) => {
-            previewAccentColor(hex)
-            window.overlayApi.setAccentColor(hex)
-          }}
-          onSave={() => setAccentColorPickerOpen(false)}
-          onCancel={() => setAccentColorPickerOpen(false)}
-        />
-      )}
-    </div>
+    </SimulatorContext.Provider>
   )
 }

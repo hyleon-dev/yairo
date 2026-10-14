@@ -2,7 +2,7 @@ import {app, ipcMain, BrowserWindow, clipboard, shell, globalShortcut, Notificat
 import {mkdirSync, writeFileSync} from 'fs'
 import {dirname, join} from 'path'
 import {WindowManager} from './windowManager'
-import {IrsdkService} from './irsdkService'
+import {SimService} from './simService'
 import {ConfigStore} from './configStore'
 import {OverlayServer} from './overlayServer'
 import {OverlaySettingsStore} from './overlaySettingsStore'
@@ -11,6 +11,8 @@ import {checkForUpdate} from './updateChecker'
 import {
   IPC,
   overlaySettingsChannel,
+  SIMULATOR_IDS,
+  isOverlaySupported,
   type AnyOverlaySettings,
   type ColorCorrectionMode,
   type ConnectionStatus,
@@ -19,17 +21,21 @@ import {
   type RelativeOverlaySettings,
   type StandingsOverlaySettings,
   type UpdateStatus,
-  type OverlayScreenshotResult
+  type OverlayScreenshotResult,
+  type SimulatorId,
+  type TrackShape
 } from '../shared/types'
 
 const windowManager = new WindowManager()
-const irsdk = new IrsdkService()
+const sim = new SimService()
 const configStore = new ConfigStore()
 const overlayServer = new OverlayServer()
-const overlaySettingsStore = new OverlaySettingsStore()
+const overlaySettingsStore = new OverlaySettingsStore(configStore.get().simulator)
 const driverStatsStore = new DriverStatsStore()
 
-let connectionStatus: ConnectionStatus = {connected: false}
+let connectionStatus: ConnectionStatus = {connected: false, needsSetup: false}
+// Cached for overlay windows opened after the shape was sent.
+let trackShape: TrackShape | null = null
 let updateStatus: UpdateStatus = {available: false, currentVersion: app.getVersion()}
 
 // Shows the per-overlay screenshot button in the Control Center (when enabled).
@@ -102,31 +108,26 @@ function createControlWindow(): void {
   })
 }
 
-function createOverlaysFromConfig(): void {
-  const {overlays} = configStore.get()
+// Opens enabled overlays and closes those that are disabled or not supported by the active sim.
+function syncOverlayWindows(): void {
+  const {overlays, simulator} = configStore.get()
   for (const overlay of overlays) {
-    if (overlay.enabled) {
+    if (overlay.enabled && isOverlaySupported(simulator, overlay.id)) {
       windowManager.createOverlayWindow(overlay, onOverlayBoundsChanged)
+    } else {
+      windowManager.closeOverlayWindow(overlay.id)
     }
   }
 }
 
 function registerIpcHandlers(): void {
   ipcMain.handle(IPC.CONFIG_GET, () => configStore.get())
+  ipcMain.handle(IPC.TRACK_SHAPE_GET, () => trackShape)
 
   // Control Center toggles an overlay on/off or changes settings
   ipcMain.handle(IPC.CONFIG_SET_OVERLAY, (_evt, id: OverlayId, patch) => {
     const updated = configStore.setOverlay(id, patch)
-    const overlayConfig = updated.overlays.find((o) => o.id === id)
-
-    if (overlayConfig) {
-      if (overlayConfig.enabled) {
-        windowManager.createOverlayWindow(overlayConfig, onOverlayBoundsChanged)
-      } else {
-        windowManager.closeOverlayWindow(id)
-      }
-    }
-
+    syncOverlayWindows()
     broadcastToAll(IPC.CONFIG_UPDATED, updated)
     return updated
   })
@@ -157,6 +158,20 @@ function registerIpcHandlers(): void {
   ipcMain.handle(IPC.TARGET_LAP_TIME_SET, (_evt, targetLapTimeSec: number) => {
     const updated = configStore.setTargetLapTimeSec(targetLapTimeSec)
     broadcastToAll(IPC.CONFIG_UPDATED, updated)
+    return updated
+  })
+
+  ipcMain.handle(IPC.SIMULATOR_SET, (_evt, simulator: SimulatorId) => {
+    if (!SIMULATOR_IDS.includes(simulator)) return configStore.get()
+    if (simulator === configStore.get().simulator) return configStore.get()
+
+    const updated = configStore.setSimulator(simulator)
+    overlaySettingsStore.setSimulator(simulator)
+    void sim.switchSimulator(simulator)
+    syncOverlayWindows()
+    // Windows that stay open move to this sim's saved position.
+    for (const overlay of updated.overlays) windowManager.setOverlayBounds(overlay.id, overlay.bounds)
+    seedOverlaySettings()
     return updated
   })
 
@@ -221,12 +236,12 @@ function registerIpcHandlers(): void {
 
         if (id === 'relative') {
           const relativeSettings = updated as RelativeOverlaySettings
-          irsdk.setRelativeWindow(relativeSettings.driversAhead, relativeSettings.driversBehind)
+          sim.setRelativeWindow(relativeSettings.driversAhead, relativeSettings.driversBehind)
         }
 
         if (id === 'standings') {
           const standingsSettings = updated as StandingsOverlaySettings
-          irsdk.setStandingsWindow(
+          sim.setStandingsWindow(
               standingsSettings.driversAhead,
               standingsSettings.driversBehind,
               standingsSettings.topCount
@@ -248,63 +263,74 @@ function seedOverlaySettings(): void {
   // (Electron windows don't need this. They fetch getConfig() themselves.)
   broadcastToAll(IPC.CONFIG_UPDATED, configStore.get())
 
+  // Control Center too, its settings change when switching the simulator.
   for (const overlay of configStore.get().overlays) {
-    broadcastToOverlays(overlaySettingsChannel(overlay.id), overlaySettingsStore.get(overlay.id))
+    broadcastToAll(overlaySettingsChannel(overlay.id), overlaySettingsStore.get(overlay.id))
   }
 
   const relativeSettings = overlaySettingsStore.get('relative') as RelativeOverlaySettings
-  irsdk.setRelativeWindow(relativeSettings.driversAhead, relativeSettings.driversBehind)
+  sim.setRelativeWindow(relativeSettings.driversAhead, relativeSettings.driversBehind)
 
   const standingsSettings = overlaySettingsStore.get('standings') as StandingsOverlaySettings
-  irsdk.setStandingsWindow(
+  sim.setStandingsWindow(
       standingsSettings.driversAhead,
       standingsSettings.driversBehind,
       standingsSettings.topCount
   )
 }
 
-function registerIrsdkEvents(): void {
-  irsdk.on('telemetry', (data) => {
+function registerSimEvents(): void {
+  sim.on('telemetry', (data) => {
     broadcastToOverlays(IPC.TELEMETRY_UPDATE, data)
   })
-  irsdk.on('standings', (data) => {
+  sim.on('standings', (data) => {
     broadcastToOverlays(IPC.STANDINGS_UPDATE, data)
   })
-  irsdk.on('relative', (data) => {
+  sim.on('relative', (data) => {
     broadcastToOverlays(IPC.RELATIVE_UPDATE, data)
   })
-  irsdk.on('trackmap', (data) => {
+  sim.on('trackmap', (data) => {
     broadcastToOverlays(IPC.TRACKMAP_UPDATE, data)
   })
-  irsdk.on('flags', (data) => {
+  sim.on('flags', (data) => {
     broadcastToOverlays(IPC.FLAGS_UPDATE, data)
   })
-  irsdk.on('connected', () => {
+  sim.on('trackShape', (data) => {
+    trackShape = data
+    broadcastToOverlays(IPC.TRACK_SHAPE_UPDATE, data)
+  })
+  sim.on('connected', () => {
     driverStatsStore.expireIfStale()
-    connectionStatus = {connected: true}
+    connectionStatus = {...connectionStatus, connected: true}
     broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
   })
-  irsdk.on('disconnected', () => {
-    connectionStatus = {connected: false}
+  sim.on('disconnected', () => {
+    trackShape = null
+    broadcastToOverlays(IPC.TRACK_SHAPE_UPDATE, null)
+    connectionStatus = {...connectionStatus, connected: false}
     broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
   })
-  irsdk.on('lapCompleted', (events) => {
+  sim.on('needsSetup', (needsSetup) => {
+    connectionStatus = {...connectionStatus, needsSetup}
+    broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
+  })
+  sim.on('lapCompleted', (events) => {
     for (const event of events) {
       driverStatsStore.recordLapTime(event.custId, event.driverName, event.entry)
     }
   })
-  irsdk.on('sessionHeartbeat', (sessionTimeRemainSec) => {
+  sim.on('sessionHeartbeat', (sessionTimeRemainSec) => {
     driverStatsStore.updateSessionExpiry(sessionTimeRemainSec)
   })
 }
 
 app.whenReady().then(() => {
   registerIpcHandlers()
-  registerIrsdkEvents()
+  registerSimEvents()
 
   createControlWindow()
-  createOverlaysFromConfig()
-  irsdk.start()
+  syncOverlayWindows()
+  sim.start(configStore.get().simulator)
   overlayServer.start()
   seedOverlaySettings()
 
@@ -337,7 +363,9 @@ app.on('will-quit', () => {
 })
 
 app.on('window-all-closed', () => {
-  irsdk.stop()
   overlayServer.stop()
-  if (process.platform !== 'darwin') app.quit()
+  // Quitting while the worker sits in a native SDK call would crash, so wait for it.
+  void sim.stop().finally(() => {
+    if (process.platform !== 'darwin') app.quit()
+  })
 })

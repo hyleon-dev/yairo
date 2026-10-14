@@ -7,6 +7,7 @@
 
 // Subset of iRacing telemetry actually forwarded to overlays, kept small to just what overlays need.
 export interface TelemetryData {
+  sim: SimulatorId
   speedKph: number
   rpm: number
   rpmIdle: number
@@ -22,6 +23,8 @@ export interface TelemetryData {
   // inverted here to match throttlePct/brakePct.
   clutchPct: number
   fuelLevelL: number
+  // 0..100. Set for LMU cars with virtual energy, fuel estimates are then in % VE instead of liters.
+  virtualEnergyPct: number | null
   lap: number
   lapDistPct: number // 0..1, position on track
   isOnTrack: boolean
@@ -37,8 +40,7 @@ export interface TelemetryData {
   lapDeltaToBestValid: boolean
   // Mirrors the SDK's OnPitRoad. True anywhere between the pit lane's entry and
   // exit cones (driving through, or stopped in our stall). False on the racing
-  // surface. Always false while spectating (tires are not meaningful for another
-  // car either way, see TiresData).
+  // surface. Always false while spectating.
   isOnPitRoad: boolean
   // Mirrors the SDK's EngineWarnings pit speed limiter bit. Always false while spectating.
   pitLimiterActive: boolean
@@ -48,8 +50,8 @@ export interface TelemetryData {
   lowFuelWarning: boolean
   // true when this data is from the driver being watched (spectating), not our own car.
   isSpectatingOther: boolean
-  // null until a full lap with known consumption has been driven (fresh
-  // into the session, or just left the pits), or while spectating.
+  // null while spectating. Consumption values inside stay null until a full lap
+  // with known consumption has been driven (fresh into the session, or just left the pits).
   fuelEstimate: FuelEstimate | null
   incidentCount: number
   // Incidents of whoever is CURRENTLY driving our team car (SDK: PlayerCarDriverIncidentCount).
@@ -64,8 +66,14 @@ export interface TelemetryData {
   // Raw string from WeekendInfo.WeekendOptions.IncidentLimit, e.g. "17x" or "unlimited".
   // Empty string if the SDK hasn't provided anything yet.
   incidentLimit: string
-  // Only meaningful while actually driving (own car), see isSpectatingOther.
+  // While spectating only set if the sim has tires for the watched car, see hasTireData.
   tires: TiresData
+  // False if tires is only zero filler. LMU online has no tire data for other drivers.
+  hasTireData: boolean
+  // Own car only. null while spectating or if the sim has no damage data (iRacing).
+  damage: DamageData | null
+  // Own car only. null while spectating or if the sim has no track limits points (iRacing).
+  trackLimits: TrackLimits | null
 }
 
 // --- Tires ------------------------------------------------------------
@@ -85,39 +93,70 @@ export interface TiresData {
   rr: TireWheelData
 }
 
+export interface TrackLimits {
+  points: number
+  penaltyAtPoints: number // a penalty is given when points reach this
+}
+
+export type DamageLevel = 0 | 1 | 2 // none, some, heavy
+export type WheelDamage = 'ok' | 'flat' | 'detached'
+
+export interface DamageData {
+  body: {
+    front: DamageLevel
+    frontRight: DamageLevel
+    right: DamageLevel
+    rearRight: DamageLevel
+    rear: DamageLevel
+    rearLeft: DamageLevel
+    left: DamageLevel
+    frontLeft: DamageLevel
+  }
+  wheels: { lf: WheelDamage; rf: WheelDamage; lr: WheelDamage; rr: WheelDamage }
+  overheating: boolean
+  partsDetached: boolean
+}
+
 // A consumption projection for one scenario (last lap, or avg of the last 5).
 // Separate from the raw fuel level in TelemetryData.fuelLevelL.
+// Amounts are in liters, or in % VE if TelemetryData.virtualEnergyPct is set.
 export interface FuelLapEstimate {
-  // L, consumption per lap in this scenario.
-  consumptionPerLapL: number
+  consumptionPerLap: number
   // How many more laps the current (live) fuel level covers in this scenario.
   // Ticks down continuously as fuel burns, including mid-lap.
   lapsRemaining: number
-  // L, left over after the last fully possible lap (a safety margin, if pitting
+  // Left over after the last fully possible lap (a safety margin, if pitting
   // exactly at "pitByLap").
   // Unlike lapsRemaining, this value (and pitByLap) is only recomputed once per lap,
   // from the fuel level at THIS lap's start. It does not update live or mid-lap.
   // Reason: live updates would turn it into a sawtooth. It would fall in lockstep
-  // with the live tank level, then jump back up by a full consumptionPerLapL
+  // with the live tank level, then jump back up by a full consumptionPerLap
   // whenever the live level crosses a multiple-of-consumption threshold mid-lap.
   // That threshold crossing is unrelated to actual lap boundaries, so the jump
   // would be confusing. This is not meant to be a stable "pit-plan buffer".
-  marginLiters: number
+  margin: number
   // Absolute lap number by which to pit at the latest. Same once-per-lap
-  // stability as marginLiters, for the same reason.
+  // stability as margin, for the same reason.
   pitByLap: number
 }
 
 // iRacing itself provides neither consumption nor a range estimate. Both are computed
 // here from the per-lap fuel-level history (see trackFuelConsumption() in irsdkWorker.ts).
+export interface FuelLapConsumption {
+  lap: number
+  consumption: number // liters or % VE, like FuelLapEstimate
+}
+
 export interface FuelEstimate {
   lastLap: FuelLapEstimate | null
   avgLast5: FuelLapEstimate | null
-  // L, amount that will be added at the next pit stop. Comes straight from iRacing's
-  // own pit service menu (PitSvFuel telemetry var). Tracks "Auto Fill" live if the
-  // driver has that enabled. Otherwise it is whatever amount is currently dialed in
-  // manually. null while not driving our own car.
-  nextPitFuelL: number | null
+  lapHistory: FuelLapConsumption[] // oldest first, last 5 full laps
+  // Amount added at the next pit stop, liters or % VE, from the sim's pit menu.
+  // iRacing: PitSvFuel, tracks "Auto Fill" live. LMU: VE target minus current VE.
+  // null while not driving our own car or if the pit menu is unknown.
+  nextPitFill: number | null
+  // s, estimated standing time of the next stop with the current pit menu. LMU only.
+  pitStopTimeSec: number | null
   // How many more pit stops for fuel are needed before the session ends. Assumes
   // a full refill every stop (see estimateStopsRemaining() in irsdkWorker.ts for
   // the underlying laps-to-go/consumption math). null without a consumption
@@ -128,6 +167,8 @@ export interface FuelEstimate {
 // Sent when iRacing isn't running / no session is active.
 export interface ConnectionStatus {
   connected: boolean
+  // Sim runs but provides no data, e.g. LMU without "Enable Plugins".
+  needsSetup: boolean
 }
 
 // --- Update check ---------------------------------------------------------
@@ -166,18 +207,18 @@ export interface DriverStanding {
   bestLapTime: number // s, <= 0 if no valid time yet
   isClassFastestLap: boolean
   isPlayer: boolean
-  iRating: number
+  iRating: number | null // null if the sim has no iRating
   // Estimated iRating change if the race ended right now, with drivers in their
   // CURRENT live position order (see iratingCalculator.ts). This is NOT a
   // finish-position prediction. It is based only on where everyone stands at this
   // instant. null outside a race session, or if this driver has no valid iRating
   // (e.g. missing driver data).
   iRatingChange: number | null
-  licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
+  licString: string | null // Safety Rating string as given by the SDK, e.g. "A 4.99". null if the sim has none.
   // Official iRacing license class color as a CSS hex code. Derived from licString's
   // letter (licenseColorHex() in irsdkWorker.ts). This is NOT the SDK's own
   // Driver.LicColor, which can report the wrong color for a driver's actual license class.
-  licColorHex: string
+  licColorHex: string | null
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
   // Average of every lap time recorded for the CURRENT driver of this car,
   // during the current session.
@@ -192,6 +233,8 @@ export interface DriverStanding {
   // Resolved from the car's CarScreenName.
   // Null if no known manufacturer keyword matched.
   manufacturerLogoKey: string | null
+  pitStops: number | null // null if the sim doesn't count them
+  penalties: number | null // outstanding penalties, null if the sim has none
   lastLapTime: number
   // Laps this driver is behind the class leader's completed lap count.
   // 0 while on the leader's lap (or ahead, e.g. during a formation lap).
@@ -202,11 +245,13 @@ export interface StandingsClass {
   classId: number
   className: string
   driverCount: number
-  strengthOfField: number // not directly from SDK but computed with official strength-of-field formula.
+  // Not from the SDK, computed with the official formula. null without iRatings.
+  strengthOfField: number | null
   drivers: DriverStanding[]
 }
 
 export interface StandingsData {
+  sim: SimulatorId
   trackName: string
   sessionType: string
   remainingTimeSecs: number
@@ -239,14 +284,11 @@ export interface RelativeDriver {
   lapsDifference: number // > 0 = driver is that many laps ahead, < 0 = that many laps behind.
   isPlayer: boolean
   isInPit: boolean
-  iRating: number
-  // See DriverStanding.iRatingChange.
+  // See DriverStanding.
+  iRating: number | null
   iRatingChange: number | null
-  licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
-  // Official iRacing license class color as a CSS hex code. Derived from licString's
-  // letter (licenseColorHex() in irsdkWorker.ts). This is NOT the SDK's own
-  // Driver.LicColor, which can report the wrong color for a driver's actual license class.
-  licColorHex: string
+  licString: string | null
+  licColorHex: string | null
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
   // See DriverStanding.avgLapTimeSec.
   avgLapTimeSec: number
@@ -254,6 +296,7 @@ export interface RelativeDriver {
 }
 
 export interface RelativeData {
+  sim: SimulatorId
   // Sorted front to back, player in the middle.
   drivers: RelativeDriver[]
 }
@@ -270,9 +313,24 @@ export interface TrackMapDriver {
   lapDistPct: number // 0..1, position along the lap.
   surface: TrackSurfaceStatus
   isPlayer: boolean
+  // Position in TrackShape coordinates. Only set by sims with world positions (LMU).
+  x?: number
+  y?: number
+}
+
+// Track outline in world coordinates (meters, y = north). Comes from the sim (LMU),
+// not from the bundled iRacing SVGs. Sent only when the layout changes.
+export interface TrackShape {
+  key: string
+  trackPath: string
+  pitPath: string
+  // SVG transform for paths and cars. Tracks are rotated to fill the landscape overlay.
+  transform: string
+  viewBox: string
 }
 
 export interface TrackMapData {
+  sim: SimulatorId
   trackId: number
   trackName: string
   drivers: TrackMapDriver[]
@@ -300,6 +358,7 @@ export const FLAG_BITS = {
 } as const
 
 export interface FlagsData {
+  sim: SimulatorId
   flags: number // raw SessionFlags bitmask, decode with FLAG_BITS
 }
 
@@ -346,6 +405,7 @@ export type OverlayId =
   | 'tires'
   | 'flags'
   | 'delta-bar'
+  | 'damage'
 
 export interface OverlayBounds {
   x: number
@@ -361,6 +421,36 @@ export interface OverlayConfig {
   bounds: OverlayBounds
 }
 
+export type SimulatorId = 'iracing' | 'lmu'
+
+export const SIMULATOR_IDS: readonly SimulatorId[] = ['iracing', 'lmu']
+
+export const DEFAULT_SIMULATOR: SimulatorId = 'iracing'
+
+export interface SimFeatures {
+  // iRating, Safety Rating and Strength of Field.
+  driverRatings: boolean
+  // Tire data updates while driving, not only in the pits.
+  liveTires: boolean
+  pitStopCounts: boolean
+  pitStopEstimate: boolean
+  // Track rubber/grip state in the Standings header.
+  trackGrip: boolean
+  // Outstanding penalty per car (LMU count, iRacing black flag).
+  penaltyFlags: boolean
+  // Hidden in the Control Center, window stays closed. The enabled setting is kept.
+  unsupportedOverlays: readonly OverlayId[]
+}
+
+export const SIM_FEATURES: Record<SimulatorId, SimFeatures> = {
+  iracing: { driverRatings: true, liveTires: false, pitStopCounts: false, pitStopEstimate: false, trackGrip: true, penaltyFlags: true, unsupportedOverlays: ['damage'] },
+  lmu: { driverRatings: false, liveTires: true, pitStopCounts: true, pitStopEstimate: true, trackGrip: false, penaltyFlags: true, unsupportedOverlays: ['incidents'] }
+}
+
+export function isOverlaySupported(sim: SimulatorId, id: OverlayId): boolean {
+  return !SIM_FEATURES[sim].unsupportedOverlays.includes(id)
+}
+
 // 'none' = no correction. The others apply a daltonization filter (see
 // shared/colorCorrectionFilters.ts). This only ever runs in the Control Center and
 // the real Electron overlay windows. It deliberately does NOT run for OBS/browser
@@ -372,6 +462,7 @@ export const DEFAULT_COLOR_CORRECTION_MODE: ColorCorrectionMode = 'none'
 
 /** Full state managed and persisted by the Control Center. */
 export interface AppConfig {
+  // Layout of the active simulator. Each simulator keeps its own (see configStore.ts).
   overlays: OverlayConfig[]
   editMode: boolean
   // null until the user has moved/resized the Control Center window once.
@@ -380,10 +471,11 @@ export interface AppConfig {
   // in theme.css on every window (Control Center + overlays).
   accentColor: string
   colorCorrectionMode: ColorCorrectionMode
-  // s, <= 0 = no target set. Global rather than per-overlay, so every overlay that
-  // compares against a target lap (Lap Timer, Delta Bar, ...) shares one value.
-  // Set once in the Control Center, instead of separately per overlay.
+  // s, <= 0 = no target set. Shared by every overlay that compares against a target
+  // lap (Lap Timer, Delta Bar, ...). Kept per simulator, like overlays.
   targetLapTimeSec: number
+  // Chosen by the user in the Control Center. No auto-detection.
+  simulator: SimulatorId
 }
 
 // The accent color hardcoded in theme.css (--color-accent) before the user
@@ -433,6 +525,8 @@ export interface StandingsOverlaySettings
   showNationFlag: boolean // Shows the driver's country flag.
   showManufacturerLogo: boolean // Shows the car's manufacturer logo.
   showRealTime: boolean // Shows real time in header.
+  showPitStops: boolean
+  showPenalties: boolean
 }
 
 export interface TiresOverlaySettings extends BaseOverlaySettings {
@@ -443,6 +537,10 @@ export interface TiresOverlaySettings extends BaseOverlaySettings {
 export interface TelemetryOverlaySettings extends BaseOverlaySettings {
   /** Shows the numeric RPM readout next to the shift-light LED bar. */
   showRpmNumber: boolean
+}
+
+export interface FuelOverlaySettings extends BaseOverlaySettings {
+  showLapHistory: boolean
 }
 
 export interface FlagsOverlaySettings extends BaseOverlaySettings {
@@ -459,7 +557,7 @@ export interface DeltaBarOverlaySettings extends BaseOverlaySettings {
 
 export type OverlaySettingsMap = {
   telemetry: TelemetryOverlaySettings
-  fuel: BaseOverlaySettings
+  fuel: FuelOverlaySettings
   'lap-timer': BaseOverlaySettings
   incidents: BaseOverlaySettings
   standings: StandingsOverlaySettings
@@ -468,6 +566,7 @@ export type OverlaySettingsMap = {
   tires: TiresOverlaySettings
   flags: FlagsOverlaySettings
   'delta-bar': DeltaBarOverlaySettings
+  damage: BaseOverlaySettings
 }
 
 export type AnyOverlaySettings = OverlaySettingsMap[OverlayId]
@@ -480,7 +579,7 @@ const DEFAULT_TRACKMAP_OPACITY = 0.35
 
 export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
   telemetry: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showRpmNumber: true },
-  fuel: { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
+  fuel: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showLapHistory: true },
   'lap-timer': { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
   incidents: { scale: 1, opacity: DEFAULT_PANEL_OPACITY },
   standings: {
@@ -497,6 +596,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
     showBestLapTime: true,
     showNationFlag: false,
     showManufacturerLogo: false,
+    showPitStops: false,
+    showPenalties: false,
     showLastLapTime: true,
     showRealTime: false
   },
@@ -516,7 +617,8 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettingsMap = {
   tires: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showWearPct: true },
   flags: { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showLabel: false },
   // opacity is unused (no panel background), kept only because BaseOverlaySettings requires it.
-  'delta-bar': { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showDeltaNumber: true, barWidthPx: 360 }
+  'delta-bar': { scale: 1, opacity: DEFAULT_PANEL_OPACITY, showDeltaNumber: true, barWidthPx: 360 },
+  damage: { scale: 1, opacity: DEFAULT_PANEL_OPACITY }
 }
 
 // Main -> renderer broadcast channel for a single overlay's settings, one channel per overlay id
@@ -536,17 +638,20 @@ export const IPC = {
   STANDINGS_UPDATE: 'standings:update',
   RELATIVE_UPDATE: 'relative:update',
   TRACKMAP_UPDATE: 'trackmap:update',
+  TRACK_SHAPE_UPDATE: 'track-shape:update',
   FLAGS_UPDATE: 'flags:update',
   CONNECTION_STATUS: 'connection:status',
   CONFIG_UPDATED: 'config:updated',
 
   // Renderer -> main (invoke/handle)
   CONFIG_GET: 'config:get',
+  TRACK_SHAPE_GET: 'track-shape:get',
   CONFIG_SET_OVERLAY: 'config:set-overlay',
   EDIT_MODE_SET: 'edit-mode:set',
   ACCENT_COLOR_SET: 'accent-color:set',
   COLOR_CORRECTION_MODE_SET: 'color-correction-mode:set',
   TARGET_LAP_TIME_SET: 'target-lap-time:set',
+  SIMULATOR_SET: 'simulator:set',
   OVERLAY_BOUNDS_SET: 'overlay:set-bounds',
   OVERLAY_CONTENT_SIZE_SET: 'overlay:set-content-size',
   OVERLAY_SETTINGS_GET: 'overlay-settings:get',

@@ -1,6 +1,12 @@
-import type { ColorCorrectionMode, OverlayId } from './types'
+import type { ColorCorrectionMode, OverlayId, SimulatorId } from './types'
 
-const stintLapsHint = 'iRacing does not provide this info. It is calculated internally from tracked laps. ' +
+// Without simulators the hint applies to every sim.
+export interface Hint {
+  text: string
+  simulators?: readonly SimulatorId[]
+}
+
+const stintLapsHint = 'The sim does not provide this info. It is calculated internally from tracked laps. ' +
     'When the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits, ' +
     'it is not tracked and the stint laps won\'t be correct when you reconnect and start YAiRO until the car boxes.'
 
@@ -8,14 +14,25 @@ export const messages = {
   control: {
     appTitle: 'Yet Another iRacing Overlay',
     loading: 'Loading configuration…',
-    connected: '● iRacing connected',
-    disconnected: '○ iRacing not active',
+    connected: (simName: string) => `● ${simName} connected`,
+    disconnected: (simName: string) => `○ ${simName} not active`,
+    simulatorHeading: 'Simulation',
+    simulators: {
+      iracing: { name: 'iRacing', mark: 'iR', setupHint: '' },
+      lmu: {
+        name: 'Le Mans Ultimate',
+        mark: 'LMU',
+        setupHint: 'No data. Turn on "Settings > Gameplay > Enable Plugins" in LMU and restart LMU.'
+      }
+    } as Record<SimulatorId, { name: string; mark: string; setupHint: string }>,
+    simulatorConnected: 'connected',
+    simulatorWaiting: 'waiting for sim',
+    simulatorInactive: 'inactive',
     overlaysHeading: 'Overlays',
-    // Only overlays with an entry here get the info ('i') button next to
-    // their name in the Control Center. Undefined = no hint yet, no button.
+    // Info ('i') button next to the overlay name. Only shown if a hint applies to the active sim.
     overlayHints: {
-      tires: 'The Data is only updated when pitting.'
-    } as Partial<Record<OverlayId, string>>,
+      tires: [{ text: 'The data is only updated when pitting.', simulators: ['iracing'] }]
+    } as Partial<Record<OverlayId, Hint[]>>,
     updateAvailable: (version: string) => `A new version (${version}) is available.`,
     updateAvailableLink: 'View release',
     positioningHeading: 'Positioning',
@@ -52,9 +69,10 @@ export const messages = {
     columnBest: 'Best',
     columnAvgLap: 'Avg',
     columnLast: 'Last',
+    columnPitStops: 'Pit',
     leader: 'LEADER',
-    classMeta: (driverCount: number, strengthOfField: number) =>
-      `${driverCount} Driver · SoF ${strengthOfField}`,
+    classMeta: (driverCount: number, strengthOfField: number | null) =>
+      strengthOfField === null ? `${driverCount} Driver` : `${driverCount} Driver · SoF ${strengthOfField}`,
     gripLabel: 'GRIP'
   },
   relative: {
@@ -84,7 +102,7 @@ export const messages = {
     showIRating: 'Show iRating',
     showSafetyRating: 'Show Safety Rating',
     showStint: 'Show stint laps',
-    showStintHint: stintLapsHint,
+    showStintHints: [{ text: stintLapsHint }] as Hint[],
     showAvgLapTime: 'Show average lap time',
     showBestLapTime: 'Show best lap time',
     showNationFlag: 'Show country flag',
@@ -97,6 +115,9 @@ export const messages = {
     resetTargetTime: 'Reset target time',
     resetTargetTime_short: 'Reset',
     showLastLapTime: 'Show last lap time',
+    showPitStops: 'Show pit stops',
+    showLapHistory: 'Show usage of last laps',
+    showPenalties: 'Show penalty flag',
     showRealTime: 'Show real time',
     showDeltaNumber: 'Show delta number',
     barWidth: 'Bar width',
@@ -106,7 +127,9 @@ export const messages = {
     lapLabel: 'LAP',
     lastLap: 'Last',
     bestLap: 'Best',
-    targetLap: 'Target'
+    targetLap: 'Target',
+    trackLimits: 'Track Limits',
+    trackLimitsValue: (points: number, penaltyAt: number) => `${points.toFixed(2)} / ${penaltyAt.toFixed(0)}`
   },
   telemetry: {
     speedUnit: 'km/h',
@@ -122,6 +145,7 @@ export const messages = {
   },
   fuel: {
     unit: 'l',
+    unitVirtualEnergy: '% VE',
     lapsRemaining: (laps: number) => `~${laps.toFixed(1)} LAPS`,
     rangeUnknown: 'Range: –',
     statLastConsumption: 'LAST',
@@ -129,9 +153,12 @@ export const messages = {
     statPitBy: 'PIT BY',
     statRemaining: '@END',
     statNextFill: 'NEXT FILL',
+    statPitTime: 'PIT TIME',
     statStopsLeft: 'Stops',
     predictionsLabel: 'Predictions',
-    consumptionLabel: 'Usage /Lap'
+    consumptionLabel: 'Usage /Lap',
+    historyLabel: 'Last Laps',
+    historyLap: (lap: number) => `L${lap}`
   },
   incidents: {
     driver: 'Driver',
@@ -141,6 +168,10 @@ export const messages = {
   },
   tires: {
     tempUnit: '°C'
+  },
+  damage: {
+    overheating: 'OVERHEATING',
+    partsDetached: 'PARTS LOST'
   },
   flags: {
     none: 'NO FLAG',
