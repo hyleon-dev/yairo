@@ -19,6 +19,7 @@ Changes go live within about 5 minutes after the push (GitHub cache).
     "title": "Le Mans Ultimate is now supported",
     "file": "2026-10-lmu.md",
     "priority": "high",
+    "showUpdate": "v1.0.0-pre4",
     "maxVersion": "1.5.99",
     "expires": "2026-12-31"
   }
@@ -28,10 +29,11 @@ Changes go live within about 5 minutes after the push (GitHub cache).
 | Field        | Required | Meaning |
 |--------------|----------|---------|
 | `id`         | yes      | Unique, never reuse it. The app uses it to remember "read". |
-| `date`       | yes      | ISO date, sorts the news (newest first). |
+| `date`       | yes      | ISO date (`"2026-10-15"`) or date with time (`"2026-10-15T14:30"`). Sorts the news, newest first. The app shows only the date. Add a time to order several news on the same day. Without a time, news with the same date keep their order in `index.json` (earlier in the array = shown as newer). |
 | `title`      | yes      | Text in the banner and heading in the modal. |
 | `file`       | yes      | Markdown file relative to this branch. |
 | `priority`   | no       | `high` = modal at startup, otherwise (`normal`) banner only. |
+| `showUpdate` | no       | Update button in the modal. `true` = latest release (only if newer than installed). A release tag like `"v1.0.0-pre4"` = minimum version: links to the newest full release >= this tag, else the newest pre-release >= this tag (only if newer than installed). So a news can point to `v1.0.0-pre4` first and switches to `v1.0.0` by itself once that is released. |
 | `minVersion` | no       | Only for app versions >= this value. |
 | `maxVersion` | no       | Only for app versions <= this value (e.g. "only users not yet on 1.6"). |
 | `expires`    | no       | ISO date, not shown anymore from the following day. |
