@@ -1,4 +1,4 @@
-import type { FuelOverlaySettings, TelemetryData } from '../../../../shared/types'
+import { SIM_FEATURES, type FuelOverlaySettings, type TelemetryData } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import './FuelOverlay.css'
 
@@ -17,6 +17,7 @@ export function FuelOverlay({ data, settings }: { data: TelemetryData; settings:
   const lastLap = data.fuelEstimate?.lastLap ?? null
   const avgLast5 = data.fuelEstimate?.avgLast5 ?? null
   const nextPitFill = data.fuelEstimate?.nextPitFill ?? null
+  const pitStopTimeSec = data.fuelEstimate?.pitStopTimeSec ?? null
   const stopsRemaining = data.fuelEstimate?.stopsRemaining ?? null
   const lapHistory = data.fuelEstimate?.lapHistory ?? []
   const isVirtualEnergy = data.virtualEnergyPct !== null
@@ -71,6 +72,9 @@ export function FuelOverlay({ data, settings }: { data: TelemetryData; settings:
         </div>
         <div className="fuel-stats-row" style={{ border: '0', paddingTop: '4px' }}>
           <FuelStat label={m.statNextFill} value={nextPitFill !== null ? amount(nextPitFill) : '–'} />
+          {SIM_FEATURES[data.sim].pitStopEstimate && (
+            <FuelStat label={m.statPitTime} value={pitStopTimeSec !== null ? `${pitStopTimeSec.toFixed(1)} s` : '–'} />
+          )}
         </div>
       </div>
 

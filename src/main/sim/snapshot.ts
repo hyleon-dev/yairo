@@ -1,4 +1,4 @@
-import type { DamageData, SimulatorId, TiresData, TrackShape, TrackSurfaceStatus } from '../../shared/types'
+import type { DamageData, SimulatorId, TiresData, TrackLimits, TrackShape, TrackSurfaceStatus } from '../../shared/types'
 
 // Simulator-independent view of one tick. Each SimSource maps its own SDK onto this,
 // and all overlay payloads are built from it (see sim/core).
@@ -106,6 +106,7 @@ export interface SimPlayerCar {
   fuelLevelPct: number // 0..1
   fuelCapacityL: number // 0 if unknown
   nextPitFill: number | null // liters, or % VE if virtualEnergyPct is set
+  pitStopTimeSec?: number | null
   virtualEnergyPct: number | null // 0..100, null if the car has no virtual energy
   lap: number
   lapDistPct: number
@@ -119,6 +120,7 @@ export interface SimPlayerCar {
   incidentCount: number
   tires: TiresData
   damage?: DamageData
+  trackLimits?: TrackLimits
 }
 
 export interface SimSnapshot {

@@ -38,7 +38,8 @@ const NO_TELEMETRY: Omit<TelemetryData, 'sim'> = {
   incidentLimit: '',
   tires: ZERO_TIRES,
   hasTireData: false,
-  damage: null
+  damage: null,
+  trackLimits: null
 }
 
 let lastSpeedSample: { carIdx: number; lapDistPct: number; sessionTime: number } | null = null
@@ -107,7 +108,8 @@ export function buildTelemetry(snap: SimSnapshot): TelemetryData {
       incidentLimit,
       tires: player.tires,
       hasTireData: true,
-      damage: player.damage ?? null
+      damage: player.damage ?? null,
+      trackLimits: player.trackLimits ?? null
     }
   }
 
@@ -157,6 +159,7 @@ export function buildTelemetry(snap: SimSnapshot): TelemetryData {
     incidentLimit,
     tires: car?.tires ?? ZERO_TIRES,
     hasTireData: car?.tires !== undefined,
-    damage: null
+    damage: null,
+    trackLimits: null
   }
 }

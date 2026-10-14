@@ -67,7 +67,8 @@ const EMPTY_TELEMETRY: Omit<TelemetryData, 'sim'> = {
   incidentLimit: '-',
   tires: { lf: EMPTY_WHEEL, rf: EMPTY_WHEEL, lr: EMPTY_WHEEL, rr: EMPTY_WHEEL },
   hasTireData: false,
-  damage: null
+  damage: null,
+  trackLimits: null
 }
 
 const EMPTY_STANDINGS: Omit<StandingsData, 'sim'> = {

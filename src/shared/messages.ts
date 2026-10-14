@@ -127,7 +127,9 @@ export const messages = {
     lapLabel: 'LAP',
     lastLap: 'Last',
     bestLap: 'Best',
-    targetLap: 'Target'
+    targetLap: 'Target',
+    trackLimits: 'Track Limits',
+    trackLimitsValue: (points: number, penaltyAt: number) => `${points.toFixed(2)} / ${penaltyAt.toFixed(0)}`
   },
   telemetry: {
     speedUnit: 'km/h',
@@ -151,6 +153,7 @@ export const messages = {
     statPitBy: 'PIT BY',
     statRemaining: '@END',
     statNextFill: 'NEXT FILL',
+    statPitTime: 'PIT TIME',
     statStopsLeft: 'Stops',
     predictionsLabel: 'Predictions',
     consumptionLabel: 'Usage /Lap',

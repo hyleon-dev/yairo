@@ -13,6 +13,8 @@ export interface LmuScoringInfo {
   session: number
   currentET: number
   sessionTimeRemaining: number
+  trackLimitsStepsPerPoint: number
+  trackLimitsStepsPerPenalty: number
   maxLaps: number
   lapDist: number
   numVehicles: number
@@ -71,6 +73,7 @@ export interface LmuTelemetry {
   fuelCapacity: number
   virtualEnergy: number // 0..1, 0 for cars without virtual energy
   speedLimiterActive: boolean
+  trackLimitsSteps: number // points * trackLimitsStepsPerPoint
   deltaBest: number
   vehicleModel: string
   vehicleClass: number // IP_VehicleClass
@@ -107,6 +110,8 @@ function parseScoringInfo(buf: Buffer): LmuScoringInfo {
     session: buf.readInt32LE(b + s.mSession),
     currentET: buf.readDoubleLE(b + s.mCurrentET),
     sessionTimeRemaining: buf.readFloatLE(b + s.mSessionTimeRemaining),
+    trackLimitsStepsPerPoint: buf.readUInt8(b + s.mTrackLimitsStepsPerPoint),
+    trackLimitsStepsPerPenalty: buf.readUInt8(b + s.mTrackLimitsStepsPerPenalty),
     maxLaps: buf.readInt32LE(b + s.mMaxLaps),
     lapDist: buf.readDoubleLE(b + s.mLapDist),
     numVehicles: buf.readInt32LE(b + s.mNumVehicles),
@@ -176,6 +181,7 @@ function parseTelemetry(buf: Buffer, idx: number): LmuTelemetry {
     fuelCapacity: buf.readDoubleLE(b + t.mFuelCapacity),
     virtualEnergy: buf.readFloatLE(b + t.mVirtualEnergy),
     speedLimiterActive: buf.readUInt8(b + t.mSpeedLimiterActive) !== 0,
+    trackLimitsSteps: buf.readUInt8(b + t.mTrackLimitsSteps),
     deltaBest: buf.readDoubleLE(b + t.mDeltaBest),
     vehicleModel: str(buf, b + t.mVehicleModel, 30),
     vehicleClass: buf.readUInt8(b + t.mVehicleClass),

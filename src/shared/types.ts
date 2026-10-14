@@ -72,6 +72,8 @@ export interface TelemetryData {
   hasTireData: boolean
   // Own car only. null while spectating or if the sim has no damage data (iRacing).
   damage: DamageData | null
+  // Own car only. null while spectating or if the sim has no track limits points (iRacing).
+  trackLimits: TrackLimits | null
 }
 
 // --- Tires ------------------------------------------------------------
@@ -89,6 +91,11 @@ export interface TiresData {
   rf: TireWheelData
   lr: TireWheelData
   rr: TireWheelData
+}
+
+export interface TrackLimits {
+  points: number
+  penaltyAtPoints: number // a penalty is given when points reach this
 }
 
 export type DamageLevel = 0 | 1 | 2 // none, some, heavy
@@ -148,6 +155,8 @@ export interface FuelEstimate {
   // iRacing: PitSvFuel, tracks "Auto Fill" live. LMU: VE target minus current VE.
   // null while not driving our own car or if the pit menu is unknown.
   nextPitFill: number | null
+  // s, estimated standing time of the next stop with the current pit menu. LMU only.
+  pitStopTimeSec: number | null
   // How many more pit stops for fuel are needed before the session ends. Assumes
   // a full refill every stop (see estimateStopsRemaining() in irsdkWorker.ts for
   // the underlying laps-to-go/consumption math). null without a consumption
@@ -424,6 +433,7 @@ export interface SimFeatures {
   // Tire data updates while driving, not only in the pits.
   liveTires: boolean
   pitStopCounts: boolean
+  pitStopEstimate: boolean
   // Track rubber/grip state in the Standings header.
   trackGrip: boolean
   // Outstanding penalty per car (LMU count, iRacing black flag).
@@ -433,8 +443,8 @@ export interface SimFeatures {
 }
 
 export const SIM_FEATURES: Record<SimulatorId, SimFeatures> = {
-  iracing: { driverRatings: true, liveTires: false, pitStopCounts: false, trackGrip: true, penaltyFlags: true, unsupportedOverlays: ['damage'] },
-  lmu: { driverRatings: false, liveTires: true, pitStopCounts: true, trackGrip: false, penaltyFlags: true, unsupportedOverlays: ['incidents'] }
+  iracing: { driverRatings: true, liveTires: false, pitStopCounts: false, pitStopEstimate: false, trackGrip: true, penaltyFlags: true, unsupportedOverlays: ['damage'] },
+  lmu: { driverRatings: false, liveTires: true, pitStopCounts: true, pitStopEstimate: true, trackGrip: false, penaltyFlags: true, unsupportedOverlays: ['incidents'] }
 }
 
 export function isOverlaySupported(sim: SimulatorId, id: OverlayId): boolean {

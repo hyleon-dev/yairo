@@ -4,12 +4,13 @@ import {
   type DamageLevel,
   type TireWheelData,
   type TiresData,
+  type TrackLimits,
   type TrackSurfaceStatus,
   type WheelDamage
 } from '../../../shared/types'
 import type { SimCar, SimPlayerCar, SimSession, SimShiftLights, SimSnapshot, SimSource } from '../snapshot'
 import { LmuSharedMemory } from './lmuSharedMemory'
-import { parseFrame, type LmuFrame, type LmuTelemetry, type LmuVec3, type LmuVehicleScoring, type LmuWheel } from './lmuParse'
+import { parseFrame, type LmuFrame, type LmuScoringInfo, type LmuTelemetry, type LmuVec3, type LmuVehicleScoring, type LmuWheel } from './lmuParse'
 import { isRestReachable, LmuCarNumbers, LmuFocusPoller, LmuPitMenu, LmuNationalities, LmuSessionWatcher, LmuTrackShapeLoader, toMapPoint } from './lmuRest'
 
 // LMU sends telemetry at 100 Hz. Overlays don't need more than this.
@@ -59,7 +60,7 @@ const GAME_PHASE = { green: 5, fullCourseYellow: 6, stopped: 7, over: 8, paused:
 
 export type NationalityLookup = Pick<LmuNationalities, 'lookup'>
 export type CarNumberLookup = Pick<LmuCarNumbers, 'lookup'>
-export type PitMenuState = Pick<LmuPitMenu, 'veTargetPct'>
+export type PitMenuState = Pick<LmuPitMenu, 'veTargetPct' | 'pitStopTimeSec'>
 
 const sleepArray = new Int32Array(new SharedArrayBuffer(4))
 
@@ -191,7 +192,7 @@ export function buildSnapshot(
     ownCarIdx,
     focusCarIdx: isDriving || !focusIsKnown ? ownCarIdx : focusCarId,
     isDriving,
-    player: isDriving && own && ownTelemetry ? buildPlayerCar(own, ownTelemetry, scoring.lapDist, pitMenu) : null,
+    player: isDriving && own && ownTelemetry ? buildPlayerCar(own, ownTelemetry, scoring, pitMenu) : null,
     cars: buildCars(frame, telemetryById, nationalities, carNumbers)
   }
 }
@@ -445,6 +446,12 @@ function buildDamage(telemetry: LmuTelemetry): DamageData {
   }
 }
 
+function trackLimits(telemetry: LmuTelemetry, scoring: LmuScoringInfo): TrackLimits | undefined {
+  const perPoint = scoring.trackLimitsStepsPerPoint
+  if (perPoint <= 0) return undefined
+  return { points: telemetry.trackLimitsSteps / perPoint, penaltyAtPoints: scoring.trackLimitsStepsPerPenalty / perPoint }
+}
+
 function nextPitFill(telemetry: LmuTelemetry, pitMenu: PitMenuState): number | null {
   const ve = virtualEnergyPct(telemetry)
   if (ve === null || pitMenu.veTargetPct === null) return null
@@ -454,7 +461,7 @@ function nextPitFill(telemetry: LmuTelemetry, pitMenu: PitMenuState): number | n
 function buildPlayerCar(
   vehicle: LmuVehicleScoring,
   telemetry: LmuTelemetry,
-  trackLength: number,
+  scoring: LmuScoringInfo,
   pitMenu: PitMenuState
 ): SimPlayerCar {
   return {
@@ -470,9 +477,10 @@ function buildPlayerCar(
     fuelLevelPct: telemetry.fuelCapacity > 0 ? telemetry.fuel / telemetry.fuelCapacity : 1,
     fuelCapacityL: telemetry.fuelCapacity,
     nextPitFill: nextPitFill(telemetry, pitMenu),
+    pitStopTimeSec: pitMenu.pitStopTimeSec,
     virtualEnergyPct: virtualEnergyPct(telemetry),
     lap: vehicle.totalLaps + 1,
-    lapDistPct: wrapLapDistPct(vehicle.lapDist, trackLength),
+    lapDistPct: wrapLapDistPct(vehicle.lapDist, scoring.lapDist),
     lapCurrentTime: telemetry.elapsedTime - telemetry.lapStartET,
     lapLastTime: vehicle.lastLapTime,
     lapBestTime: vehicle.bestLapTime,
@@ -482,6 +490,7 @@ function buildPlayerCar(
     pitLimiterActive: telemetry.speedLimiterActive,
     incidentCount: -1,
     tires: buildTires(telemetry),
-    damage: buildDamage(telemetry)
+    damage: buildDamage(telemetry),
+    trackLimits: trackLimits(telemetry, scoring)
   }
 }

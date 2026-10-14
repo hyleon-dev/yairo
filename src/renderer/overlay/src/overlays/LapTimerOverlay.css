@@ -77,3 +77,16 @@
 .delta-target {
   font-weight: bold;
 }
+
+.track-limits {
+  margin-top: 6px;
+  margin-bottom: 0;
+}
+.track-limits-val {
+  font-size: var(--font-body-sm);
+  color: var(--color-text-soft);
+}
+.track-limits-val--warn {
+  color: var(--color-danger);
+  font-weight: 700;
+}

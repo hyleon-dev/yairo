@@ -125,6 +125,8 @@ interface RestPitMenuEntry {
 export class LmuPitMenu {
   // VE level after the stop in %, e.g. "100% 32 laps". null for cars without VE.
   veTargetPct: number | null = null
+  // s, from /rest/strategy/pitstop-estimate (sum of damage, fuel, tires, ... times).
+  pitStopTimeSec: number | null = null
   private timer: NodeJS.Timeout | null = null
   private busy = false
 
@@ -138,13 +140,19 @@ export class LmuPitMenu {
     if (this.timer) clearInterval(this.timer)
     this.timer = null
     this.veTargetPct = null
+    this.pitStopTimeSec = null
   }
 
   private async poll(): Promise<void> {
     if (this.busy) return
     this.busy = true
     try {
-      const menu = await getJson('/rest/garage/PitMenu/receivePitMenu')
+      const [menu, estimate] = await Promise.all([
+        getJson('/rest/garage/PitMenu/receivePitMenu'),
+        getJson('/rest/strategy/pitstop-estimate')
+      ])
+      const total = (estimate as { total?: unknown } | null | undefined)?.total
+      this.pitStopTimeSec = typeof total === 'number' ? total : null
       const entry = Array.isArray(menu)
         ? (menu as RestPitMenuEntry[]).find((e) => e.name === 'VIRTUAL ENERGY:')
         : undefined

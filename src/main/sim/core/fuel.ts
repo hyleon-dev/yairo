@@ -190,7 +190,14 @@ function estimateStopsRemaining(
 export function buildFuelEstimate(snap: SimSnapshot, player: SimPlayerCar): FuelEstimate {
   // The pit menu value doesn't need any driven lap.
   if (fuelPerLapHistory.length === 0) {
-    return { lastLap: null, avgLast5: null, lapHistory: [], nextPitFill: player.nextPitFill, stopsRemaining: null }
+    return {
+      lastLap: null,
+      avgLast5: null,
+      lapHistory: [],
+      nextPitFill: player.nextPitFill,
+      pitStopTimeSec: player.pitStopTimeSec ?? null,
+      stopsRemaining: null
+    }
   }
 
   const { lap: currentLap } = player
@@ -211,6 +218,7 @@ export function buildFuelEstimate(snap: SimSnapshot, player: SimPlayerCar): Fuel
     avgLast5: buildFuelLapEstimate(avgConsumption, fuelLevel, lapStartFuelLevel, currentLap),
     lapHistory: [...fuelPerLapHistory],
     nextPitFill: player.nextPitFill,
+    pitStopTimeSec: player.pitStopTimeSec ?? null,
     // Uses the average-of-5 consumption rather than last-lap. This projects
     // across many remaining laps, so a stable rate matters more here than
     // reacting fast to a single outlier lap.

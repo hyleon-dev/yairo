@@ -197,7 +197,7 @@ export class FakeLmuSource implements SimSource {
     const frame = this.buildFrame()
     const showGreen = this.greenFlag.update(frame.scoring.gamePhase, frame.scoring.currentET)
     return {
-      ...buildSnapshot(frame, -1, this.nationalities, this.carNumbers, { veTargetPct: 100 }, showGreen),
+      ...buildSnapshot(frame, -1, this.nationalities, this.carNumbers, { veTargetPct: 100, pitStopTimeSec: 42.5 }, showGreen),
       trackShape: this.trackShape
     }
   }
@@ -301,6 +301,7 @@ export class FakeLmuSource implements SimSource {
         fuelCapacity: car.fuelCapacity,
         virtualEnergy: car.ve,
         speedLimiterActive: car.inGarage,
+        trackLimitsSteps: car.id === PLAYER_ID ? 6 : 0,
         deltaBest: car.bestLapTime > 0 ? 0.4 * Math.sin(lapFraction * 2 * Math.PI) : 0,
         vehicleModel: car.vehicleModel,
         vehicleClass: car.classEnum,
@@ -331,7 +332,9 @@ export class FakeLmuSource implements SimSource {
         inRealtime: true,
         ambientTemp: 18,
         trackTemp: 27,
-        sessionTimeRemaining: Math.max(0, SESSION_DURATION_SEC - this.currentET)
+        sessionTimeRemaining: Math.max(0, SESSION_DURATION_SEC - this.currentET),
+        trackLimitsStepsPerPoint: 4,
+        trackLimitsStepsPerPenalty: 20
       },
       vehicles,
       playerHasVehicle: true,
