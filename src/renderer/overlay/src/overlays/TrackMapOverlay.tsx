@@ -1,5 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import type { TrackMapData, TrackMapDriver } from '../../../../shared/types'
+import type { TrackMapData, TrackMapDriver, TrackShape } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import { TRACK_MAP_SHAPES, TRACK_MAP_VIEW_BOX } from '../trackmaps/registry'
 import './TrackMapOverlay.css'
@@ -18,7 +18,66 @@ const FALLBACK_VIEW_BOX = '0 0 200 200'
 const FALLBACK_CENTER = 100
 const FALLBACK_RADIUS = 80
 
-export function TrackMapOverlay({ data }: { data: TrackMapData }) {
+// Marker size relative to the viewBox width, same look as the iRacing maps (1920 wide).
+const WORLD_DOT_RADIUS = 20 / 1920
+const WORLD_PLAYER_DOT_RADIUS = 34 / 1920
+const WORLD_DOT_STROKE = 4 / 1920
+const PIT_MASK_ID = 'trackmap-pit-mask'
+// Covers any track in world meters, independent of the rotation.
+const MASK_EXTENT = 100_000
+
+export function TrackMapOverlay({ data, trackShape }: { data: TrackMapData; trackShape: TrackShape | null }) {
+  if (trackShape) return <WorldTrackMap data={data} shape={trackShape} />
+  // LMU without a map is in the menu or loading. Its shared memory still holds the old cars there.
+  if (data.sim === 'lmu') return <div className="trackmap trackmap--idle" />
+  return <SvgTrackMap data={data} />
+}
+
+// Outline and car positions both in world coordinates (LMU).
+function WorldTrackMap({ data, shape }: { data: TrackMapData; shape: TrackShape }) {
+  const viewBoxWidth = Number(shape.viewBox.split(' ')[2]) || 1
+  const placed = data.drivers.filter((d) => d.x !== undefined && d.y !== undefined)
+  // Player last, so it is drawn on top.
+  placed.sort((a, b) => Number(a.isPlayer) - Number(b.isPlayer))
+
+  return (
+    <div className="trackmap">
+      <svg viewBox={shape.viewBox} className="trackmap-svg">
+        <g transform={shape.transform || undefined}>
+          {
+            // Both lines are translucent. The mask cuts the pit lane where the track lies,
+            // so the pit lane runs into the track instead of showing through it.
+          }
+          <mask id={PIT_MASK_ID} maskUnits="userSpaceOnUse" x={-MASK_EXTENT} y={-MASK_EXTENT} width={2 * MASK_EXTENT} height={2 * MASK_EXTENT}>
+            <rect x={-MASK_EXTENT} y={-MASK_EXTENT} width={2 * MASK_EXTENT} height={2 * MASK_EXTENT} fill="white" />
+            <path d={shape.trackPath} className="trackmap-outline trackmap-outline--world" style={{ stroke: 'black' }} vectorEffect="non-scaling-stroke" />
+          </mask>
+          {shape.pitPath && (
+            <path
+              d={shape.pitPath}
+              className="trackmap-outline trackmap-pitlane"
+              mask={`url(#${PIT_MASK_ID})`}
+              vectorEffect="non-scaling-stroke"
+            />
+          )}
+          <path d={shape.trackPath} className="trackmap-outline trackmap-outline--world" vectorEffect="non-scaling-stroke" />
+          {placed.map((driver) => (
+            <circle
+              key={driver.carIdx}
+              cx={driver.x}
+              cy={driver.y}
+              r={(driver.isPlayer ? WORLD_PLAYER_DOT_RADIUS : WORLD_DOT_RADIUS) * viewBoxWidth}
+              className={dotClassName(driver)}
+              style={{ fill: driver.classColorHex, strokeWidth: WORLD_DOT_STROKE * viewBoxWidth }}
+            />
+          ))}
+        </g>
+      </svg>
+    </div>
+  )
+}
+
+function SvgTrackMap({ data }: { data: TrackMapData }) {
   const pathRef = useRef<SVGPathElement>(null)
   const [dots, setDots] = useState<Dot[]>([])
   const shape = TRACK_MAP_SHAPES[String(data.trackId)]

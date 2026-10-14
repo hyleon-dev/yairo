@@ -1,4 +1,4 @@
-import type { SimulatorId, TiresData, TrackSurfaceStatus } from '../../shared/types'
+import type { SimulatorId, TiresData, TrackShape, TrackSurfaceStatus } from '../../shared/types'
 
 // Simulator-independent view of one tick. Each SimSource maps its own SDK onto this,
 // and all overlay payloads are built from it (see sim/core).
@@ -69,6 +69,8 @@ export interface SimCar {
   gear: number
   // Undefined if the sim has no per-car speed. Then it is estimated from lapDistPct.
   speedKph?: number
+  // TrackShape coordinates. Undefined if the sim has no world positions.
+  worldPos?: { x: number; y: number }
   official?: SimOfficialResult
 }
 
@@ -111,6 +113,8 @@ export interface SimSnapshot {
   isDriving: boolean
   player: SimPlayerCar | null // null while not driving
   cars: SimCar[]
+  // Same object until the layout changes. Undefined if the sim has no track outline.
+  trackShape?: TrackShape | null
 }
 
 export interface SimSource {

@@ -273,6 +273,20 @@ export interface TrackMapDriver {
   lapDistPct: number // 0..1, position along the lap.
   surface: TrackSurfaceStatus
   isPlayer: boolean
+  // Position in TrackShape coordinates. Only set by sims with world positions (LMU).
+  x?: number
+  y?: number
+}
+
+// Track outline in world coordinates (meters, y = north). Comes from the sim (LMU),
+// not from the bundled iRacing SVGs. Sent only when the layout changes.
+export interface TrackShape {
+  key: string
+  trackPath: string
+  pitPath: string
+  // SVG transform for paths and cars. Tracks are rotated to fill the landscape overlay.
+  transform: string
+  viewBox: string
 }
 
 export interface TrackMapData {
@@ -567,12 +581,14 @@ export const IPC = {
   STANDINGS_UPDATE: 'standings:update',
   RELATIVE_UPDATE: 'relative:update',
   TRACKMAP_UPDATE: 'trackmap:update',
+  TRACK_SHAPE_UPDATE: 'track-shape:update',
   FLAGS_UPDATE: 'flags:update',
   CONNECTION_STATUS: 'connection:status',
   CONFIG_UPDATED: 'config:updated',
 
   // Renderer -> main (invoke/handle)
   CONFIG_GET: 'config:get',
+  TRACK_SHAPE_GET: 'track-shape:get',
   CONFIG_SET_OVERLAY: 'config:set-overlay',
   EDIT_MODE_SET: 'edit-mode:set',
   ACCENT_COLOR_SET: 'accent-color:set',

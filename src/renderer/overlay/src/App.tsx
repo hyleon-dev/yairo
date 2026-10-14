@@ -13,7 +13,8 @@ import type {
   TelemetryData,
   TelemetryOverlaySettings,
   TiresOverlaySettings,
-  TrackMapData
+  TrackMapData,
+  TrackShape
 } from '../../../shared/types'
 import { useOverlayBridge } from './useOverlayBridge'
 import { useReportContentSize } from './useReportContentSize'
@@ -93,7 +94,7 @@ function useOverlayId(): OverlayId {
 
 export default function App() {
   const overlayId = useOverlayId()
-  const { telemetry, standings, relative, trackMap, flags, editMode, settings, targetLapTimeSec, simulator } =
+  const { telemetry, standings, relative, trackMap, trackShape, flags, editMode, settings, targetLapTimeSec, simulator } =
     useOverlayBridge(overlayId)
   const contentRef = useReportContentSize(overlayId, editMode, settings.scale)
 
@@ -115,7 +116,7 @@ export default function App() {
         // useReportContentSize pick up a scale change.
       }
       <div ref={contentRef} className="overlay-content" style={{ zoom: settings.scale }}>
-        {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, flags, settings, targetLapTimeSec, simulator)}
+        {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, trackShape, flags, settings, targetLapTimeSec, simulator)}
       </div>
     </div>
   )
@@ -127,6 +128,7 @@ function renderOverlayContent(
   standings: StandingsData | null,
   relative: RelativeData | null,
   trackMap: TrackMapData | null,
+  trackShape: TrackShape | null,
   flags: FlagsData | null,
   settings: AnyOverlaySettings,
   targetLapTimeSec: number,
@@ -145,7 +147,7 @@ function renderOverlayContent(
   }
 
   if (id === 'trackmap') {
-    return <TrackMapOverlay data={trackMap ?? { ...EMPTY_TRACKMAP, sim }} />
+    return <TrackMapOverlay data={trackMap ?? { ...EMPTY_TRACKMAP, sim }} trackShape={trackShape} />
   }
 
   if (id === 'flags') {

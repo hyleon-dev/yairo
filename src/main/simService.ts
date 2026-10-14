@@ -8,7 +8,8 @@ import type {
   SimulatorId,
   StandingsData,
   TelemetryData,
-  TrackMapData
+  TrackMapData,
+  TrackShape
 } from '../shared/types'
 import type { SimWorkerCommand, SimWorkerMessage } from './simWorkerMessages'
 
@@ -20,6 +21,7 @@ interface SimServiceEvents {
   standings: (data: StandingsData) => void
   relative: (data: RelativeData) => void
   trackmap: (data: TrackMapData) => void
+  trackShape: (data: TrackShape | null) => void
   flags: (data: FlagsData) => void
   connected: () => void
   disconnected: () => void
@@ -81,6 +83,9 @@ export class SimService extends EventEmitter {
           break
         case 'flags':
           this.emit('flags', message.data)
+          break
+        case 'track-shape':
+          this.emit('trackShape', message.data)
           break
         case 'lap-completed':
           this.emit('lapCompleted', message.events)

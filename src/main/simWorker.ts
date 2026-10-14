@@ -1,5 +1,5 @@
 import { parentPort, workerData } from 'worker_threads'
-import type { SimulatorId } from '../shared/types'
+import type { SimulatorId, TrackShape } from '../shared/types'
 import type { SimSource } from './sim/snapshot'
 import { buildFrameMessages, type DisplayWindows } from './sim/core/frame'
 import { IracingSource } from './sim/iracing/iracingSource'
@@ -58,6 +58,7 @@ let lastAttachAttempt = Date.now()
 let loggedFirstAttempt = false
 let lastSessionHeartbeatAt = 0
 let lastNeedsSetup = false
+let lastTrackShape: TrackShape | null | undefined
 
 function loop(): void {
   // Nothing left to schedule after this, so the worker thread ends on its own.
@@ -81,6 +82,7 @@ function loop(): void {
       wasConnected = false
       log('connection lost')
       post({ type: 'disconnected' })
+      lastTrackShape = undefined
     }
 
     const now = Date.now()
@@ -108,6 +110,11 @@ function publishFrame(): void {
   if (!snap) return
 
   for (const message of buildFrameMessages(snap, windows)) post(message)
+
+  if (snap.trackShape !== undefined && snap.trackShape !== lastTrackShape) {
+    lastTrackShape = snap.trackShape
+    post({ type: 'track-shape', data: snap.trackShape })
+  }
 
   // Sends the remaining session time to the main process (not every tick).
   // This lets driverStatsStore.ts keep pushing back the driver-history expiry

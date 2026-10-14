@@ -22,7 +22,8 @@ import {
   type StandingsOverlaySettings,
   type UpdateStatus,
   type OverlayScreenshotResult,
-  type SimulatorId
+  type SimulatorId,
+  type TrackShape
 } from '../shared/types'
 
 const windowManager = new WindowManager()
@@ -33,6 +34,8 @@ const overlaySettingsStore = new OverlaySettingsStore()
 const driverStatsStore = new DriverStatsStore()
 
 let connectionStatus: ConnectionStatus = {connected: false, needsSetup: false}
+// Cached for overlay windows opened after the shape was sent.
+let trackShape: TrackShape | null = null
 let updateStatus: UpdateStatus = {available: false, currentVersion: app.getVersion()}
 
 // Shows the per-overlay screenshot button in the Control Center (when enabled).
@@ -119,6 +122,7 @@ function syncOverlayWindows(): void {
 
 function registerIpcHandlers(): void {
   ipcMain.handle(IPC.CONFIG_GET, () => configStore.get())
+  ipcMain.handle(IPC.TRACK_SHAPE_GET, () => trackShape)
 
   // Control Center toggles an overlay on/off or changes settings
   ipcMain.handle(IPC.CONFIG_SET_OVERLAY, (_evt, id: OverlayId, patch) => {
@@ -287,12 +291,18 @@ function registerSimEvents(): void {
   sim.on('flags', (data) => {
     broadcastToOverlays(IPC.FLAGS_UPDATE, data)
   })
+  sim.on('trackShape', (data) => {
+    trackShape = data
+    broadcastToOverlays(IPC.TRACK_SHAPE_UPDATE, data)
+  })
   sim.on('connected', () => {
     driverStatsStore.expireIfStale()
     connectionStatus = {...connectionStatus, connected: true}
     broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
   })
   sim.on('disconnected', () => {
+    trackShape = null
+    broadcastToOverlays(IPC.TRACK_SHAPE_UPDATE, null)
     connectionStatus = {...connectionStatus, connected: false}
     broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
   })

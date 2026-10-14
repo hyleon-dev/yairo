@@ -16,7 +16,9 @@ export function buildTrackMap(snap: SimSnapshot): TrackMapData {
       classColorHex: car.classColorHex,
       lapDistPct: car.lapDistPct,
       surface: car.surface,
-      isPlayer: car.carIdx === snap.focusCarIdx
+      isPlayer: car.carIdx === snap.focusCarIdx,
+      x: car.worldPos?.x,
+      y: car.worldPos?.y
     })
   }
 

@@ -14,7 +14,8 @@ import {
   type SimulatorId,
   type StandingsData,
   type TelemetryData,
-  type TrackMapData
+  type TrackMapData,
+  type TrackShape
 } from '../../../shared/types'
 import { hexToRgbTriplet } from '../../../shared/color'
 import { COLOR_CORRECTION_FILTER_SVG_ID, COLOR_CORRECTION_FILTER_SVG_MARKUP, colorCorrectionFilterId } from '../../../shared/colorCorrectionFilters'
@@ -24,6 +25,7 @@ export interface OverlayBridgeState {
   standings: StandingsData | null
   relative: RelativeData | null
   trackMap: TrackMapData | null
+  trackShape: TrackShape | null
   flags: FlagsData | null
   editMode: boolean
   settings: AnyOverlaySettings
@@ -61,6 +63,7 @@ export function useOverlayBridge(overlayId: OverlayId): OverlayBridgeState {
   const [standings, setStandings] = useState<StandingsData | null>(null)
   const [relative, setRelative] = useState<RelativeData | null>(null)
   const [trackMap, setTrackMap] = useState<TrackMapData | null>(null)
+  const [trackShape, setTrackShape] = useState<TrackShape | null>(null)
   const [flags, setFlags] = useState<FlagsData | null>(null)
   const [editMode, setEditMode] = useState(false)
   const [settings, setSettings] = useState<AnyOverlaySettings>(DEFAULT_OVERLAY_SETTINGS[overlayId])
@@ -69,7 +72,7 @@ export function useOverlayBridge(overlayId: OverlayId): OverlayBridgeState {
 
   useEffect(() => {
     const setters = {
-      setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
+      setTelemetry, setStandings, setRelative, setTrackMap, setTrackShape, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
       setSimulator
     }
     return window.overlayApi
@@ -77,7 +80,7 @@ export function useOverlayBridge(overlayId: OverlayId): OverlayBridgeState {
       : subscribeViaWebSocket(overlayId, setters)
   }, [overlayId])
 
-  return { telemetry, standings, relative, trackMap, flags, editMode, settings, targetLapTimeSec, simulator }
+  return { telemetry, standings, relative, trackMap, trackShape, flags, editMode, settings, targetLapTimeSec, simulator }
 }
 
 interface Setters {
@@ -85,6 +88,7 @@ interface Setters {
   setStandings: (d: StandingsData | null) => void
   setRelative: (d: RelativeData | null) => void
   setTrackMap: (d: TrackMapData | null) => void
+  setTrackShape: (d: TrackShape | null) => void
   setFlags: (d: FlagsData | null) => void
   setEditMode: (v: boolean) => void
   setSettings: (s: AnyOverlaySettings) => void
@@ -95,7 +99,7 @@ interface Setters {
 function subscribeViaElectron(
   overlayId: OverlayId,
   {
-    setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
+    setTelemetry, setStandings, setRelative, setTrackMap, setTrackShape, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
     setSimulator
   }: Setters
 ): () => void {
@@ -103,6 +107,7 @@ function subscribeViaElectron(
   const unsubStandings = window.overlayApi.onStandings(setStandings)
   const unsubRelative = window.overlayApi.onRelative(setRelative)
   const unsubTrackMap = window.overlayApi.onTrackMap(setTrackMap)
+  const unsubTrackShape = window.overlayApi.onTrackShape(setTrackShape)
   const unsubFlags = window.overlayApi.onFlags(setFlags)
   const unsubConfig = window.overlayApi.onConfigUpdated((cfg: AppConfig) => {
     setEditMode(cfg.editMode)
@@ -130,12 +135,14 @@ function subscribeViaElectron(
     setSimulator(cfg.simulator)
   })
   window.overlayApi.getOverlaySettings(overlayId).then(setSettings)
+  window.overlayApi.getTrackShape().then(setTrackShape)
 
   return () => {
     unsubTelemetry()
     unsubStandings()
     unsubRelative()
     unsubTrackMap()
+    unsubTrackShape()
     unsubFlags()
     unsubConfig()
     unsubSettings()
@@ -146,7 +153,7 @@ function subscribeViaElectron(
 function subscribeViaWebSocket(
     overlayId: OverlayId,
     {
-      setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
+      setTelemetry, setStandings, setRelative, setTrackMap, setTrackShape, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
       setSimulator
     }: Setters
 ): () => void {
@@ -170,6 +177,9 @@ function subscribeViaWebSocket(
         break
       case IPC.TRACKMAP_UPDATE:
         setTrackMap(payload as TrackMapData)
+        break
+      case IPC.TRACK_SHAPE_UPDATE:
+        setTrackShape(payload as TrackShape | null)
         break
       case IPC.FLAGS_UPDATE:
         setFlags(payload as FlagsData)

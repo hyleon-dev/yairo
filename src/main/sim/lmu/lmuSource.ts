@@ -2,7 +2,7 @@ import { FLAG_BITS, type TireWheelData, type TiresData, type TrackSurfaceStatus 
 import type { SimCar, SimPlayerCar, SimSession, SimSnapshot, SimSource } from '../snapshot'
 import { LmuSharedMemory } from './lmuSharedMemory'
 import { parseFrame, type LmuFrame, type LmuTelemetry, type LmuVec3, type LmuVehicleScoring, type LmuWheel } from './lmuParse'
-import { isRestReachable, LmuFocusPoller, LmuNationalities } from './lmuRest'
+import { isRestReachable, LmuFocusPoller, LmuNationalities, LmuSessionWatcher, LmuTrackShapeLoader, toMapPoint } from './lmuRest'
 
 // LMU sends telemetry at 100 Hz. Overlays don't need more than this.
 const FRAME_INTERVAL_MS = 1000 / 30
@@ -47,6 +47,8 @@ export class LmuSource implements SimSource {
   private readonly shm = new LmuSharedMemory()
   private readonly focus = new LmuFocusPoller()
   private readonly nationalities = new LmuNationalities()
+  private readonly trackShape = new LmuTrackShapeLoader()
+  private readonly session = new LmuSessionWatcher()
   private lastFrameAt = 0
   private probingRest = false
   needsSetup = false
@@ -61,9 +63,11 @@ export class LmuSource implements SimSource {
       this.needsSetup = false
       this.focus.start()
       this.nationalities.start()
+      this.session.start()
     } else {
       this.focus.stop()
       this.nationalities.stop()
+      this.session.stop()
       void this.probeRest()
     }
   }
@@ -85,7 +89,12 @@ export class LmuSource implements SimSource {
     if (pauseMs > 0) Atomics.wait(sleepArray, 0, 0, pauseMs)
 
     if (!this.shm.isOpen) return false
-    // No new frame while paused or in menus. Keep publishing as long as the game runs.
+    // Like a lost connection, so all overlays clear. The wait keeps the worker loop from spinning.
+    if (!this.session.inSession) {
+      Atomics.wait(sleepArray, 0, 0, timeoutMs)
+      return false
+    }
+    // No new frame while paused. Keep publishing as long as the game runs.
     if (!this.shm.waitForFrame(timeoutMs) && !this.shm.isGameRunning()) return false
 
     this.lastFrameAt = Date.now()
@@ -95,13 +104,18 @@ export class LmuSource implements SimSource {
   close(): void {
     this.focus.stop()
     this.nationalities.stop()
+    this.session.stop()
+    this.trackShape.reset()
     this.shm.close()
   }
 
   read(): SimSnapshot | null {
     const buf = this.shm.copy()
     if (!buf) return null
-    return buildSnapshot(parseFrame(buf), this.focus.focusCarId, this.nationalities)
+    const frame = parseFrame(buf)
+    const { trackName, lapDist } = frame.scoring
+    this.trackShape.update(trackName ? `${trackName}|${lapDist.toFixed(0)}` : '', lapDist)
+    return { ...buildSnapshot(frame, this.focus.focusCarId, this.nationalities), trackShape: this.trackShape.shape }
   }
 }
 
@@ -181,6 +195,14 @@ function buildSession(frame: LmuFrame, own: LmuVehicleScoring | undefined): SimS
   }
 }
 
+// Cars not yet placed in the world report (0, 0, 0).
+function worldPos(telemetry: LmuTelemetry | undefined): { x: number; y: number } | undefined {
+  if (!telemetry) return undefined
+  const { x, y, z } = telemetry.pos
+  if (x === 0 && y === 0 && z === 0) return undefined
+  return toMapPoint(x, z)
+}
+
 function speedMs(vel: LmuVec3): number {
   return Math.hypot(vel.x, vel.y, vel.z)
 }
@@ -256,7 +278,8 @@ function buildCars(frame: LmuFrame, telemetryById: Map<number, LmuTelemetry>, na
         currentLapTime: telemetry ? telemetry.elapsedTime - telemetry.lapStartET : -1,
         rpm: telemetry?.engineRPM ?? 0,
         gear: telemetry?.gear ?? 0,
-        speedKph: telemetry ? speedMs(telemetry.localVel) * 3.6 : undefined
+        speedKph: telemetry ? speedMs(telemetry.localVel) * 3.6 : undefined,
+        worldPos: worldPos(telemetry)
       }
     })
 }

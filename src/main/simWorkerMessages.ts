@@ -4,7 +4,8 @@ import type {
   RelativeData,
   StandingsData,
   TelemetryData,
-  TrackMapData
+  TrackMapData,
+  TrackShape
 } from '../shared/types'
 
 // Messages simWorker.ts (worker thread) sends to simService.ts
@@ -18,6 +19,8 @@ export type SimWorkerMessage =
     | { type: 'relative'; data: RelativeData }
     | { type: 'trackmap'; data: TrackMapData }
     | { type: 'flags'; data: FlagsData }
+    // Only sent when the track layout changes.
+    | { type: 'track-shape'; data: TrackShape | null }
     // One or more drivers completed a lap since the last tick (see
     // checkLapCompletions() in sim/core/tracking.ts). Only sent when something
     // actually happened, not every tick.
