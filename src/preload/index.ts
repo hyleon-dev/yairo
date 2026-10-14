@@ -7,6 +7,7 @@ import type {
   ConnectionStatus,
   DriverStatsData,
   FlagsData,
+  NewsEntry,
   OverlayBounds,
   OverlayId,
   OverlayScreenshotResult,
@@ -32,6 +33,12 @@ const api = {
   getTrackShape: (): Promise<TrackShape | null> => ipcRenderer.invoke(IPC.TRACK_SHAPE_GET),
 
   openReleasePage: (url: string): Promise<void> => ipcRenderer.invoke(IPC.UPDATE_OPEN_RELEASE, url),
+
+  getNews: (): Promise<NewsEntry[]> => ipcRenderer.invoke(IPC.NEWS_GET),
+
+  markNewsSeen: (ids: string[]): Promise<void> => ipcRenderer.invoke(IPC.NEWS_MARK_SEEN, ids),
+
+  openNewsLink: (url: string): Promise<void> => ipcRenderer.invoke(IPC.NEWS_OPEN_LINK, url),
 
   getScreenshotsEnabled: (): Promise<boolean> => ipcRenderer.invoke(IPC.OVERLAY_SCREENSHOTS_ENABLED_GET),
 
@@ -122,6 +129,12 @@ const api = {
     const listener = (_e: Electron.IpcRendererEvent, status: UpdateStatus) => cb(status)
     ipcRenderer.on(IPC.UPDATE_STATUS, listener)
     return () => ipcRenderer.removeListener(IPC.UPDATE_STATUS, listener)
+  },
+
+  onNews: (cb: (news: NewsEntry[]) => void) => {
+    const listener = (_e: Electron.IpcRendererEvent, news: NewsEntry[]) => cb(news)
+    ipcRenderer.on(IPC.NEWS, listener)
+    return () => ipcRenderer.removeListener(IPC.NEWS, listener)
   },
 
   onConfigUpdated: (cb: (config: AppConfig) => void) => {

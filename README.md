@@ -286,3 +286,15 @@ keeps old pre-releases from lingering around once a real release supersedes
 them, and makes the release's changelog look as if the pre-releases never
 existed (commits made during a pre-release phase simply show up in the next
 real release's changelog instead).
+
+### News
+
+The Control Center shows news on startup, independent of the installed
+version (e.g. "v1.0.0 adds LMU support" for users still on an older version).
+They live on the orphan branch [`news`](https://github.com/hyleon-dev/yairo/tree/news) (`index.json` plus one
+Markdown file per news) and are loaded from `raw.githubusercontent.com`, so
+publishing a news is just a push to that branch, no new release needed.
+High-priority news open as a modal, others show as a banner. A news can link
+to a release, e.g. to a pre-release first and to the final release
+automatically once that is out. The fields and their behavior are described in
+the [`news` branch README](https://github.com/hyleon-dev/yairo/blob/news/README.md).

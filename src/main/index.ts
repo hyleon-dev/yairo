@@ -8,6 +8,7 @@ import {OverlayServer} from './overlayServer'
 import {OverlaySettingsStore} from './overlaySettingsStore'
 import {DriverStatsStore} from './driverStatsStore'
 import {checkForUpdate} from './updateChecker'
+import {fetchNews} from './newsService'
 import {
   IPC,
   overlaySettingsChannel,
@@ -21,6 +22,7 @@ import {
   type RelativeOverlaySettings,
   type StandingsOverlaySettings,
   type UpdateStatus,
+  type NewsEntry,
   type OverlayScreenshotResult,
   type SimulatorId,
   type TrackShape
@@ -37,6 +39,7 @@ let connectionStatus: ConnectionStatus = {connected: false, needsSetup: false}
 // Cached for overlay windows opened after the shape was sent.
 let trackShape: TrackShape | null = null
 let updateStatus: UpdateStatus = {available: false, currentVersion: app.getVersion()}
+let news: NewsEntry[] = []
 
 // Shows the per-overlay screenshot button in the Control Center (when enabled).
 // Off by default so the button doesn't clutter normal use.
@@ -213,6 +216,18 @@ function registerIpcHandlers(): void {
     if (url.startsWith('https://github.com/hyleon-dev/yairo/')) shell.openExternal(url)
   })
 
+  ipcMain.handle(IPC.NEWS_GET, () => news)
+
+  ipcMain.handle(IPC.NEWS_MARK_SEEN, (_evt, ids: string[]) => {
+    configStore.markNewsSeen(ids)
+    news = news.map((entry) => (ids.includes(entry.id) ? {...entry, seen: true} : entry))
+  })
+
+  // Links inside news bodies. The news text comes from our own repo, so any https URL is allowed.
+  ipcMain.handle(IPC.NEWS_OPEN_LINK, (_evt, url: string) => {
+    if (url.startsWith('https://')) shell.openExternal(url)
+  })
+
   ipcMain.handle(IPC.OVERLAY_SCREENSHOTS_ENABLED_GET, () => screenshotsEnabled)
 
   // Control Center's per-overlay "Screenshot" button
@@ -348,6 +363,13 @@ app.whenReady().then(() => {
     updateStatus = status
     if (windowManager.controlWindow && !windowManager.controlWindow.isDestroyed()) {
       windowManager.controlWindow.webContents.send(IPC.UPDATE_STATUS, updateStatus)
+    }
+  })
+
+  fetchNews(app.getVersion(), configStore.getSeenNewsIds()).then((entries) => {
+    news = entries
+    if (windowManager.controlWindow && !windowManager.controlWindow.isDestroyed()) {
+      windowManager.controlWindow.webContents.send(IPC.NEWS, news)
     }
   })
 

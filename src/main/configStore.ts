@@ -104,6 +104,7 @@ function mergeOverlays(saved: OverlayConfig[] | undefined): OverlayConfig[] {
 interface StoredConfig extends Omit<AppConfig, 'overlays' | 'targetLapTimeSec'> {
   overlaysBySim: Record<SimulatorId, OverlayConfig[]>
   targetLapTimeSecBySim: Record<SimulatorId, number>
+  seenNewsIds: string[]
 }
 
 function perSim<T>(value: (sim: SimulatorId) => T): Record<SimulatorId, T> {
@@ -117,7 +118,8 @@ const DEFAULT_STORED: StoredConfig = {
   colorCorrectionMode: DEFAULT_CONFIG.colorCorrectionMode,
   simulator: DEFAULT_CONFIG.simulator,
   overlaysBySim: perSim(() => DEFAULT_CONFIG.overlays),
-  targetLapTimeSecBySim: perSim(() => DEFAULT_CONFIG.targetLapTimeSec)
+  targetLapTimeSecBySim: perSim(() => DEFAULT_CONFIG.targetLapTimeSec),
+  seenNewsIds: []
 }
 
 export class ConfigStore {
@@ -132,7 +134,7 @@ export class ConfigStore {
   }
 
   get(): AppConfig {
-    const { overlaysBySim, targetLapTimeSecBySim, ...global } = this.stored
+    const { overlaysBySim, targetLapTimeSecBySim, seenNewsIds: _seenNewsIds, ...global } = this.stored
     return {
       ...global,
       overlays: overlaysBySim[global.simulator],
@@ -171,6 +173,15 @@ export class ConfigStore {
     return this.update({ simulator })
   }
 
+  getSeenNewsIds(): readonly string[] {
+    return this.stored.seenNewsIds
+  }
+
+  markNewsSeen(ids: string[]): void {
+    const seen = new Set([...this.stored.seenNewsIds, ...ids])
+    this.update({ seenNewsIds: [...seen] })
+  }
+
   private update(patch: Partial<StoredConfig>): AppConfig {
     this.stored = { ...this.stored, ...patch }
     this.persist()
@@ -193,7 +204,8 @@ export class ConfigStore {
           overlaysBySim: perSim((sim) => mergeOverlays(saved.overlaysBySim?.[sim] ?? saved.overlays)),
           targetLapTimeSecBySim: perSim(
             (sim) => saved.targetLapTimeSecBySim?.[sim] ?? saved.targetLapTimeSec ?? DEFAULT_CONFIG.targetLapTimeSec
-          )
+          ),
+          seenNewsIds: Array.isArray(saved.seenNewsIds) ? saved.seenNewsIds : DEFAULT_STORED.seenNewsIds
         }
       }
     } catch (err) {

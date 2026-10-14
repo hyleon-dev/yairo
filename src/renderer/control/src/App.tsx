@@ -6,6 +6,7 @@ import {
   type AppConfig,
   type ColorCorrectionMode,
   type ConnectionStatus,
+  type NewsEntry,
   type OverlayId,
   type SimulatorId,
   type UpdateStatus
@@ -20,11 +21,13 @@ import { messages } from '../../../shared/messages'
 import { OverlaySettingsPanel, TargetLapTimeInputs } from './OverlaySettingsPanel'
 import { AccentColorPopup } from './AccentColorPopup'
 import { SimulatorPicker } from './SimulatorPicker'
+import { NewsModal } from './NewsModal'
 import {SimHints, ToggleSwitch} from "./Elements";
 import { SimulatorContext } from "./simulatorContext";
 import {Camera, Check, Link, X} from "lucide-react";
 
 const m = messages.control
+const mNews = messages.news
 
 // Applies an accent color live to the Control Center's own CSS variables.
 // Used for the saved config.accentColor and for the picker's live preview.
@@ -49,6 +52,8 @@ export default function App() {
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null)
   const [screenshotsEnabled, setScreenshotsEnabled] = useState(false)
   const [accentColorPickerOpen, setAccentColorPickerOpen] = useState(false)
+  const [news, setNews] = useState<NewsEntry[]>([])
+  const [newsModalEntries, setNewsModalEntries] = useState<NewsEntry[] | null>(null)
 
   useEffect(() => {
     window.overlayApi.getConfig().then(setConfig)
@@ -59,6 +64,7 @@ export default function App() {
     // and the one-off broadcast would be missed.
     window.overlayApi.getConnectionStatus().then(setConnection)
     window.overlayApi.getUpdateStatus().then(setUpdateStatus)
+    window.overlayApi.getNews().then(setNews)
     // Set once via OVERLAY_SCREENSHOTS=1 env var at app start (see main/index.ts).
     // Does not change at runtime, so no subscription is needed.
     window.overlayApi.getScreenshotsEnabled().then(setScreenshotsEnabled)
@@ -66,11 +72,13 @@ export default function App() {
     const unsubConfig = window.overlayApi.onConfigUpdated(setConfig)
     const unsubConn = window.overlayApi.onConnectionStatus(setConnection)
     const unsubUpdate = window.overlayApi.onUpdateStatus(setUpdateStatus)
+    const unsubNews = window.overlayApi.onNews(setNews)
 
     return () => {
       unsubConfig()
       unsubConn()
       unsubUpdate()
+      unsubNews()
     }
   }, [])
 
@@ -103,7 +111,25 @@ export default function App() {
     applyColorCorrectionMode(config.colorCorrectionMode)
   }, [config?.colorCorrectionMode])
 
+  useEffect(() => {
+    if (newsModalEntries) return
+    const urgent = news.filter((entry) => !entry.seen && entry.priority === 'high')
+    if (urgent.length > 0) setNewsModalEntries(urgent)
+  }, [news])
+
   if (!config) return <div className="app">{m.loading}</div>
+
+  const markNewsSeen = (ids: string[]) => {
+    window.overlayApi.markNewsSeen(ids)
+    setNews((prev) => prev.map((entry) => (ids.includes(entry.id) ? { ...entry, seen: true } : entry)))
+  }
+
+  const closeNewsModal = () => {
+    if (newsModalEntries) markNewsSeen(newsModalEntries.map((entry) => entry.id))
+    setNewsModalEntries(null)
+  }
+
+  const bannerNews = news.find((entry) => !entry.seen)
 
   const toggleOverlay = (id: string, enabled: boolean) => {
     window.overlayApi.setOverlay(id as never, { enabled })
@@ -163,6 +189,24 @@ export default function App() {
               >
                 {m.updateAvailableLink}
               </button>
+            </div>
+          )}
+          {bannerNews && (
+            <div className="update-banner">
+              <span>{bannerNews.title}</span>
+              <div className="news-banner-actions">
+                <button type="button" className="update-banner-link" onClick={() => setNewsModalEntries([bannerNews])}>
+                  {mNews.read}
+                </button>
+                <button
+                  type="button"
+                  className="overlay-in-line-button"
+                  title={mNews.dismiss}
+                  onClick={() => markNewsSeen([bannerNews.id])}
+                >
+                  <X />
+                </button>
+              </div>
             </div>
           )}
           <header>
@@ -255,9 +299,18 @@ export default function App() {
                 </option>
               ))}
             </select>
+            {news.length > 0 && (
+              <button type="button" className="secondary-btn" onClick={() => setNewsModalEntries(news)}>
+                {mNews.footerBtn}
+              </button>
+            )}
           </div>
           {updateStatus && <span className="app-version">{m.versionLabel(updateStatus.currentVersion)}</span>}
         </footer>
+
+        {newsModalEntries && (
+          <NewsModal entries={newsModalEntries} updateStatus={updateStatus} onClose={closeNewsModal} />
+        )}
 
         {accentColorPickerOpen && (
           <AccentColorPopup

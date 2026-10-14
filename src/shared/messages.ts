@@ -50,6 +50,13 @@ export const messages = {
     } as Record<ColorCorrectionMode, string>,
     targetTimeHeader: 'Target Time'
   },
+  news: {
+    footerBtn: 'News',
+    read: 'Read',
+    dismiss: 'Dismiss',
+    close: 'Close',
+    update: (version: string) => `Update to v${version}`
+  },
   accentColor: {
     title: 'Accent color',
     hexLabel: 'Hex',

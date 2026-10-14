@@ -183,6 +183,25 @@ export interface UpdateStatus {
   url?: string
 }
 
+// --- News -----------------------------------------------------------------
+
+// Raw files of the orphan "news" branch in our repo (see newsService.ts).
+// Relative links and images in a news body resolve against this URL.
+export const NEWS_BASE_URL = 'https://raw.githubusercontent.com/hyleon-dev/yairo/news/'
+
+export interface NewsEntry {
+  id: string
+  // ISO date, e.g. "2026-10-15"
+  date: string
+  title: string
+  // high = opens as modal on startup, normal = banner only.
+  priority: 'high' | 'normal'
+  // Target of the entry's update button. 'latest' = newest release from the update check.
+  updateRelease?: 'latest' | { version: string; url: string }
+  markdown: string
+  seen: boolean
+}
+
 // --- Overlay screenshots ---------------------------------------------------
 
 // Result of the Control Center's "Screenshot" button per overlay.
@@ -662,6 +681,10 @@ export const IPC = {
   UPDATE_STATUS_GET: 'update-status:get',
   UPDATE_STATUS: 'update-status',
   UPDATE_OPEN_RELEASE: 'update-status:open-release',
+  NEWS_GET: 'news:get',
+  NEWS: 'news',
+  NEWS_MARK_SEEN: 'news:mark-seen',
+  NEWS_OPEN_LINK: 'news:open-link',
   OVERLAY_SCREENSHOT: 'overlay:screenshot',
   OVERLAY_SCREENSHOTS_ENABLED_GET: 'overlay:screenshots-enabled-get'
 } as const
