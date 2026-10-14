@@ -94,9 +94,7 @@ function TireGauge({
 
 export function TiresOverlay({ data, settings }: { data: TelemetryData; settings: TiresOverlaySettings }) {
   // Without live tire data, the values are only meaningful on pit road (see isOnPitRoad's doc comment).
-  const isIdle = SIM_FEATURES[data.sim].liveTires
-    ? !data.isOnTrack || data.isSpectatingOther
-    : !data.isOnPitRoad
+  const isIdle = SIM_FEATURES[data.sim].liveTires ? !data.isOnTrack || !data.hasTireData : !data.isOnPitRoad
   return (
     <div className={`card tires-grid ${isIdle ? 'tires--idle' : ''}`}>
       <TireGauge corner="lf" wheel={data.tires.lf} showWearPct={settings.showWearPct} />

@@ -1,4 +1,4 @@
-import type { SimulatorId, TiresData, TrackShape, TrackSurfaceStatus } from '../../shared/types'
+import type { DamageData, SimulatorId, TiresData, TrackShape, TrackSurfaceStatus } from '../../shared/types'
 
 // Simulator-independent view of one tick. Each SimSource maps its own SDK onto this,
 // and all overlay payloads are built from it (see sim/core).
@@ -71,7 +71,22 @@ export interface SimCar {
   speedKph?: number
   // TrackShape coordinates. Undefined if the sim has no world positions.
   worldPos?: { x: number; y: number }
+  // Undefined if the sim has inputs and fuel only for the own car (iRacing).
+  inputs?: { throttlePct: number; brakePct: number; clutchPct: number }
+  shiftLights?: SimShiftLights
+  fuel?: { fuelLevelL: number; virtualEnergyPct: number | null }
+  tires?: TiresData
+  // Undefined if the sim doesn't provide them.
+  pitStops?: number
+  penalties?: number
   official?: SimOfficialResult
+}
+
+export interface SimShiftLights {
+  rpmSLFirst: number
+  rpmSLShift: number
+  rpmSLLast: number
+  rpmSLBlink: number
 }
 
 // Own car while actively driving it.
@@ -90,7 +105,8 @@ export interface SimPlayerCar {
   fuelLevelL: number
   fuelLevelPct: number // 0..1
   fuelCapacityL: number // 0 if unknown
-  nextPitFuelL: number | null
+  nextPitFill: number | null // liters, or % VE if virtualEnergyPct is set
+  virtualEnergyPct: number | null // 0..100, null if the car has no virtual energy
   lap: number
   lapDistPct: number
   lapCurrentTime: number
@@ -102,6 +118,7 @@ export interface SimPlayerCar {
   pitLimiterActive: boolean
   incidentCount: number
   tires: TiresData
+  damage?: DamageData
 }
 
 export interface SimSnapshot {

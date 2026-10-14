@@ -3,6 +3,7 @@ import type { SimulatorId, TrackShape } from '../shared/types'
 import type { SimSource } from './sim/snapshot'
 import { buildFrameMessages, type DisplayWindows } from './sim/core/frame'
 import { IracingSource } from './sim/iracing/iracingSource'
+import { FakeLmuSource } from './sim/lmu/lmuFake'
 import { LmuSource } from './sim/lmu/lmuSource'
 import type { SimWorkerCommand, SimWorkerMessage } from './simWorkerMessages'
 
@@ -46,7 +47,7 @@ function createSource(simulator: SimulatorId): SimSource {
     case 'iracing':
       return new IracingSource()
     case 'lmu':
-      return new LmuSource()
+      return process.env.IRSDK_MOCK === '1' ? new FakeLmuSource() : new LmuSource()
   }
 }
 

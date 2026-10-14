@@ -1,0 +1,93 @@
+.card.damage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Same idle-hiding pattern as TiresOverlay. */
+.damage--idle {
+  background: transparent;
+  border-color: transparent;
+}
+
+.damage--idle > * {
+  visibility: hidden;
+}
+
+.damage-grid {
+  display: grid;
+  grid-template-columns: 14px 64px 14px;
+  grid-template-rows: 14px 112px 14px;
+  grid-template-areas:
+    'fl f fr'
+    'l c r'
+    'rl b rr';
+  gap: 3px;
+}
+
+.damage-zone {
+  border-radius: var(--radius-xs);
+}
+
+.damage-zone--0 {
+  background: rgba(var(--color-white-rgb), 0.08);
+}
+
+.damage-zone--1 {
+  background: #f1c40f;
+  box-shadow: 0 0 4px #f1c40f;
+}
+
+.damage-zone--2 {
+  background: var(--color-danger);
+  box-shadow: 0 0 4px var(--color-danger);
+}
+
+.damage-car {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  place-items: center;
+  border: 1px solid rgba(var(--color-white-rgb), 0.2);
+  border-radius: 14px;
+  padding: 10px 6px;
+}
+
+.damage-wheel {
+  width: 14px;
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-body-sm);
+  font-weight: 700;
+}
+
+.damage-wheel--ok {
+  background: rgba(var(--color-white-rgb), 0.35);
+}
+
+.damage-wheel--flat {
+  background: #f1c40f;
+}
+
+.damage-wheel--detached {
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+}
+
+.damage-warnings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 1em;
+  font-size: var(--font-body-sm);
+  letter-spacing: 0.06em;
+}
+
+.damage-warning {
+  color: var(--color-danger);
+  font-weight: 700;
+}

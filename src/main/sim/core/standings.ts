@@ -45,6 +45,8 @@ interface StandingsRow {
   avgLapTimeSec: number
   flagIsoCode: string | null
   manufacturerLogoKey: string | null
+  pitStops: number | null
+  penalties: number | null
   lastLapTime: number
 }
 
@@ -82,6 +84,8 @@ function computeRankedClasses(snap: SimSnapshot): RankedStandingsClass[] {
       avgLapTimeSec: avgLapTimeSec(car.driverId),
       flagIsoCode: car.flagIsoCode,
       manufacturerLogoKey: manufacturerLogoKey(car.carName, snap.sim),
+      pitStops: car.pitStops ?? null,
+      penalties: car.penalties ?? null,
       lastLapTime
     }
   })
@@ -250,6 +254,8 @@ function buildRacePositions(rows: StandingsRow[]): DriverStanding[] {
     avgLapTimeSec: row.avgLapTimeSec,
     flagIsoCode: row.flagIsoCode,
     manufacturerLogoKey: row.manufacturerLogoKey,
+    pitStops: row.pitStops,
+    penalties: row.penalties,
     lastLapTime: row.lastLapTime,
     lapsDown: Math.max(0, Math.floor(leaderProgress - (row.lapsCompleted + row.lapDistPct)))
   }))
@@ -289,6 +295,8 @@ function buildTimeRanking(rows: StandingsRow[]): DriverStanding[] {
     avgLapTimeSec: row.avgLapTimeSec,
     flagIsoCode: row.flagIsoCode,
     manufacturerLogoKey: row.manufacturerLogoKey,
+    pitStops: row.pitStops,
+    penalties: row.penalties,
     lastLapTime: row.lastLapTime,
     lapsDown: 0 // "laps down" only applies to races, not time-ranked sessions
   }))

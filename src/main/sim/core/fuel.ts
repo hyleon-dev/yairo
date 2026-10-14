@@ -1,11 +1,21 @@
-import type { FuelEstimate, FuelLapEstimate } from '../../../shared/types'
+import type { FuelEstimate, FuelLapConsumption, FuelLapEstimate } from '../../../shared/types'
 import type { SimPlayerCar, SimSnapshot } from '../snapshot'
 
 // Sims provide neither consumption-per-lap nor a range estimate, only own-car fuel level.
 // Computed here by comparing the fuel level at the start of each lap to get that lap's consumption.
+// Cars with virtual energy (LMU) are tracked in % VE instead of liters, VE is what limits them.
 const FUEL_HISTORY_SIZE = 5 // for the "average of the last 5 laps" value
-let lastFuelLapSample: { lap: number; fuelLevel: number } | null = null
-let fuelPerLapHistory: number[] = [] // oldest first, at most FUEL_HISTORY_SIZE entries
+// isLapStart is false for the first sample, it is usually taken mid-lap.
+let lastFuelLapSample: { lap: number; fuelLevel: number; isVirtualEnergy: boolean; isLapStart: boolean } | null = null
+let fuelPerLapHistory: FuelLapConsumption[] = [] // oldest first, at most FUEL_HISTORY_SIZE entries
+
+function energyLevel(player: SimPlayerCar): number {
+  return player.virtualEnergyPct ?? player.fuelLevelL
+}
+
+function energyCapacity(player: SimPlayerCar): number {
+  return player.virtualEnergyPct !== null ? 100 : player.fuelCapacityL
+}
 
 // Must run every tick to reset history.
 export function trackFuelConsumption(snap: SimSnapshot): void {
@@ -16,10 +26,14 @@ export function trackFuelConsumption(snap: SimSnapshot): void {
     return
   }
 
-  const { lap, fuelLevelL: fuelLevel } = snap.player
+  const { lap } = snap.player
+  const fuelLevel = energyLevel(snap.player)
+  const isVirtualEnergy = snap.player.virtualEnergyPct !== null
 
-  if (lastFuelLapSample === null) {
-    lastFuelLapSample = { lap, fuelLevel }
+  // Liters and % VE don't mix.
+  if (lastFuelLapSample === null || lastFuelLapSample.isVirtualEnergy !== isVirtualEnergy) {
+    if (lastFuelLapSample) fuelPerLapHistory = []
+    lastFuelLapSample = { lap, fuelLevel, isVirtualEnergy, isLapStart: false }
     return
   }
 
@@ -29,8 +43,8 @@ export function trackFuelConsumption(snap: SimSnapshot): void {
     const consumed = lastFuelLapSample.fuelLevel - fuelLevel
     // Refueled during the lap (pit stop) = not representative per-lap
     // consumption, so don't add it to the history
-    if (consumed > 0) {
-      fuelPerLapHistory.push(consumed)
+    if (consumed > 0 && lastFuelLapSample.isLapStart) {
+      fuelPerLapHistory.push({ lap: lastFuelLapSample.lap, consumption: consumed })
       if (fuelPerLapHistory.length > FUEL_HISTORY_SIZE) fuelPerLapHistory.shift()
     }
   } else {
@@ -39,25 +53,25 @@ export function trackFuelConsumption(snap: SimSnapshot): void {
   }
 
   // New lap just started. This fuel level is the baseline for it.
-  lastFuelLapSample = { lap, fuelLevel }
+  lastFuelLapSample = { lap, fuelLevel, isVirtualEnergy, isLapStart: true }
 }
 
 function buildFuelLapEstimate(
-  consumptionPerLapL: number,
-  fuelLevelL: number,
-  lapStartFuelLevelL: number,
+  consumptionPerLap: number,
+  fuelLevel: number,
+  lapStartFuelLevel: number,
   currentLap: number
 ): FuelLapEstimate | null {
-  if (consumptionPerLapL <= 0) return null
+  if (consumptionPerLap <= 0) return null
 
-  // margin/pitByLap deliberately use lapStartFuelLevelL (a stable snapshot),
-  // not the live fuelLevelL. See FuelLapEstimate's doc comment for why.
-  const fullLapsRemaining = Math.floor(lapStartFuelLevelL / consumptionPerLapL)
+  // margin/pitByLap deliberately use lapStartFuelLevel (a stable snapshot),
+  // not the live fuelLevel. See FuelLapEstimate's doc comment for why.
+  const fullLapsRemaining = Math.floor(lapStartFuelLevel / consumptionPerLap)
 
   return {
-    consumptionPerLapL,
-    lapsRemaining: fuelLevelL / consumptionPerLapL,
-    marginLiters: lapStartFuelLevelL - fullLapsRemaining * consumptionPerLapL,
+    consumptionPerLap,
+    lapsRemaining: fuelLevel / consumptionPerLap,
+    margin: lapStartFuelLevel - fullLapsRemaining * consumptionPerLap,
     pitByLap: currentLap + fullLapsRemaining + 1
   }
 }
@@ -158,39 +172,45 @@ export function estimateRaceLapsRemaining(snap: SimSnapshot): number | null {
 function estimateStopsRemaining(
   snap: SimSnapshot,
   player: SimPlayerCar,
-  consumptionPerLapL: number,
+  consumptionPerLap: number,
   lastLapTimeSec: number
 ): number | null {
-  if (consumptionPerLapL <= 0) return null
+  if (consumptionPerLap <= 0) return null
 
   const lapsRemaining = estimateLapsRemaining(snap, lastLapTimeSec)
   if (lapsRemaining === null) return null
 
-  if (player.fuelCapacityL <= 0) return null
+  const capacity = energyCapacity(player)
+  if (capacity <= 0) return null
 
-  const fuelNeededL = lapsRemaining * consumptionPerLapL - player.fuelLevelL
-  return Math.max(0, Math.ceil(fuelNeededL / player.fuelCapacityL))
+  const fuelNeeded = lapsRemaining * consumptionPerLap - energyLevel(player)
+  return Math.max(0, Math.ceil(fuelNeeded / capacity))
 }
 
-export function buildFuelEstimate(snap: SimSnapshot, player: SimPlayerCar): FuelEstimate | null {
-  if (fuelPerLapHistory.length === 0) return null
+export function buildFuelEstimate(snap: SimSnapshot, player: SimPlayerCar): FuelEstimate {
+  // The pit menu value doesn't need any driven lap.
+  if (fuelPerLapHistory.length === 0) {
+    return { lastLap: null, avgLast5: null, lapHistory: [], nextPitFill: player.nextPitFill, stopsRemaining: null }
+  }
 
-  const { fuelLevelL, lap: currentLap } = player
+  const { lap: currentLap } = player
+  const fuelLevel = energyLevel(player)
 
   // Fuel level as of this lap's start (tracked in trackFuelConsumption()).
   // Falls back to the live level if unavailable, e.g. right after getting
   // back in the car.
-  const lapStartFuelLevelL = lastFuelLapSample?.fuelLevel ?? fuelLevelL
+  const lapStartFuelLevel = lastFuelLapSample?.fuelLevel ?? fuelLevel
 
-  const lastLapConsumption = fuelPerLapHistory[fuelPerLapHistory.length - 1]
-  const avgConsumption = fuelPerLapHistory.reduce((sum, v) => sum + v, 0) / fuelPerLapHistory.length
+  const lastLapConsumption = fuelPerLapHistory[fuelPerLapHistory.length - 1].consumption
+  const avgConsumption = fuelPerLapHistory.reduce((sum, v) => sum + v.consumption, 0) / fuelPerLapHistory.length
   // No dedicated "current pace" value. Last completed lap is the closest estimate.
   const lastLapTimeSec = player.lapLastTime
 
   return {
-    lastLap: buildFuelLapEstimate(lastLapConsumption, fuelLevelL, lapStartFuelLevelL, currentLap),
-    avgLast5: buildFuelLapEstimate(avgConsumption, fuelLevelL, lapStartFuelLevelL, currentLap),
-    nextPitFuelL: player.nextPitFuelL,
+    lastLap: buildFuelLapEstimate(lastLapConsumption, fuelLevel, lapStartFuelLevel, currentLap),
+    avgLast5: buildFuelLapEstimate(avgConsumption, fuelLevel, lapStartFuelLevel, currentLap),
+    lapHistory: [...fuelPerLapHistory],
+    nextPitFill: player.nextPitFill,
     // Uses the average-of-5 consumption rather than last-lap. This projects
     // across many remaining laps, so a stable rate matters more here than
     // reacting fast to a single outlier lap.

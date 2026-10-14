@@ -299,6 +299,10 @@ export class FakeIRacingSDK {
       CarIdxBestLapTime: arrayVar(this.drivers.map((d) => d.bestLapTime)),
       CarIdxEstTime: arrayVar(this.drivers.map((d) => d.lapDistPct * d.currentLapPaceSec)),
       CarIdxTrackSurface: arrayVar(this.drivers.map(() => 3)), // always "on track", no pit stops
+      // One driver gets a drive-through every other 10 s, for the Standings penalty flag.
+      CarIdxSessionFlags: arrayVar(
+        this.drivers.map((_, i) => (i === 3 && Math.floor(this.simTimeSec / 10) % 2 === 1 ? FLAG_BITS.black : 0))
+      ),
       CarIdxRPM: arrayVar(this.drivers.map((d, i) => (i === PLAYER_CAR_IDX ? rpm : 6000))),
       CarIdxGear: arrayVar(this.drivers.map((d, i) => (i === PLAYER_CAR_IDX ? gear : 4))),
       CarIdxPosition: arrayVar(positions),

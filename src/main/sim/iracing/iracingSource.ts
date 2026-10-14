@@ -9,7 +9,7 @@ import {
 } from 'irsdk-node'
 import { FakeIRacingSDK } from './irsdkFake'
 import { flairNameToIsoCode } from '../../nationFlags'
-import type { TireWheelData, TiresData, TrackSurfaceStatus } from '../../../shared/types'
+import { FLAG_BITS, type TireWheelData, type TiresData, type TrackSurfaceStatus } from '../../../shared/types'
 import type { SimCar, SimPlayerCar, SimSession, SimSnapshot, SimSource } from '../snapshot'
 
 export interface IrsdkLike {
@@ -155,7 +155,8 @@ function buildPlayerCar(raw: TelemetryVarList, driver: DriverInfo | null): SimPl
     // Own car only. Straight passthrough of iRacing's own pit service menu value.
     // Live-tracks "Auto Fill" if the driver enabled it there. Otherwise
     // whatever amount is currently dialed in manually.
-    nextPitFuelL: raw.PitSvFuel?.value?.[0] ?? null,
+    nextPitFill: raw.PitSvFuel?.value?.[0] ?? null,
+    virtualEnergyPct: null,
     lap: raw.Lap?.value?.[0] ?? 0,
     lapDistPct: raw.LapDistPct?.value?.[0] ?? 0,
     lapCurrentTime: raw.LapCurrentLapTime?.value?.[0] ?? -1,
@@ -190,6 +191,8 @@ function buildCars(
   const estTimes = raw.CarIdxEstTime?.value ?? []
   const rpms = raw.CarIdxRPM?.value ?? []
   const gears = raw.CarIdxGear?.value ?? []
+  // Black flag = drive-through penalty. Unverified whether iRacing fills this for other cars.
+  const sessionFlags = raw.CarIdxSessionFlags?.value ?? []
   const playerCarPosition = raw.PlayerCarPosition?.value?.[0] ?? 0
 
   // Official session results stays for a driver once they've
@@ -252,6 +255,7 @@ function buildCars(
       currentLapTime: estTimes[carIdx] ?? -1,
       rpm: rpms[carIdx] ?? 0,
       gear: gears[carIdx] ?? 0,
+      penalties: ((sessionFlags[carIdx] ?? 0) & FLAG_BITS.black) !== 0 ? 1 : 0,
       official: result
         ? {
             position: result.Position,

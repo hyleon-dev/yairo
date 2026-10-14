@@ -5,6 +5,7 @@ import {
   type AvgLapTimeOverlaySettings, type BestLapTimeOverlaySettings,
   type DeltaBarOverlaySettings,
   type FlagsOverlaySettings,
+  type FuelOverlaySettings,
   type LastLapTimeOverlaySettings,
   type OverlayConfig,
   type RelativeOverlaySettings,
@@ -77,6 +78,10 @@ export function OverlaySettingsPanel({overlay, settings, onChange}: Props) {
 
         {overlay.id === 'telemetry' && (
             <TelemetrySettings settings={settings as TelemetryOverlaySettings} onChange={onChange}/>
+        )}
+
+        {overlay.id === 'fuel' && (
+            <FuelSettings settings={settings as FuelOverlaySettings} onChange={onChange}/>
         )}
 
         {overlay.id === 'flags' && (
@@ -190,12 +195,42 @@ function StandingsSettings({
           <BestLapTimeSettings settings={settings} onChange={onChange}/>
           <LastLapTimeSettings settings={settings} onChange={onChange}/>
         </span>
+        <PitStopsAndPenaltiesSettings settings={settings} onChange={onChange}/>
         <ToggleSwitch
           checked={settings.showRealTime}
           onChange={(checked) => onChange({showRealTime: checked})}
           label={m.showRealTime}
         />
       </>
+  )
+}
+
+function PitStopsAndPenaltiesSettings({
+                                        settings,
+                                        onChange
+                                      }: {
+  settings: StandingsOverlaySettings
+  onChange: (patch: Partial<AnyOverlaySettings>) => void
+}) {
+  const features = SIM_FEATURES[useContext(SimulatorContext)]
+  if (!features.pitStopCounts && !features.penaltyFlags) return null
+  return (
+      <span className="multi-settings-row">
+        {features.pitStopCounts && (
+            <ToggleSwitch
+                checked={settings.showPitStops}
+                onChange={(checked) => onChange({showPitStops: checked})}
+                label={m.showPitStops}
+            />
+        )}
+        {features.penaltyFlags && (
+            <ToggleSwitch
+                checked={settings.showPenalties}
+                onChange={(checked) => onChange({showPenalties: checked})}
+                label={m.showPenalties}
+            />
+        )}
+      </span>
   )
 }
 
@@ -278,6 +313,22 @@ function FlagsSettings({
           checked={settings.showLabel}
           onChange={(checked) => onChange({showLabel: checked})}
           label={m.showLabel}
+      />
+  )
+}
+
+function FuelSettings({
+                        settings,
+                        onChange
+                      }: {
+  settings: FuelOverlaySettings
+  onChange: (patch: Partial<AnyOverlaySettings>) => void
+}) {
+  return (
+      <ToggleSwitch
+          checked={settings.showLapHistory}
+          onChange={(checked) => onChange({showLapHistory: checked})}
+          label={m.showLapHistory}
       />
   )
 }

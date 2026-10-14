@@ -18,6 +18,7 @@ const NO_TELEMETRY: Omit<TelemetryData, 'sim'> = {
   brakePct: 0,
   clutchPct: 0,
   fuelLevelL: 0,
+  virtualEnergyPct: null,
   lap: 0,
   lapDistPct: 0,
   isOnTrack: false,
@@ -35,7 +36,9 @@ const NO_TELEMETRY: Omit<TelemetryData, 'sim'> = {
   currentDriverIncidentCount: -1,
   teamIncidentCount: -1,
   incidentLimit: '',
-  tires: ZERO_TIRES
+  tires: ZERO_TIRES,
+  hasTireData: false,
+  damage: null
 }
 
 let lastSpeedSample: { carIdx: number; lapDistPct: number; sessionTime: number } | null = null
@@ -84,6 +87,7 @@ export function buildTelemetry(snap: SimSnapshot): TelemetryData {
       brakePct: player.brakePct,
       clutchPct: player.clutchPct,
       fuelLevelL: player.fuelLevelL,
+      virtualEnergyPct: player.virtualEnergyPct,
       lap: player.lap,
       lapDistPct: player.lapDistPct,
       isOnTrack: true,
@@ -94,21 +98,23 @@ export function buildTelemetry(snap: SimSnapshot): TelemetryData {
       lapDeltaToBestValid: player.lapDeltaToBestValid,
       isOnPitRoad: player.isOnPitRoad,
       pitLimiterActive: player.pitLimiterActive,
-      lowFuelWarning: player.fuelLevelPct <= LOW_FUEL_PCT_THRESHOLD,
+      lowFuelWarning: (player.virtualEnergyPct !== null ? player.virtualEnergyPct / 100 : player.fuelLevelPct) <= LOW_FUEL_PCT_THRESHOLD,
       incidentCount: player.incidentCount,
       isSpectatingOther: false,
       fuelEstimate: buildFuelEstimate(snap, player),
       currentDriverIncidentCount,
       teamIncidentCount,
       incidentLimit,
-      tires: player.tires
+      tires: player.tires,
+      hasTireData: true,
+      damage: player.damage ?? null
     }
   }
 
   // When spectating / not in car.
   // Show speed/RPM/gear/lap times for the currently watched car,
   // where the sim provides per-vehicle data.
-  // Pedal inputs and fuel level stay 0.
+  // Pedal inputs and fuel level stay 0 if the sim has them only for the own car.
   const focusCarIdx = snap.focusCarIdx
   if (focusCarIdx < 0) return { ...NO_TELEMETRY, sim: snap.sim }
 
@@ -121,15 +127,16 @@ export function buildTelemetry(snap: SimSnapshot): TelemetryData {
       estimateSpeedKph(focusCarIdx, car?.lapDistPct ?? -1, session.sessionTimeSec, session.trackLengthM),
     rpm: car?.rpm ?? 0,
     rpmIdle: -1,
-    rpmSLFirst: -1,
-    rpmSLShift: -1,
-    rpmSLLast: -1,
-    rpmSLBlink: -1,
+    rpmSLFirst: car?.shiftLights?.rpmSLFirst ?? -1,
+    rpmSLShift: car?.shiftLights?.rpmSLShift ?? -1,
+    rpmSLLast: car?.shiftLights?.rpmSLLast ?? -1,
+    rpmSLBlink: car?.shiftLights?.rpmSLBlink ?? -1,
     gear: car?.gear ?? 0,
-    throttlePct: 0,
-    brakePct: 0,
-    clutchPct: 0,
-    fuelLevelL: 0,
+    throttlePct: car?.inputs?.throttlePct ?? 0,
+    brakePct: car?.inputs?.brakePct ?? 0,
+    clutchPct: car?.inputs?.clutchPct ?? 0,
+    fuelLevelL: car?.fuel?.fuelLevelL ?? 0,
+    virtualEnergyPct: car?.fuel?.virtualEnergyPct ?? null,
     lap: car?.lap ?? 0,
     lapDistPct: car?.lapDistPct ?? 0,
     isOnTrack: true,
@@ -139,7 +146,6 @@ export function buildTelemetry(snap: SimSnapshot): TelemetryData {
     // No precise delta-to-best-lap per track point is possible for other cars.
     lapDeltaToBest: 0,
     lapDeltaToBestValid: false,
-    // Tires aren't meaningful while spectating anyway (see ZERO_TIRES below).
     isOnPitRoad: false,
     pitLimiterActive: false,
     lowFuelWarning: false,
@@ -149,6 +155,8 @@ export function buildTelemetry(snap: SimSnapshot): TelemetryData {
     currentDriverIncidentCount,
     teamIncidentCount,
     incidentLimit,
-    tires: ZERO_TIRES
+    tires: car?.tires ?? ZERO_TIRES,
+    hasTireData: car?.tires !== undefined,
+    damage: null
   }
 }

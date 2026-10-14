@@ -4,6 +4,7 @@ import type {
   DeltaBarOverlaySettings,
   FlagsData,
   FlagsOverlaySettings,
+  FuelOverlaySettings,
   OverlayId,
   RelativeData,
   SimulatorId,
@@ -28,6 +29,7 @@ import { TrackMapOverlay } from './overlays/TrackMapOverlay'
 import { TiresOverlay } from './overlays/TiresOverlay'
 import { FlagsOverlay } from './overlays/FlagsOverlay'
 import { DeltaBarOverlay } from './overlays/DeltaBarOverlay'
+import { DamageOverlay } from './overlays/DamageOverlay'
 
 // Fallback data shown before the first message for this overlay has arrived.
 const EMPTY_WHEEL = { wearPct: 0, tempC: 0, tempUnit: 'C' }
@@ -45,6 +47,7 @@ const EMPTY_TELEMETRY: Omit<TelemetryData, 'sim'> = {
   brakePct: 0,
   clutchPct: 0,
   fuelLevelL: 0,
+  virtualEnergyPct: null,
   lap: 0,
   lapDistPct: 0,
   isOnTrack: false,
@@ -62,7 +65,9 @@ const EMPTY_TELEMETRY: Omit<TelemetryData, 'sim'> = {
   currentDriverIncidentCount: -1,
   teamIncidentCount: -1,
   incidentLimit: '-',
-  tires: { lf: EMPTY_WHEEL, rf: EMPTY_WHEEL, lr: EMPTY_WHEEL, rr: EMPTY_WHEEL }
+  tires: { lf: EMPTY_WHEEL, rf: EMPTY_WHEEL, lr: EMPTY_WHEEL, rr: EMPTY_WHEEL },
+  hasTireData: false,
+  damage: null
 }
 
 const EMPTY_STANDINGS: Omit<StandingsData, 'sim'> = {
@@ -97,6 +102,9 @@ export default function App() {
   const { telemetry, standings, relative, trackMap, trackShape, flags, editMode, settings, targetLapTimeSec, simulator } =
     useOverlayBridge(overlayId)
   const contentRef = useReportContentSize(overlayId, editMode, settings.scale)
+  // LMU sends no data outside a session (main menu). Hidden then, but keeps its size for edit mode.
+  const isLmuIdle =
+    simulator === 'lmu' && !editMode && !hasOverlayData(overlayId, telemetry, standings, relative, trackShape, flags)
 
   // Sets both panel-background variants (--panel-bg for most overlays,
   // --panel-bg-light for trackmap) to the same alpha. This way it works
@@ -115,11 +123,37 @@ export default function App() {
         // the layout size. That's what lets the ResizeObserver in
         // useReportContentSize pick up a scale change.
       }
-      <div ref={contentRef} className="overlay-content" style={{ zoom: settings.scale }}>
+      <div
+        ref={contentRef}
+        className={`overlay-content ${isLmuIdle ? 'overlay-content--idle' : ''}`}
+        style={{ zoom: settings.scale }}
+      >
         {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, trackShape, flags, settings, targetLapTimeSec, simulator)}
       </div>
     </div>
   )
+}
+
+function hasOverlayData(
+  id: OverlayId,
+  telemetry: TelemetryData | null,
+  standings: StandingsData | null,
+  relative: RelativeData | null,
+  trackShape: TrackShape | null,
+  flags: FlagsData | null
+): boolean {
+  switch (id) {
+    case 'standings':
+      return standings !== null
+    case 'relative':
+      return relative !== null
+    case 'trackmap':
+      return trackShape !== null
+    case 'flags':
+      return flags !== null
+    default:
+      return telemetry !== null
+  }
 }
 
 function renderOverlayContent(
@@ -164,13 +198,15 @@ function renderOverlayContent(
     case 'telemetry':
       return <TelemetryOverlay data={telemetryData} settings={settings as TelemetryOverlaySettings} />
     case 'fuel':
-      return <FuelOverlay data={telemetryData} />
+      return <FuelOverlay data={telemetryData} settings={settings as FuelOverlaySettings} />
     case 'lap-timer':
       return <LapTimerOverlay data={telemetryData} targetLapTimeSec={targetLapTimeSec} />
     case 'incidents':
       return <IncidentsOverlay data={telemetryData} />
     case 'tires':
       return <TiresOverlay data={telemetryData} settings={settings as TiresOverlaySettings} />
+    case 'damage':
+      return <DamageOverlay data={telemetryData} />
     case 'delta-bar':
       return (
         <DeltaBarOverlay

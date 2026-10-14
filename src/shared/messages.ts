@@ -69,6 +69,7 @@ export const messages = {
     columnBest: 'Best',
     columnAvgLap: 'Avg',
     columnLast: 'Last',
+    columnPitStops: 'Pit',
     leader: 'LEADER',
     classMeta: (driverCount: number, strengthOfField: number | null) =>
       strengthOfField === null ? `${driverCount} Driver` : `${driverCount} Driver · SoF ${strengthOfField}`,
@@ -114,6 +115,9 @@ export const messages = {
     resetTargetTime: 'Reset target time',
     resetTargetTime_short: 'Reset',
     showLastLapTime: 'Show last lap time',
+    showPitStops: 'Show pit stops',
+    showLapHistory: 'Show usage of last laps',
+    showPenalties: 'Show penalty flag',
     showRealTime: 'Show real time',
     showDeltaNumber: 'Show delta number',
     barWidth: 'Bar width',
@@ -139,6 +143,7 @@ export const messages = {
   },
   fuel: {
     unit: 'l',
+    unitVirtualEnergy: '% VE',
     lapsRemaining: (laps: number) => `~${laps.toFixed(1)} LAPS`,
     rangeUnknown: 'Range: –',
     statLastConsumption: 'LAST',
@@ -148,7 +153,9 @@ export const messages = {
     statNextFill: 'NEXT FILL',
     statStopsLeft: 'Stops',
     predictionsLabel: 'Predictions',
-    consumptionLabel: 'Usage /Lap'
+    consumptionLabel: 'Usage /Lap',
+    historyLabel: 'Last Laps',
+    historyLap: (lap: number) => `L${lap}`
   },
   incidents: {
     driver: 'Driver',
@@ -158,6 +165,10 @@ export const messages = {
   },
   tires: {
     tempUnit: '°C'
+  },
+  damage: {
+    overheating: 'OVERHEATING',
+    partsDetached: 'PARTS LOST'
   },
   flags: {
     none: 'NO FLAG',

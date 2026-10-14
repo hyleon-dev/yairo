@@ -30,7 +30,7 @@ const windowManager = new WindowManager()
 const sim = new SimService()
 const configStore = new ConfigStore()
 const overlayServer = new OverlayServer()
-const overlaySettingsStore = new OverlaySettingsStore()
+const overlaySettingsStore = new OverlaySettingsStore(configStore.get().simulator)
 const driverStatsStore = new DriverStatsStore()
 
 let connectionStatus: ConnectionStatus = {connected: false, needsSetup: false}
@@ -166,9 +166,12 @@ function registerIpcHandlers(): void {
     if (simulator === configStore.get().simulator) return configStore.get()
 
     const updated = configStore.setSimulator(simulator)
+    overlaySettingsStore.setSimulator(simulator)
     void sim.switchSimulator(simulator)
     syncOverlayWindows()
-    broadcastToAll(IPC.CONFIG_UPDATED, updated)
+    // Windows that stay open move to this sim's saved position.
+    for (const overlay of updated.overlays) windowManager.setOverlayBounds(overlay.id, overlay.bounds)
+    seedOverlaySettings()
     return updated
   })
 
@@ -260,8 +263,9 @@ function seedOverlaySettings(): void {
   // (Electron windows don't need this. They fetch getConfig() themselves.)
   broadcastToAll(IPC.CONFIG_UPDATED, configStore.get())
 
+  // Control Center too, its settings change when switching the simulator.
   for (const overlay of configStore.get().overlays) {
-    broadcastToOverlays(overlaySettingsChannel(overlay.id), overlaySettingsStore.get(overlay.id))
+    broadcastToAll(overlaySettingsChannel(overlay.id), overlaySettingsStore.get(overlay.id))
   }
 
   const relativeSettings = overlaySettingsStore.get('relative') as RelativeOverlaySettings

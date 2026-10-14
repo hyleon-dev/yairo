@@ -49,6 +49,7 @@ const MANUFACTURER_KEYWORDS: ManufacturerKeyword[] = [
   { key: 'mclaren', pattern: /\bmclaren\b/i },
   { key: 'nissan', pattern: /\bnissan\b/i },
   { key: 'oreca', pattern: /\boreca\b/i },
+  { key: 'peugeot', pattern: /\bpeugeot\b/i },
   { key: 'pontiac', pattern: /\bpontiac\b/i },
   { key: 'porsche', pattern: /\bporsche\b/i },
   { key: 'radical', pattern: /\bradical\b/i },

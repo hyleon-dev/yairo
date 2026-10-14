@@ -5,6 +5,8 @@ import type { TrackShape } from '../../../shared/types'
 const BASES = ['http://127.0.0.1:6397', 'http://[::1]:6397']
 const REQUEST_TIMEOUT_MS = 1000
 const FOCUS_POLL_MS = 500
+const CAR_NUMBER_POLL_MS = 2000
+const PIT_MENU_POLL_MS = 2000
 // The vehicle list is ~600 KB.
 const VEHICLES_TIMEOUT_MS = 5000
 const NATIONALITY_RETRY_MS = 10_000
@@ -65,6 +67,90 @@ export class LmuFocusPoller {
     try {
       const value = await getJson('/rest/watch/focus')
       this.focusCarId = typeof value === 'number' ? value : -1
+    } finally {
+      this.busy = false
+    }
+  }
+}
+
+// Car numbers by slot ID (= mID). Custom team liveries all carry #397 in mVehicleName,
+// only REST has the number the driver picked.
+export class LmuCarNumbers {
+  private bySlot = new Map<number, string>()
+  private timer: NodeJS.Timeout | null = null
+  private busy = false
+
+  start(): void {
+    if (this.timer) return
+    void this.poll()
+    this.timer = setInterval(() => void this.poll(), CAR_NUMBER_POLL_MS)
+  }
+
+  stop(): void {
+    if (this.timer) clearInterval(this.timer)
+    this.timer = null
+    this.bySlot = new Map()
+  }
+
+  lookup(slotId: number): string | undefined {
+    return this.bySlot.get(slotId)
+  }
+
+  private async poll(): Promise<void> {
+    if (this.busy) return
+    this.busy = true
+    try {
+      const standings = await getJson('/rest/watch/standings')
+      if (!Array.isArray(standings)) return
+      const bySlot = new Map<number, string>()
+      for (const entry of standings as { slotID?: unknown; carNumber?: unknown }[]) {
+        if (typeof entry.slotID === 'number' && typeof entry.carNumber === 'string' && entry.carNumber) {
+          bySlot.set(entry.slotID, entry.carNumber)
+        }
+      }
+      this.bySlot = bySlot
+    } finally {
+      this.busy = false
+    }
+  }
+}
+
+interface RestPitMenuEntry {
+  name?: string
+  currentSetting?: number
+  settings?: { text?: string }[]
+}
+
+// Pit menu of the own car. Answers "Invalid state" (no JSON) without a car.
+export class LmuPitMenu {
+  // VE level after the stop in %, e.g. "100% 32 laps". null for cars without VE.
+  veTargetPct: number | null = null
+  private timer: NodeJS.Timeout | null = null
+  private busy = false
+
+  start(): void {
+    if (this.timer) return
+    void this.poll()
+    this.timer = setInterval(() => void this.poll(), PIT_MENU_POLL_MS)
+  }
+
+  stop(): void {
+    if (this.timer) clearInterval(this.timer)
+    this.timer = null
+    this.veTargetPct = null
+  }
+
+  private async poll(): Promise<void> {
+    if (this.busy) return
+    this.busy = true
+    try {
+      const menu = await getJson('/rest/garage/PitMenu/receivePitMenu')
+      const entry = Array.isArray(menu)
+        ? (menu as RestPitMenuEntry[]).find((e) => e.name === 'VIRTUAL ENERGY:')
+        : undefined
+      const text = entry?.settings?.[entry.currentSetting ?? -1]?.text
+      const pct = text?.match(/^(\d+(?:\.\d+)?)%/)?.[1]
+      this.veTargetPct = pct !== undefined ? Number(pct) : null
     } finally {
       this.busy = false
     }

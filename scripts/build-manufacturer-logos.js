@@ -49,7 +49,7 @@ const MANUFACTURER_KEYS = [
   'acura', 'alpine', 'aston-martin', 'audi', 'bmw', 'buick', 'cadillac', 'caterham',
   'chevrolet', 'corvette', 'ferrari', 'ford', 'genesis', 'ginetta', 'holden', 'honda', 'hyundai',
   'kia', 'lamborghini',
-  'ligier', 'lotus', 'mazda', 'mclaren', 'mercedes', 'nissan', 'pontiac',
+  'ligier', 'lotus', 'mazda', 'mclaren', 'mercedes', 'nissan', 'peugeot', 'pontiac',
   'porsche', 'radical', 'ram', 'renault', 'riley', 'ruf', 'subaru', 'toyota',
   'volkswagen',
   ...LOCAL_ONLY_KEYS

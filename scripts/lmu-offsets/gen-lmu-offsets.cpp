@@ -134,6 +134,11 @@ int main() {
   OFF(TelemInfoV01, mUnfilteredThrottle);
   OFF(TelemInfoV01, mUnfilteredBrake);
   OFF(TelemInfoV01, mUnfilteredClutch);
+  OFF(TelemInfoV01, mOverheating);
+  OFF(TelemInfoV01, mDetached);
+  OFF(TelemInfoV01, mDentSeverity);
+  OFF(TelemInfoV01, mLastImpactET);
+  OFF(TelemInfoV01, mLastImpactMagnitude);
   OFF(TelemInfoV01, mFuel);
   OFF(TelemInfoV01, mEngineMaxRPM);
   OFF(TelemInfoV01, mCurrentSector);
@@ -163,6 +168,7 @@ int main() {
   OFF(TelemWheelV01, mTemperature);
   OFF(TelemWheelV01, mWear);
   OFF(TelemWheelV01, mFlat);
+  OFF(TelemWheelV01, mDetached);
   OFF(TelemWheelV01, mTireCarcassTemperature);
   OFF(TelemWheelV01, mOptimalTemp);
   printf("  },\n");

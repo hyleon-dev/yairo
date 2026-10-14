@@ -37,6 +37,10 @@ an already-squeezed size that's too small instead of actually needed one. */
   flex-shrink: 0;
 }
 
+.overlay-content--idle {
+  visibility: hidden;
+}
+
 /* Fully click-through during live operation (controlled by Electron via
    setIgnoreMouseEvents). Additionally draggable via OS drag in edit mode. */
 .overlay-root.edit-mode {
