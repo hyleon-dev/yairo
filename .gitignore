@@ -33,8 +33,11 @@ yarn-error.log*
 
 # Project-specific
 resources/trackmap-assets/
+resources/lmu-trackmap-assets/
 resources/manufacturer-logos/
-sdk-dump.json
+dump_iracing.json
+dump_lmu.json
+lmu-swagger.json
 media/*/
 
 # Helper

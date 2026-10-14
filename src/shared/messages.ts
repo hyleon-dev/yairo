@@ -1,6 +1,12 @@
-import type { ColorCorrectionMode, OverlayId } from './types'
+import type { ColorCorrectionMode, OverlayId, SimulatorId } from './types'
 
-const stintLapsHint = 'iRacing does not provide this info. It is calculated internally from tracked laps. ' +
+// Without simulators the hint applies to every sim.
+export interface Hint {
+  text: string
+  simulators?: readonly SimulatorId[]
+}
+
+const stintLapsHint = 'The sim does not provide this info. It is calculated internally from tracked laps. ' +
     'When the program is not running (e.g. in 24hr races when you turn off your pc) and in the meantime the car pits, ' +
     'it is not tracked and the stint laps won\'t be correct when you reconnect and start YAiRO until the car boxes.'
 
@@ -8,14 +14,21 @@ export const messages = {
   control: {
     appTitle: 'Yet Another iRacing Overlay',
     loading: 'Loading configuration…',
-    connected: '● iRacing connected',
-    disconnected: '○ iRacing not active',
+    connected: (simName: string) => `● ${simName} connected`,
+    disconnected: (simName: string) => `○ ${simName} not active`,
+    simulatorHeading: 'Simulation',
+    simulators: {
+      iracing: { name: 'iRacing', mark: 'iR' },
+      lmu: { name: 'Le Mans Ultimate', mark: 'LMU' }
+    } as Record<SimulatorId, { name: string; mark: string }>,
+    simulatorConnected: 'connected',
+    simulatorWaiting: 'waiting for sim',
+    simulatorInactive: 'inactive',
     overlaysHeading: 'Overlays',
-    // Only overlays with an entry here get the info ('i') button next to
-    // their name in the Control Center. Undefined = no hint yet, no button.
+    // Info ('i') button next to the overlay name. Only shown if a hint applies to the active sim.
     overlayHints: {
-      tires: 'The Data is only updated when pitting.'
-    } as Partial<Record<OverlayId, string>>,
+      tires: [{ text: 'The data is only updated when pitting.', simulators: ['iracing'] }]
+    } as Partial<Record<OverlayId, Hint[]>>,
     updateAvailable: (version: string) => `A new version (${version}) is available.`,
     updateAvailableLink: 'View release',
     positioningHeading: 'Positioning',
@@ -84,7 +97,7 @@ export const messages = {
     showIRating: 'Show iRating',
     showSafetyRating: 'Show Safety Rating',
     showStint: 'Show stint laps',
-    showStintHint: stintLapsHint,
+    showStintHints: [{ text: stintLapsHint }] as Hint[],
     showAvgLapTime: 'Show average lap time',
     showBestLapTime: 'Show best lap time',
     showNationFlag: 'Show country flag',

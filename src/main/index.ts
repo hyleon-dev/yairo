@@ -2,7 +2,7 @@ import {app, ipcMain, BrowserWindow, clipboard, shell, globalShortcut, Notificat
 import {mkdirSync, writeFileSync} from 'fs'
 import {dirname, join} from 'path'
 import {WindowManager} from './windowManager'
-import {IrsdkService} from './irsdkService'
+import {SimService} from './simService'
 import {ConfigStore} from './configStore'
 import {OverlayServer} from './overlayServer'
 import {OverlaySettingsStore} from './overlaySettingsStore'
@@ -11,6 +11,7 @@ import {checkForUpdate} from './updateChecker'
 import {
   IPC,
   overlaySettingsChannel,
+  SIMULATOR_IDS,
   type AnyOverlaySettings,
   type ColorCorrectionMode,
   type ConnectionStatus,
@@ -19,11 +20,12 @@ import {
   type RelativeOverlaySettings,
   type StandingsOverlaySettings,
   type UpdateStatus,
-  type OverlayScreenshotResult
+  type OverlayScreenshotResult,
+  type SimulatorId
 } from '../shared/types'
 
 const windowManager = new WindowManager()
-const irsdk = new IrsdkService()
+const sim = new SimService()
 const configStore = new ConfigStore()
 const overlayServer = new OverlayServer()
 const overlaySettingsStore = new OverlaySettingsStore()
@@ -160,6 +162,16 @@ function registerIpcHandlers(): void {
     return updated
   })
 
+  ipcMain.handle(IPC.SIMULATOR_SET, (_evt, simulator: SimulatorId) => {
+    if (!SIMULATOR_IDS.includes(simulator)) return configStore.get()
+    if (simulator === configStore.get().simulator) return configStore.get()
+
+    const updated = configStore.setSimulator(simulator)
+    void sim.switchSimulator(simulator)
+    broadcastToAll(IPC.CONFIG_UPDATED, updated)
+    return updated
+  })
+
   // Overlay reports new position/size after a drag in edit mode
   ipcMain.handle(IPC.OVERLAY_BOUNDS_SET, (_evt, id: OverlayId, bounds: OverlayBounds) => {
     windowManager.setOverlayBounds(id, bounds)
@@ -221,12 +233,12 @@ function registerIpcHandlers(): void {
 
         if (id === 'relative') {
           const relativeSettings = updated as RelativeOverlaySettings
-          irsdk.setRelativeWindow(relativeSettings.driversAhead, relativeSettings.driversBehind)
+          sim.setRelativeWindow(relativeSettings.driversAhead, relativeSettings.driversBehind)
         }
 
         if (id === 'standings') {
           const standingsSettings = updated as StandingsOverlaySettings
-          irsdk.setStandingsWindow(
+          sim.setStandingsWindow(
               standingsSettings.driversAhead,
               standingsSettings.driversBehind,
               standingsSettings.topCount
@@ -253,58 +265,58 @@ function seedOverlaySettings(): void {
   }
 
   const relativeSettings = overlaySettingsStore.get('relative') as RelativeOverlaySettings
-  irsdk.setRelativeWindow(relativeSettings.driversAhead, relativeSettings.driversBehind)
+  sim.setRelativeWindow(relativeSettings.driversAhead, relativeSettings.driversBehind)
 
   const standingsSettings = overlaySettingsStore.get('standings') as StandingsOverlaySettings
-  irsdk.setStandingsWindow(
+  sim.setStandingsWindow(
       standingsSettings.driversAhead,
       standingsSettings.driversBehind,
       standingsSettings.topCount
   )
 }
 
-function registerIrsdkEvents(): void {
-  irsdk.on('telemetry', (data) => {
+function registerSimEvents(): void {
+  sim.on('telemetry', (data) => {
     broadcastToOverlays(IPC.TELEMETRY_UPDATE, data)
   })
-  irsdk.on('standings', (data) => {
+  sim.on('standings', (data) => {
     broadcastToOverlays(IPC.STANDINGS_UPDATE, data)
   })
-  irsdk.on('relative', (data) => {
+  sim.on('relative', (data) => {
     broadcastToOverlays(IPC.RELATIVE_UPDATE, data)
   })
-  irsdk.on('trackmap', (data) => {
+  sim.on('trackmap', (data) => {
     broadcastToOverlays(IPC.TRACKMAP_UPDATE, data)
   })
-  irsdk.on('flags', (data) => {
+  sim.on('flags', (data) => {
     broadcastToOverlays(IPC.FLAGS_UPDATE, data)
   })
-  irsdk.on('connected', () => {
+  sim.on('connected', () => {
     driverStatsStore.expireIfStale()
     connectionStatus = {connected: true}
     broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
   })
-  irsdk.on('disconnected', () => {
+  sim.on('disconnected', () => {
     connectionStatus = {connected: false}
     broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
   })
-  irsdk.on('lapCompleted', (events) => {
+  sim.on('lapCompleted', (events) => {
     for (const event of events) {
       driverStatsStore.recordLapTime(event.custId, event.driverName, event.entry)
     }
   })
-  irsdk.on('sessionHeartbeat', (sessionTimeRemainSec) => {
+  sim.on('sessionHeartbeat', (sessionTimeRemainSec) => {
     driverStatsStore.updateSessionExpiry(sessionTimeRemainSec)
   })
 }
 
 app.whenReady().then(() => {
   registerIpcHandlers()
-  registerIrsdkEvents()
+  registerSimEvents()
 
   createControlWindow()
   createOverlaysFromConfig()
-  irsdk.start()
+  sim.start(configStore.get().simulator)
   overlayServer.start()
   seedOverlaySettings()
 
@@ -337,7 +349,9 @@ app.on('will-quit', () => {
 })
 
 app.on('window-all-closed', () => {
-  irsdk.stop()
   overlayServer.stop()
-  if (process.platform !== 'darwin') app.quit()
+  // Quitting while the worker sits in a native SDK call would crash, so wait for it.
+  void sim.stop().finally(() => {
+    if (process.platform !== 'darwin') app.quit()
+  })
 })

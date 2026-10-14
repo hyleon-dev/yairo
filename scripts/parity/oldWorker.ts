@@ -8,10 +8,10 @@ import {
   type TelemetryVarList,
   type WeekendInfo
 } from 'irsdk-node'
-import { FakeIRacingSDK } from './irsdkFake'
-import { flairNameToIsoCode } from './nationFlags'
-import { manufacturerLogoKey } from './manufacturerLogos'
-import { estimateIratingChanges } from './iratingCalculator'
+import { FakeIRacingSDK } from '../../src/main/sim/iracing/irsdkFake'
+import { flairNameToIsoCode } from '../../src/main/nationFlags'
+import { manufacturerLogoKey } from '../../src/main/manufacturerLogos'
+import { estimateIratingChanges } from '../../src/main/iratingCalculator'
 import type {
   DriverLapCompletedEvent,
   DriverStanding,
@@ -28,8 +28,8 @@ import type {
   TrackMapData,
   TrackMapDriver,
   TrackSurfaceStatus
-} from '../shared/types'
-import type { IrsdkWorkerCommand, IrsdkWorkerMessage } from './irsdkWorkerMessages'
+} from '../../src/shared/types'
+import type { IrsdkWorkerCommand, IrsdkWorkerMessage } from '../../src/main/irsdkWorkerMessages'
 
 // Runs as its own worker thread (see irsdkService.ts). waitForData() is a
 // blocking native call that's effectively busy almost constantly while
@@ -60,7 +60,9 @@ parentPort?.on('message', (command: IrsdkWorkerCommand) => {
   }
 })
 
+export const posted: IrsdkWorkerMessage[] = []
 function post(message: IrsdkWorkerMessage): void {
+  posted.push(message)
   parentPort?.postMessage(message)
 }
 
@@ -120,8 +122,8 @@ function displayDriverName(carIdx: number, ownCarIdx: number, realName: string):
   return fakeNameFor(carIdx)
 }
 
-const sdk: IrsdkLike = useFakeSdk ? new FakeIRacingSDK() : new IRacingSDK({ autoEnableTelemetry: true })
-sdk.startSDK()
+const sdk: IrsdkLike = (globalThis as any).__paritySdk
+
 
 let wasConnected = false
 let lastStartAttempt = Date.now()
@@ -1323,4 +1325,4 @@ function buildFlags(raw: TelemetryVarList): FlagsData {
   return { flags: raw.SessionFlags?.value?.[0] ?? 0 }
 }
 
-loop()
+export { publishTelemetry, relativeAhead }

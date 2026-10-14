@@ -4,9 +4,12 @@ import { join, dirname } from 'path'
 import {
   DEFAULT_ACCENT_COLOR,
   DEFAULT_COLOR_CORRECTION_MODE,
+  DEFAULT_SIMULATOR,
+  SIMULATOR_IDS,
   type AppConfig,
   type ColorCorrectionMode,
-  type OverlayConfig
+  type OverlayConfig,
+  type SimulatorId
 } from '../shared/types'
 
 const DEFAULT_CONFIG: AppConfig = {
@@ -15,6 +18,7 @@ const DEFAULT_CONFIG: AppConfig = {
   accentColor: DEFAULT_ACCENT_COLOR,
   colorCorrectionMode: DEFAULT_COLOR_CORRECTION_MODE,
   targetLapTimeSec: 0,
+  simulator: DEFAULT_SIMULATOR,
   overlays: [
     {
       id: 'telemetry',
@@ -141,6 +145,12 @@ export class ConfigStore {
     return this.config
   }
 
+  setSimulator(simulator: SimulatorId): AppConfig {
+    this.config = { ...this.config, simulator }
+    this.persist()
+    return this.config
+  }
+
   private load(): AppConfig {
     try {
       if (existsSync(this.filePath)) {
@@ -152,6 +162,8 @@ export class ConfigStore {
           accentColor: saved.accentColor ?? DEFAULT_CONFIG.accentColor,
           colorCorrectionMode: saved.colorCorrectionMode ?? DEFAULT_CONFIG.colorCorrectionMode,
           targetLapTimeSec: saved.targetLapTimeSec ?? DEFAULT_CONFIG.targetLapTimeSec,
+          simulator:
+            saved.simulator && SIMULATOR_IDS.includes(saved.simulator) ? saved.simulator : DEFAULT_CONFIG.simulator,
           overlays: mergeOverlays(saved.overlays)
         }
       }

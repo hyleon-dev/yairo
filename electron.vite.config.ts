@@ -9,9 +9,9 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve(__dirname, 'src/main/index.ts'),
-          // Exclusive worker-thread for irsdk-node,
+          // Exclusive worker-thread for the sim connection,
           // needs own file because new Worker(...) expects a file path at runtime
-          irsdkWorker: resolve(__dirname, 'src/main/irsdkWorker.ts')
+          simWorker: resolve(__dirname, 'src/main/simWorker.ts')
         }
       }
     }

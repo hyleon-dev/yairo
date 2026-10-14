@@ -1,0 +1,123 @@
+import type { TiresData, TrackSurfaceStatus } from '../../shared/types'
+
+// Simulator-independent view of one tick. Each SimSource maps its own SDK onto this,
+// and all overlay payloads are built from it (see sim/core).
+
+export interface SimSession {
+  // Changes when a new session starts. Used to reset per-session tracking.
+  sessionNum: number
+  sessionType: string // e.g. "Race", "Practice", "Qualify"
+  trackId: number // -1 if unknown
+  trackName: string
+  trackLengthM: number // 0 if unknown
+  sessionTimeSec: number
+  timeRemainSec: number | null
+  lapsRemain: number | null
+  airTemp: number
+  airTempUnit: string
+  trackTemp: number
+  trackTempUnit: string
+  grip: string
+  flags: number // FLAG_BITS bitmask
+  // Own car/team, regardless of camera focus. -1 = not available.
+  currentDriverIncidentCount: number
+  teamIncidentCount: number
+  incidentLimit: string
+  // Overall P1, -1 if unknown.
+  leaderCarIdx: number
+}
+
+// Official session classification. Stays for a driver even after they left the server.
+export interface SimOfficialResult {
+  position: number
+  lapsCompleted: number
+  bestLapTime: number
+  lastLapTime: number
+}
+
+export interface SimCar {
+  carIdx: number
+  // In the live roster (connected, not a spectator or pace car). False for cars only
+  // known from `official`.
+  isLive: boolean
+  surface: TrackSurfaceStatus | null // null = not in world
+  driverId: number | undefined
+  driverName: string
+  teamName: string
+  carNumber: string
+  carId: number
+  carName: string
+  classId: number
+  className: string
+  classColorHex: string
+  classEstLapTime: number // s, -1 if unknown
+  iRating: number
+  licString: string
+  licColorHex: string
+  flagIsoCode: string | null
+  incidentCount: number // -1 = not available
+  position: number // live overall position, 0 = not classified
+  lap: number
+  lapsCompleted: number
+  lapDistPct: number
+  gapToLeaderSec: number
+  bestLapTime: number // s, <= 0 if none
+  lastLapTime: number // s, <= 0 if none
+  currentLapTime: number // s, -1 if unknown
+  rpm: number
+  gear: number
+  // Undefined if the sim has no per-car speed. Then it is estimated from lapDistPct.
+  speedKph?: number
+  official?: SimOfficialResult
+}
+
+// Own car while actively driving it.
+export interface SimPlayerCar {
+  speedKph: number
+  rpm: number
+  rpmIdle: number
+  rpmSLFirst: number
+  rpmSLShift: number
+  rpmSLLast: number
+  rpmSLBlink: number
+  gear: number
+  throttlePct: number
+  brakePct: number
+  clutchPct: number // 1 = fully pressed
+  fuelLevelL: number
+  fuelLevelPct: number // 0..1
+  fuelCapacityL: number // 0 if unknown
+  nextPitFuelL: number | null
+  lap: number
+  lapDistPct: number
+  lapCurrentTime: number
+  lapLastTime: number
+  lapBestTime: number
+  lapDeltaToBest: number
+  lapDeltaToBestValid: boolean
+  isOnPitRoad: boolean
+  pitLimiterActive: boolean
+  incidentCount: number
+  tires: TiresData
+}
+
+export interface SimSnapshot {
+  session: SimSession
+  ownCarIdx: number // -1 if none
+  // Own car while driving, else the car the camera follows.
+  focusCarIdx: number
+  isDriving: boolean
+  player: SimPlayerCar | null // null while not driving
+  cars: SimCar[]
+}
+
+export interface SimSource {
+  readonly name: string
+  // (Re)tries to attach to the sim. Called periodically while disconnected.
+  attach(): void
+  // Blocks until a new frame is available. False on timeout or when not connected.
+  waitForFrame(timeoutMs: number): boolean
+  read(): SimSnapshot | null
+  // Releases native handles. Called between frames, never during a blocking wait.
+  close(): void
+}

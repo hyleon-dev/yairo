@@ -11,6 +11,7 @@ import type {
   OverlayId,
   OverlayScreenshotResult,
   RelativeData,
+  SimulatorId,
   StandingsData,
   TelemetryData,
   TrackMapData,
@@ -47,6 +48,8 @@ const api = {
 
   setTargetLapTimeSec: (targetLapTimeSec: number): Promise<AppConfig> =>
     ipcRenderer.invoke(IPC.TARGET_LAP_TIME_SET, targetLapTimeSec),
+
+  setSimulator: (simulator: SimulatorId): Promise<AppConfig> => ipcRenderer.invoke(IPC.SIMULATOR_SET, simulator),
 
   copyToClipboard: (text: string): Promise<void> => ipcRenderer.invoke(IPC.CLIPBOARD_WRITE, text),
 

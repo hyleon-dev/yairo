@@ -1,9 +1,9 @@
 import type { Driver, DriverInfo, SessionList, TelemetryVariable, TelemetryVarList, WeekendInfo } from 'irsdk-node'
-import { FLAG_BITS } from '../shared/types'
+import { FLAG_BITS } from '../../../shared/types'
 
 // Simulated race session for local dev without iRacing running (see
-// "npm run dev:mock", IRSDK_MOCK=1 in irsdkWorker.ts).
-// Mirrors only the SDK fields that irsdkWorker.ts actually reads. Everything
+// "npm run dev:mock", IRSDK_MOCK=1 in iracingSource.ts).
+// Mirrors only the SDK fields that iracingSource.ts actually reads. Everything
 // else on TelemetryVarList/DriverInfo/WeekendInfo/SessionList stays empty,
 // hence the "as unknown as" casts below.
 // Kept simple on purpose: no pit stops, no session changes, no spectating,
@@ -175,7 +175,7 @@ export class FakeIRacingSDK {
   }
 
   // Timeouts keep the fake running at the same rate (~30Hz) as a real connect.
-  // Otherwise the setImmediate() loop in irsdkWorker.ts would spin unthrottled
+  // Otherwise the setImmediate() loop in simWorker.ts would spin unthrottled
   // and flood the main process with messages.
   waitForData(timeoutMs = 16): boolean {
     const elapsed = Date.now() - this.lastTickAt

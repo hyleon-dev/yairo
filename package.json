@@ -10,7 +10,9 @@
     "dev:mock": "cross-env IRSDK_MOCK=1 electron-vite dev",
     "dev:document": "cross-env ANONYMIZE_DRIVER_NAMES=1 OVERLAY_SCREENSHOTS=1 electron-vite dev",
     "dev:debug": "electron-vite dev --inspect --sourcemap",
-    "dump-sdk": "cross-env ELECTRON_RUN_AS_NODE=1 electron scripts/dump-sdk-data.js",
+    "dump-iracing": "cross-env ELECTRON_RUN_AS_NODE=1 electron scripts/dump-iracing-data.js",
+    "dump-lmu": "node scripts/dump-lmu-data.js",
+    "gen-lmu-offsets": "scripts\\lmu-offsets\\gen-lmu-offsets.bat",
     "build-trackmaps": "node scripts/build-trackmap-registry.js",
     "build-manufacturer-logos": "node scripts/build-manufacturer-logos.js",
     "build": "electron-vite build",
@@ -20,6 +22,7 @@
   "dependencies": {
     "flag-icons": "^7.5.0",
     "irsdk-node": "^4.4.0",
+    "koffi": "^3.3.2",
     "lucide-react": "^1.31.0",
     "react": "^18.3.1",
     "react-colorful": "^5.8.0",

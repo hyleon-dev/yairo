@@ -248,6 +248,66 @@ h2 {
   margin-bottom: 8px;
 }
 
+.sim-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.sim-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px 10px;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-light);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sim-tile:hover {
+  border-color: var(--color-text-dim);
+}
+
+.sim-tile.active {
+  border-color: var(--color-accent);
+  background: rgba(var(--color-accent-rgb), 0.12);
+}
+
+.sim-tile:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.sim-tile-mark {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
+.sim-tile.active .sim-tile-mark {
+  color: var(--color-accent);
+}
+
+.sim-tile-name {
+  font-size: var(--font-md);
+  font-weight: bold;
+  text-align: center;
+}
+
+.sim-tile-status {
+  font-size: var(--font-body-sm);
+  color: var(--color-text-gray);
+}
+
+.sim-tile-status.ok {
+  color: var(--color-success-soft);
+}
+
 .overlay-list {
   list-style: none;
   padding: 0;

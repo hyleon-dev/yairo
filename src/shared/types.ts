@@ -361,6 +361,12 @@ export interface OverlayConfig {
   bounds: OverlayBounds
 }
 
+export type SimulatorId = 'iracing' | 'lmu'
+
+export const SIMULATOR_IDS: readonly SimulatorId[] = ['iracing', 'lmu']
+
+export const DEFAULT_SIMULATOR: SimulatorId = 'iracing'
+
 // 'none' = no correction. The others apply a daltonization filter (see
 // shared/colorCorrectionFilters.ts). This only ever runs in the Control Center and
 // the real Electron overlay windows. It deliberately does NOT run for OBS/browser
@@ -384,6 +390,8 @@ export interface AppConfig {
   // compares against a target lap (Lap Timer, Delta Bar, ...) shares one value.
   // Set once in the Control Center, instead of separately per overlay.
   targetLapTimeSec: number
+  // Chosen by the user in the Control Center. No auto-detection.
+  simulator: SimulatorId
 }
 
 // The accent color hardcoded in theme.css (--color-accent) before the user
@@ -547,6 +555,7 @@ export const IPC = {
   ACCENT_COLOR_SET: 'accent-color:set',
   COLOR_CORRECTION_MODE_SET: 'color-correction-mode:set',
   TARGET_LAP_TIME_SET: 'target-lap-time:set',
+  SIMULATOR_SET: 'simulator:set',
   OVERLAY_BOUNDS_SET: 'overlay:set-bounds',
   OVERLAY_CONTENT_SIZE_SET: 'overlay:set-content-size',
   OVERLAY_SETTINGS_GET: 'overlay-settings:get',
