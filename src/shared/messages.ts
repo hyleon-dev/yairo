@@ -18,9 +18,13 @@ export const messages = {
     disconnected: (simName: string) => `○ ${simName} not active`,
     simulatorHeading: 'Simulation',
     simulators: {
-      iracing: { name: 'iRacing', mark: 'iR' },
-      lmu: { name: 'Le Mans Ultimate', mark: 'LMU' }
-    } as Record<SimulatorId, { name: string; mark: string }>,
+      iracing: { name: 'iRacing', mark: 'iR', setupHint: '' },
+      lmu: {
+        name: 'Le Mans Ultimate',
+        mark: 'LMU',
+        setupHint: 'No data. Turn on "Settings > Gameplay > Enable Plugins" in LMU and restart LMU.'
+      }
+    } as Record<SimulatorId, { name: string; mark: string; setupHint: string }>,
     simulatorConnected: 'connected',
     simulatorWaiting: 'waiting for sim',
     simulatorInactive: 'inactive',
@@ -66,8 +70,8 @@ export const messages = {
     columnAvgLap: 'Avg',
     columnLast: 'Last',
     leader: 'LEADER',
-    classMeta: (driverCount: number, strengthOfField: number) =>
-      `${driverCount} Driver · SoF ${strengthOfField}`,
+    classMeta: (driverCount: number, strengthOfField: number | null) =>
+      strengthOfField === null ? `${driverCount} Driver` : `${driverCount} Driver · SoF ${strengthOfField}`,
     gripLabel: 'GRIP'
   },
   relative: {

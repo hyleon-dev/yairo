@@ -12,6 +12,7 @@ import type {
 export type SimWorkerMessage =
     | { type: 'connected' }
     | { type: 'disconnected' }
+    | { type: 'needs-setup'; value: boolean }
     | { type: 'telemetry'; data: TelemetryData }
     | { type: 'standings'; data: StandingsData }
     | { type: 'relative'; data: RelativeData }

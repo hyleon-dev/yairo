@@ -68,7 +68,7 @@ export function buildRelative(snap: SimSnapshot, window: RelativeWindow): Relati
 
   const focusDriver = rows.find((row) => row.isFocused)
   if (!focusDriver) {
-    return { drivers: [] }
+    return { sim: snap.sim, drivers: [] }
   }
 
   // Using track distance from the car in focus to other cars, to calculate gap time.
@@ -124,5 +124,5 @@ export function buildRelative(snap: SimSnapshot, window: RelativeWindow): Relati
     lastLapTime: row.lastLapTime
   }))
 
-  return { drivers }
+  return { sim: snap.sim, drivers }
 }

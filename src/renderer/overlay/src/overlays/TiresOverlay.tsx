@@ -1,4 +1,4 @@
-import type { TelemetryData, TiresOverlaySettings, TireWheelData } from '../../../../shared/types'
+import { SIM_FEATURES, type TelemetryData, type TiresOverlaySettings, type TireWheelData } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import './TiresOverlay.css'
 
@@ -93,9 +93,10 @@ function TireGauge({
 }
 
 export function TiresOverlay({ data, settings }: { data: TelemetryData; settings: TiresOverlaySettings }) {
-  // Tire data is only meaningful on pit road (see isOnPitRoad's doc comment).
-  // Otherwise it is hidden via .tires--idle.
-  const isIdle = !data.isOnPitRoad
+  // Without live tire data, the values are only meaningful on pit road (see isOnPitRoad's doc comment).
+  const isIdle = SIM_FEATURES[data.sim].liveTires
+    ? !data.isOnTrack || data.isSpectatingOther
+    : !data.isOnPitRoad
   return (
     <div className={`card tires-grid ${isIdle ? 'tires--idle' : ''}`}>
       <TireGauge corner="lf" wheel={data.tires.lf} showWearPct={settings.showWearPct} />

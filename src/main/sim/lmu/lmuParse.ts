@@ -27,6 +27,7 @@ export interface LmuVehicleScoring {
   id: number
   driverName: string
   vehicleName: string
+  vehFilename: string
   totalLaps: number
   lapDist: number
   bestLapTime: number
@@ -113,6 +114,7 @@ function parseVehicle(buf: Buffer, idx: number): LmuVehicleScoring {
     id: buf.readInt32LE(b + v.mID),
     driverName: str(buf, b + v.mDriverName, 32),
     vehicleName: str(buf, b + v.mVehicleName, 64),
+    vehFilename: str(buf, b + v.mVehFilename, 32),
     totalLaps: buf.readInt16LE(b + v.mTotalLaps),
     lapDist: buf.readDoubleLE(b + v.mLapDist),
     bestLapTime: buf.readDoubleLE(b + v.mBestLapTime),

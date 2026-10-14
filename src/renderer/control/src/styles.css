@@ -308,6 +308,12 @@ h2 {
   color: var(--color-success-soft);
 }
 
+.sim-tile-hint {
+  font-size: var(--font-body-sm);
+  color: var(--color-warning);
+  text-align: center;
+}
+
 .overlay-list {
   list-style: none;
   padding: 0;

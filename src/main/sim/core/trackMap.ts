@@ -21,6 +21,7 @@ export function buildTrackMap(snap: SimSnapshot): TrackMapData {
   }
 
   return {
+    sim: snap.sim,
     trackId: snap.session.trackId,
     trackName: snap.session.trackName,
     drivers
@@ -28,5 +29,5 @@ export function buildTrackMap(snap: SimSnapshot): TrackMapData {
 }
 
 export function buildFlags(snap: SimSnapshot): FlagsData {
-  return { flags: snap.session.flags }
+  return { sim: snap.sim, flags: snap.session.flags }
 }

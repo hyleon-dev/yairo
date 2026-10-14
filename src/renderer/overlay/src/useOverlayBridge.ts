@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   DEFAULT_OVERLAY_SETTINGS,
+  DEFAULT_SIMULATOR,
   IPC,
   overlaySettingsChannel,
   type AnyOverlaySettings,
@@ -10,6 +11,7 @@ import {
   type FlagsData,
   type OverlayId,
   type RelativeData,
+  type SimulatorId,
   type StandingsData,
   type TelemetryData,
   type TrackMapData
@@ -27,6 +29,8 @@ export interface OverlayBridgeState {
   settings: AnyOverlaySettings
   // s, <= 0 = no target set. Global (part of AppConfig), see its doc comment in shared/types.ts.
   targetLapTimeSec: number
+  // Selected sim from the config. Payloads carry their own sim, this covers the time without data.
+  simulator: SimulatorId
 }
 
 // Applied directly here, not returned as state. This way every overlay
@@ -61,17 +65,19 @@ export function useOverlayBridge(overlayId: OverlayId): OverlayBridgeState {
   const [editMode, setEditMode] = useState(false)
   const [settings, setSettings] = useState<AnyOverlaySettings>(DEFAULT_OVERLAY_SETTINGS[overlayId])
   const [targetLapTimeSec, setTargetLapTimeSec] = useState(0)
+  const [simulator, setSimulator] = useState<SimulatorId>(DEFAULT_SIMULATOR)
 
   useEffect(() => {
     const setters = {
-      setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec
+      setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
+      setSimulator
     }
     return window.overlayApi
       ? subscribeViaElectron(overlayId, setters)
       : subscribeViaWebSocket(overlayId, setters)
   }, [overlayId])
 
-  return { telemetry, standings, relative, trackMap, flags, editMode, settings, targetLapTimeSec }
+  return { telemetry, standings, relative, trackMap, flags, editMode, settings, targetLapTimeSec, simulator }
 }
 
 interface Setters {
@@ -83,11 +89,15 @@ interface Setters {
   setEditMode: (v: boolean) => void
   setSettings: (s: AnyOverlaySettings) => void
   setTargetLapTimeSec: (v: number) => void
+  setSimulator: (v: SimulatorId) => void
 }
 
 function subscribeViaElectron(
   overlayId: OverlayId,
-  { setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec }: Setters
+  {
+    setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
+    setSimulator
+  }: Setters
 ): () => void {
   const unsubTelemetry = window.overlayApi.onTelemetry(setTelemetry)
   const unsubStandings = window.overlayApi.onStandings(setStandings)
@@ -99,6 +109,7 @@ function subscribeViaElectron(
     applyAccentColor(cfg.accentColor)
     applyColorCorrectionMode(cfg.colorCorrectionMode)
     setTargetLapTimeSec(cfg.targetLapTimeSec)
+    setSimulator(cfg.simulator)
   })
   const unsubSettings = window.overlayApi.onOverlaySettings(overlayId, setSettings)
   const unsubConnection = window.overlayApi.onConnectionStatus((status: ConnectionStatus) => {
@@ -116,6 +127,7 @@ function subscribeViaElectron(
     applyAccentColor(cfg.accentColor)
     applyColorCorrectionMode(cfg.colorCorrectionMode)
     setTargetLapTimeSec(cfg.targetLapTimeSec)
+    setSimulator(cfg.simulator)
   })
   window.overlayApi.getOverlaySettings(overlayId).then(setSettings)
 
@@ -133,7 +145,10 @@ function subscribeViaElectron(
 
 function subscribeViaWebSocket(
     overlayId: OverlayId,
-    {setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec}: Setters
+    {
+      setTelemetry, setStandings, setRelative, setTrackMap, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
+      setSimulator
+    }: Setters
 ): () => void {
   // No edit mode/dragging in the browser
   setEditMode(false)
@@ -175,6 +190,7 @@ function subscribeViaWebSocket(
         // applyColorCorrectionMode()'s doc comment above.
         applyAccentColor((payload as AppConfig).accentColor)
         setTargetLapTimeSec((payload as AppConfig).targetLapTimeSec)
+        setSimulator((payload as AppConfig).simulator)
         break
       case settingsChannel:
         setSettings(payload as AnyOverlaySettings)

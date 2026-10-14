@@ -20,7 +20,7 @@ interface RankedStandingsClass {
   classId: number
   className: string
   driverCount: number
-  strengthOfField: number
+  strengthOfField: number | null
   drivers: DriverStanding[]
 }
 
@@ -38,9 +38,9 @@ interface StandingsRow {
   isPlayer: boolean
   classId: number
   className: string
-  iRating: number
-  licString: string
-  licColorHex: string
+  iRating: number | null
+  licString: string | null
+  licColorHex: string | null
   classColorHex: string
   avgLapTimeSec: number
   flagIsoCode: string | null
@@ -81,7 +81,7 @@ function computeRankedClasses(snap: SimSnapshot): RankedStandingsClass[] {
       classColorHex: car.classColorHex,
       avgLapTimeSec: avgLapTimeSec(car.driverId),
       flagIsoCode: car.flagIsoCode,
-      manufacturerLogoKey: manufacturerLogoKey(car.carName),
+      manufacturerLogoKey: manufacturerLogoKey(car.carName, snap.sim),
       lastLapTime
     }
   })
@@ -106,7 +106,7 @@ function computeRankedClasses(snap: SimSnapshot): RankedStandingsClass[] {
     // class-position order (index 0 = P1) here, matching what
     // estimateIratingChanges() expects.
     const iRatingChanges = isRace
-      ? estimateIratingChanges(drivers.map((d) => d.iRating))
+      ? estimateIratingChanges(drivers.map((d) => d.iRating ?? 0))
       : drivers.map(() => null)
 
     const driversWithFastestFlag = drivers.map((d, i) => ({
@@ -150,9 +150,11 @@ export function buildStandings(snap: SimSnapshot, window: StandingsWindow): Stan
   const classes: StandingsClass[] = rankedClasses
     .map((cls) => ({ ...cls, drivers: filterStandingsWindow(cls.drivers, hasPlayerAnywhere, window) }))
     // Strongest (fastest) class first, matching iRacing's own multiclass results ordering.
-    .sort((a, b) => b.strengthOfField - a.strengthOfField)
+    // Without SoF the source order stays (stable sort).
+    .sort((a, b) => (b.strengthOfField ?? 0) - (a.strengthOfField ?? 0))
 
   return {
+    sim: snap.sim,
     trackName: session.trackName,
     sessionType: session.sessionType,
     remainingTimeSecs: session.timeRemainSec ?? 0,
@@ -171,9 +173,9 @@ export function buildStandings(snap: SimSnapshot, window: StandingsWindow): Stan
 // BR1 = 1600/ln(2); SoF = BR1 * ln(n / sum(e^(-iRating_i / BR1))).
 // Sanity check: if every driver has the same iRating R, the formula returns
 // exactly R (n factors of e^(-R/BR1) cancel against the n in the numerator).
-function computeStrengthOfField(iRatings: number[]): number {
-  const validRatings = iRatings.filter((r) => r > 0)
-  if (validRatings.length === 0) return 0
+function computeStrengthOfField(iRatings: (number | null)[]): number | null {
+  const validRatings = iRatings.filter((r): r is number => r !== null && r > 0)
+  if (validRatings.length === 0) return null
 
   const BR1 = 1600 / Math.log(2)
   const sumExp = validRatings.reduce((sum, r) => sum + Math.exp(-r / BR1), 0)

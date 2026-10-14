@@ -1,5 +1,11 @@
 import { Fragment } from 'react'
-import type { DriverStanding, StandingsClass, StandingsData, StandingsOverlaySettings } from '../../../../shared/types'
+import {
+  SIM_FEATURES,
+  type DriverStanding,
+  type StandingsClass,
+  type StandingsData,
+  type StandingsOverlaySettings
+} from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import { classPositionGradient, licBadgeStyle } from '../sdkColors'
 import { manufacturerLogoDataUri } from '../manufacturerLogos/registry'
@@ -105,7 +111,7 @@ function DriverRow({
       <span className="col-name">{driver.driverName}</span>
       {settings.showIRating && iRating({ driver, settings })}
       {settings.showSafetyRating && (
-        <span className="col-sr" style={licBadgeStyle(driver.licColorHex)}>
+        <span className="col-sr" style={driver.licColorHex ? licBadgeStyle(driver.licColorHex) : undefined}>
           {driver.licString || '-'}
         </span>
       )}
@@ -223,7 +229,11 @@ function EmptyClassBlock({ settings }: { settings: StandingsOverlaySettings }) {
 // ===================================
 // === Overlay Header
 // ===================================
-export function StandingsOverlay({ data, settings }: { data: StandingsData; settings: StandingsOverlaySettings }) {
+export function StandingsOverlay({ data, settings: userSettings }: { data: StandingsData; settings: StandingsOverlaySettings }) {
+  const settings = SIM_FEATURES[data.sim].driverRatings
+    ? userSettings
+    : { ...userSettings, showIRating: false, showIRatingChange: false, showSafetyRating: false }
+
   return (
     <div className="standings">
       <div className="header">

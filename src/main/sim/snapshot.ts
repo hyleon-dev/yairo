@@ -1,4 +1,4 @@
-import type { TiresData, TrackSurfaceStatus } from '../../shared/types'
+import type { SimulatorId, TiresData, TrackSurfaceStatus } from '../../shared/types'
 
 // Simulator-independent view of one tick. Each SimSource maps its own SDK onto this,
 // and all overlay payloads are built from it (see sim/core).
@@ -51,9 +51,10 @@ export interface SimCar {
   className: string
   classColorHex: string
   classEstLapTime: number // s, -1 if unknown
-  iRating: number
-  licString: string
-  licColorHex: string
+  // null if the sim has no driver ratings.
+  iRating: number | null
+  licString: string | null
+  licColorHex: string | null
   flagIsoCode: string | null
   incidentCount: number // -1 = not available
   position: number // live overall position, 0 = not classified
@@ -102,6 +103,7 @@ export interface SimPlayerCar {
 }
 
 export interface SimSnapshot {
+  sim: SimulatorId
   session: SimSession
   ownCarIdx: number // -1 if none
   // Own car while driving, else the car the camera follows.
@@ -112,7 +114,9 @@ export interface SimSnapshot {
 }
 
 export interface SimSource {
-  readonly name: string
+  readonly name: SimulatorId
+  // Sim runs but provides no data (e.g. LMU without "Enable Plugins").
+  readonly needsSetup?: boolean
   // (Re)tries to attach to the sim. Called periodically while disconnected.
   attach(): void
   // Blocks until a new frame is available. False on timeout or when not connected.

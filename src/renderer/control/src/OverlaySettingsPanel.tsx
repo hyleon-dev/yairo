@@ -1,18 +1,21 @@
-import type {
-  AnyOverlaySettings,
-  AvgLapTimeOverlaySettings, BestLapTimeOverlaySettings,
-  DeltaBarOverlaySettings,
-  FlagsOverlaySettings,
-  LastLapTimeOverlaySettings,
-  OverlayConfig,
-  RelativeOverlaySettings,
-  StandingsOverlaySettings,
-  StintOverlaySettings,
-  TelemetryOverlaySettings,
-  TiresOverlaySettings
+import { useContext } from 'react'
+import {
+  SIM_FEATURES,
+  type AnyOverlaySettings,
+  type AvgLapTimeOverlaySettings, type BestLapTimeOverlaySettings,
+  type DeltaBarOverlaySettings,
+  type FlagsOverlaySettings,
+  type LastLapTimeOverlaySettings,
+  type OverlayConfig,
+  type RelativeOverlaySettings,
+  type StandingsOverlaySettings,
+  type StintOverlaySettings,
+  type TelemetryOverlaySettings,
+  type TiresOverlaySettings
 } from '../../../shared/types'
 import {messages} from '../../../shared/messages'
 import {ToggleSwitch, SuffixNumberInput, NumberInput, SimHints} from "./Elements";
+import { SimulatorContext } from './simulatorContext'
 
 const m = messages.overlaySettings
 
@@ -206,6 +209,9 @@ function DriverRatingSettings({
   settings: RelativeOverlaySettings | StandingsOverlaySettings
   onChange: (patch: Partial<AnyOverlaySettings>) => void
 }) {
+  const simulator = useContext(SimulatorContext)
+  if (!SIM_FEATURES[simulator].driverRatings) return null
+
   return (
       <>
         <ToggleSwitch

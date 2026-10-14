@@ -2,7 +2,7 @@ import { FLAG_BITS, type TireWheelData, type TiresData, type TrackSurfaceStatus 
 import type { SimCar, SimPlayerCar, SimSession, SimSnapshot, SimSource } from '../snapshot'
 import { LmuSharedMemory } from './lmuSharedMemory'
 import { parseFrame, type LmuFrame, type LmuTelemetry, type LmuVec3, type LmuVehicleScoring, type LmuWheel } from './lmuParse'
-import { LmuFocusPoller } from './lmuRest'
+import { isRestReachable, LmuFocusPoller, LmuNationalities } from './lmuRest'
 
 // LMU sends telemetry at 100 Hz. Overlays don't need more than this.
 const FRAME_INTERVAL_MS = 1000 / 30
@@ -24,6 +24,12 @@ const CLASS_COLORS: Record<number, string> = {
 }
 const DEFAULT_CLASS_COLOR = '#828287'
 
+// Scoring class names that differ from the usual name.
+const CLASS_DISPLAY_NAMES: Record<string, string> = {
+  Hyper: 'Hypercar',
+  LMP2_ELMS: 'LMP2'
+}
+
 // No shift points in LMU, only the rev limit. Approximated as fractions of it.
 const SHIFT_LIGHT_FIRST = 0.8
 const SHIFT_LIGHT_SHIFT = 0.96
@@ -40,7 +46,10 @@ export class LmuSource implements SimSource {
   readonly name = 'lmu'
   private readonly shm = new LmuSharedMemory()
   private readonly focus = new LmuFocusPoller()
+  private readonly nationalities = new LmuNationalities()
   private lastFrameAt = 0
+  private probingRest = false
+  needsSetup = false
 
   constructor() {
     this.attach()
@@ -48,8 +57,27 @@ export class LmuSource implements SimSource {
 
   attach(): void {
     if (this.shm.isOpen && this.shm.isGameRunning()) return
-    if (this.shm.open()) this.focus.start()
-    else this.focus.stop()
+    if (this.shm.open()) {
+      this.needsSetup = false
+      this.focus.start()
+      this.nationalities.start()
+    } else {
+      this.focus.stop()
+      this.nationalities.stop()
+      void this.probeRest()
+    }
+  }
+
+  // REST answers while LMU runs, LMU_Data only exists with "Enable Plugins" on.
+  private async probeRest(): Promise<void> {
+    if (this.probingRest) return
+    this.probingRest = true
+    try {
+      const reachable = await isRestReachable()
+      this.needsSetup = reachable && !this.shm.isOpen
+    } finally {
+      this.probingRest = false
+    }
   }
 
   waitForFrame(timeoutMs: number): boolean {
@@ -66,17 +94,18 @@ export class LmuSource implements SimSource {
 
   close(): void {
     this.focus.stop()
+    this.nationalities.stop()
     this.shm.close()
   }
 
   read(): SimSnapshot | null {
     const buf = this.shm.copy()
     if (!buf) return null
-    return buildSnapshot(parseFrame(buf), this.focus.focusCarId)
+    return buildSnapshot(parseFrame(buf), this.focus.focusCarId, this.nationalities)
   }
 }
 
-function buildSnapshot(frame: LmuFrame, focusCarId: number): SimSnapshot {
+function buildSnapshot(frame: LmuFrame, focusCarId: number, nationalities: LmuNationalities): SimSnapshot {
   const { scoring, vehicles } = frame
   const telemetryById = new Map(frame.telemetry.map((t) => [t.id, t]))
   const own = vehicles.find((v) => v.isPlayer)
@@ -87,12 +116,13 @@ function buildSnapshot(frame: LmuFrame, focusCarId: number): SimSnapshot {
   const focusIsKnown = vehicles.some((v) => v.id === focusCarId)
 
   return {
+    sim: 'lmu',
     session: buildSession(frame, own),
     ownCarIdx,
     focusCarIdx: isDriving || !focusIsKnown ? ownCarIdx : focusCarId,
     isDriving,
     player: isDriving && own && ownTelemetry ? buildPlayerCar(own, ownTelemetry, scoring.lapDist) : null,
-    cars: buildCars(frame, telemetryById)
+    cars: buildCars(frame, telemetryById, nationalities)
   }
 }
 
@@ -187,7 +217,7 @@ function driverIdFromName(name: string): number {
   return -(Math.abs(hash) + 1)
 }
 
-function buildCars(frame: LmuFrame, telemetryById: Map<number, LmuTelemetry>): SimCar[] {
+function buildCars(frame: LmuFrame, telemetryById: Map<number, LmuTelemetry>, nationalities: LmuNationalities): SimCar[] {
   const { scoring } = frame
 
   return frame.vehicles
@@ -208,13 +238,13 @@ function buildCars(frame: LmuFrame, telemetryById: Map<number, LmuTelemetry>): S
         carId: -1,
         carName: telemetry?.vehicleModel ?? '',
         classId,
-        className: vehicle.vehicleClass,
+        className: CLASS_DISPLAY_NAMES[vehicle.vehicleClass] ?? vehicle.vehicleClass,
         classColorHex: CLASS_COLORS[classId] ?? DEFAULT_CLASS_COLOR,
         classEstLapTime: vehicle.estimatedLapTime > 0 ? vehicle.estimatedLapTime : -1,
-        iRating: 0,
-        licString: '',
-        licColorHex: DEFAULT_CLASS_COLOR,
-        flagIsoCode: null,
+        iRating: null,
+        licString: null,
+        licColorHex: null,
+        flagIsoCode: nationalities.lookup(vehicle.vehFilename, vehicle.driverName, vehicle.isPlayer),
         incidentCount: -1,
         position: vehicle.place,
         lap: vehicle.totalLaps + 1,

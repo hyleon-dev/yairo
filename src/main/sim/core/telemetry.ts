@@ -5,7 +5,7 @@ import { buildFuelEstimate, trackFuelConsumption } from './fuel'
 const ZERO_WHEEL: TireWheelData = { wearPct: 0, tempC: 0, tempUnit: 'C' }
 const ZERO_TIRES: TiresData = { lf: ZERO_WHEEL, rf: ZERO_WHEEL, lr: ZERO_WHEEL, rr: ZERO_WHEEL }
 
-const NO_TELEMETRY: TelemetryData = {
+const NO_TELEMETRY: Omit<TelemetryData, 'sim'> = {
   speedKph: 0,
   rpm: 0,
   rpmIdle: 0,
@@ -71,6 +71,7 @@ export function buildTelemetry(snap: SimSnapshot): TelemetryData {
 
   if (player) {
     return {
+      sim: snap.sim,
       speedKph: player.speedKph,
       rpm: player.rpm,
       rpmIdle: player.rpmIdle,
@@ -109,11 +110,12 @@ export function buildTelemetry(snap: SimSnapshot): TelemetryData {
   // where the sim provides per-vehicle data.
   // Pedal inputs and fuel level stay 0.
   const focusCarIdx = snap.focusCarIdx
-  if (focusCarIdx < 0) return NO_TELEMETRY
+  if (focusCarIdx < 0) return { ...NO_TELEMETRY, sim: snap.sim }
 
   const car = snap.cars.find((c) => c.carIdx === focusCarIdx)
 
   return {
+    sim: snap.sim,
     speedKph:
       car?.speedKph ??
       estimateSpeedKph(focusCarIdx, car?.lapDistPct ?? -1, session.sessionTimeSec, session.trackLengthM),

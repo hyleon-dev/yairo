@@ -12,7 +12,7 @@ export function HintLed({ label, active, color }: { label: string; active: boole
 
 export function iRating({ driver, settings }: { driver: DriverStanding | RelativeDriver; settings: StandingsOverlaySettings | RelativeOverlaySettings }) {
   if (!settings.showIRating) return null
-  if (driver.iRating <= 0) return <span className="col-irating">-</span>
+  if (driver.iRating === null || driver.iRating <= 0) return <span className="col-irating">-</span>
   const display = driver.iRating
 
   if (settings.showIRatingChange && driver.iRatingChange != null) {

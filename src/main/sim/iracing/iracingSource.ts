@@ -61,6 +61,7 @@ export class IracingSource implements SimSource {
     const isDriving = raw.IsOnTrack?.value?.[0] ?? false
 
     return {
+      sim: 'iracing',
       session: buildSession(raw, driverInfo, weekendInfo, sessionInfo),
       ownCarIdx,
       focusCarIdx: resolveFocusCarIdx(raw, ownCarIdx),

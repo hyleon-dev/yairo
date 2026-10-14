@@ -7,6 +7,7 @@
 
 // Subset of iRacing telemetry actually forwarded to overlays, kept small to just what overlays need.
 export interface TelemetryData {
+  sim: SimulatorId
   speedKph: number
   rpm: number
   rpmIdle: number
@@ -128,6 +129,8 @@ export interface FuelEstimate {
 // Sent when iRacing isn't running / no session is active.
 export interface ConnectionStatus {
   connected: boolean
+  // Sim runs but provides no data, e.g. LMU without "Enable Plugins".
+  needsSetup: boolean
 }
 
 // --- Update check ---------------------------------------------------------
@@ -166,18 +169,18 @@ export interface DriverStanding {
   bestLapTime: number // s, <= 0 if no valid time yet
   isClassFastestLap: boolean
   isPlayer: boolean
-  iRating: number
+  iRating: number | null // null if the sim has no iRating
   // Estimated iRating change if the race ended right now, with drivers in their
   // CURRENT live position order (see iratingCalculator.ts). This is NOT a
   // finish-position prediction. It is based only on where everyone stands at this
   // instant. null outside a race session, or if this driver has no valid iRating
   // (e.g. missing driver data).
   iRatingChange: number | null
-  licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
+  licString: string | null // Safety Rating string as given by the SDK, e.g. "A 4.99". null if the sim has none.
   // Official iRacing license class color as a CSS hex code. Derived from licString's
   // letter (licenseColorHex() in irsdkWorker.ts). This is NOT the SDK's own
   // Driver.LicColor, which can report the wrong color for a driver's actual license class.
-  licColorHex: string
+  licColorHex: string | null
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
   // Average of every lap time recorded for the CURRENT driver of this car,
   // during the current session.
@@ -202,11 +205,13 @@ export interface StandingsClass {
   classId: number
   className: string
   driverCount: number
-  strengthOfField: number // not directly from SDK but computed with official strength-of-field formula.
+  // Not from the SDK, computed with the official formula. null without iRatings.
+  strengthOfField: number | null
   drivers: DriverStanding[]
 }
 
 export interface StandingsData {
+  sim: SimulatorId
   trackName: string
   sessionType: string
   remainingTimeSecs: number
@@ -239,14 +244,11 @@ export interface RelativeDriver {
   lapsDifference: number // > 0 = driver is that many laps ahead, < 0 = that many laps behind.
   isPlayer: boolean
   isInPit: boolean
-  iRating: number
-  // See DriverStanding.iRatingChange.
+  // See DriverStanding.
+  iRating: number | null
   iRatingChange: number | null
-  licString: string // Safety Rating string as given by the SDK, e.g. "A 4.99".
-  // Official iRacing license class color as a CSS hex code. Derived from licString's
-  // letter (licenseColorHex() in irsdkWorker.ts). This is NOT the SDK's own
-  // Driver.LicColor, which can report the wrong color for a driver's actual license class.
-  licColorHex: string
+  licString: string | null
+  licColorHex: string | null
   classColorHex: string // Car class color, taken directly from the SDK (Driver.CarClassColor) as a CSS hex code.
   // See DriverStanding.avgLapTimeSec.
   avgLapTimeSec: number
@@ -254,6 +256,7 @@ export interface RelativeDriver {
 }
 
 export interface RelativeData {
+  sim: SimulatorId
   // Sorted front to back, player in the middle.
   drivers: RelativeDriver[]
 }
@@ -273,6 +276,7 @@ export interface TrackMapDriver {
 }
 
 export interface TrackMapData {
+  sim: SimulatorId
   trackId: number
   trackName: string
   drivers: TrackMapDriver[]
@@ -300,6 +304,7 @@ export const FLAG_BITS = {
 } as const
 
 export interface FlagsData {
+  sim: SimulatorId
   flags: number // raw SessionFlags bitmask, decode with FLAG_BITS
 }
 
@@ -366,6 +371,24 @@ export type SimulatorId = 'iracing' | 'lmu'
 export const SIMULATOR_IDS: readonly SimulatorId[] = ['iracing', 'lmu']
 
 export const DEFAULT_SIMULATOR: SimulatorId = 'iracing'
+
+export interface SimFeatures {
+  // iRating, Safety Rating and Strength of Field.
+  driverRatings: boolean
+  // Tire data updates while driving, not only in the pits.
+  liveTires: boolean
+  // Hidden in the Control Center, window stays closed. The enabled setting is kept.
+  unsupportedOverlays: readonly OverlayId[]
+}
+
+export const SIM_FEATURES: Record<SimulatorId, SimFeatures> = {
+  iracing: { driverRatings: true, liveTires: false, unsupportedOverlays: [] },
+  lmu: { driverRatings: false, liveTires: true, unsupportedOverlays: ['incidents'] }
+}
+
+export function isOverlaySupported(sim: SimulatorId, id: OverlayId): boolean {
+  return !SIM_FEATURES[sim].unsupportedOverlays.includes(id)
+}
 
 // 'none' = no correction. The others apply a daltonization filter (see
 // shared/colorCorrectionFilters.ts). This only ever runs in the Control Center and

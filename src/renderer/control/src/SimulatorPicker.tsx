@@ -7,11 +7,12 @@ const m = messages.control
 interface Props {
   value: SimulatorId
   connected: boolean
+  needsSetup: boolean
   onChange: (simulator: SimulatorId) => void
 }
 
 // One tile per sim. Radio group semantics, arrow keys move the selection.
-export function SimulatorPicker({ value, connected, onChange }: Props) {
+export function SimulatorPicker({ value, connected, needsSetup, onChange }: Props) {
   const tileRefs = useRef<(HTMLButtonElement | null)[]>([])
 
   const handleKeyDown = (event: KeyboardEvent, index: number) => {
@@ -51,6 +52,7 @@ export function SimulatorPicker({ value, connected, onChange }: Props) {
               {active && connected ? '● ' : '○ '}
               {status}
             </span>
+            {active && needsSetup && sim.setupHint && <span className="sim-tile-hint">{sim.setupHint}</span>}
           </button>
         )
       })}

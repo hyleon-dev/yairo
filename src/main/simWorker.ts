@@ -57,6 +57,7 @@ let wasConnected = false
 let lastAttachAttempt = Date.now()
 let loggedFirstAttempt = false
 let lastSessionHeartbeatAt = 0
+let lastNeedsSetup = false
 
 function loop(): void {
   // Nothing left to schedule after this, so the worker thread ends on its own.
@@ -91,6 +92,12 @@ function loop(): void {
       }
       source.attach()
     }
+  }
+
+  const needsSetup = !wasConnected && (source.needsSetup ?? false)
+  if (needsSetup !== lastNeedsSetup) {
+    lastNeedsSetup = needsSetup
+    post({ type: 'needs-setup', value: needsSetup })
   }
 
   setImmediate(loop)

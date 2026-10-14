@@ -23,6 +23,7 @@ interface SimServiceEvents {
   flags: (data: FlagsData) => void
   connected: () => void
   disconnected: () => void
+  needsSetup: (value: boolean) => void
   lapCompleted: (events: DriverLapCompletedEvent[]) => void
   sessionHeartbeat: (sessionTimeRemainSec: number) => void
 }
@@ -39,6 +40,7 @@ export declare interface SimService {
 export class SimService extends EventEmitter {
   private worker: Worker | null = null
   private connected = false
+  private needsSetup = false
   // Re-sent to every new worker, so a sim switch keeps the current overlay settings.
   private relativeWindow: SimWorkerCommand | null = null
   private standingsWindow: SimWorkerCommand | null = null
@@ -60,6 +62,10 @@ export class SimService extends EventEmitter {
         case 'disconnected':
           this.connected = false
           this.emit('disconnected')
+          break
+        case 'needs-setup':
+          this.needsSetup = message.value
+          this.emit('needsSetup', message.value)
           break
         case 'telemetry':
           this.emit('telemetry', message.data)
@@ -100,6 +106,10 @@ export class SimService extends EventEmitter {
     if (this.connected) {
       this.connected = false
       this.emit('disconnected')
+    }
+    if (this.needsSetup) {
+      this.needsSetup = false
+      this.emit('needsSetup', false)
     }
     if (!worker) return
 

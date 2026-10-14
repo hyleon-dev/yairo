@@ -8,6 +8,8 @@
 // Keys here are the canonical slugs shared with scripts/build-manufacturer-logos.js
 // and its generated src/renderer/overlay/src/manufacturerLogos/data.json.
 
+import type { SimulatorId } from '../shared/types'
+
 interface ManufacturerKeyword {
   key: string
   pattern: RegExp
@@ -21,15 +23,21 @@ const MANUFACTURER_KEYWORDS: ManufacturerKeyword[] = [
   { key: 'volkswagen', pattern: /\b(volkswagen|vw)\b/i },
   { key: 'mercedes', pattern: /\bmercedes\b/i },
   { key: 'acura', pattern: /\bacura\b/i },
+  { key: 'alpine', pattern: /\balpine\b/i },
   { key: 'audi', pattern: /\baudi\b/i },
   { key: 'bmw', pattern: /\bbmw\b/i },
   { key: 'buick', pattern: /\bbuick\b/i },
   { key: 'cadillac', pattern: /\bcadillac\b/i },
   { key: 'caterham', pattern: /\bcaterham\b/i },
+  // Before chevrolet: "Chevrolet Corvette Z06" contains both.
+  { key: 'corvette', pattern: /\bcorvette\b/i },
   { key: 'chevrolet', pattern: /\bchevrolet\b/i },
   { key: 'dallara', pattern: /\bdallara\b/i },
+  { key: 'duqueine', pattern: /\bduqueine\b/i },
   { key: 'ferrari', pattern: /\bferrari\b/i },
   { key: 'ford', pattern: /\bford\b/i },
+  { key: 'genesis', pattern: /\bgenesis\b/i },
+  { key: 'ginetta', pattern: /\bginetta\b/i },
   { key: 'holden', pattern: /\bholden\b/i },
   { key: 'honda', pattern: /\bhonda\b/i },
   { key: 'hyundai', pattern: /\bhyundai\b/i },
@@ -40,6 +48,7 @@ const MANUFACTURER_KEYWORDS: ManufacturerKeyword[] = [
   { key: 'mazda', pattern: /\bmazda\b/i },
   { key: 'mclaren', pattern: /\bmclaren\b/i },
   { key: 'nissan', pattern: /\bnissan\b/i },
+  { key: 'oreca', pattern: /\boreca\b/i },
   { key: 'pontiac', pattern: /\bpontiac\b/i },
   { key: 'porsche', pattern: /\bporsche\b/i },
   { key: 'radical', pattern: /\bradical\b/i },
@@ -52,7 +61,8 @@ const MANUFACTURER_KEYWORDS: ManufacturerKeyword[] = [
   { key: 'toyota', pattern: /\btoyota\b/i }
 ]
 
-export function manufacturerLogoKey(carScreenName: string | undefined | null): string {
-  if (!carScreenName) return 'generic'
-  return MANUFACTURER_KEYWORDS.find(({ pattern }) => pattern.test(carScreenName))?.key ?? 'generic'
+export function manufacturerLogoKey(carScreenName: string | undefined | null, sim: SimulatorId): string {
+  const fallback = `generic_${sim}`
+  if (!carScreenName) return fallback
+  return MANUFACTURER_KEYWORDS.find(({ pattern }) => pattern.test(carScreenName))?.key ?? fallback
 }

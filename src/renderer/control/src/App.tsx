@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   OVERLAY_SERVER_PORT,
+  isOverlaySupported,
   type AnyOverlaySettings,
   type AppConfig,
   type ColorCorrectionMode,
@@ -41,7 +42,7 @@ function applyColorCorrectionMode(mode: ColorCorrectionMode): void {
 
 export default function App() {
   const [config, setConfig] = useState<AppConfig | null>(null)
-  const [connection, setConnection] = useState<ConnectionStatus>({ connected: false })
+  const [connection, setConnection] = useState<ConnectionStatus>({ connected: false, needsSetup: false })
   const [settings, setSettings] = useState<Partial<Record<OverlayId, AnyOverlaySettings>>>({})
   const [copiedOverlayId, setCopiedOverlayId] = useState<OverlayId | null>(null)
   const [screenshotOverlayId, setScreenshotOverlayId] = useState<{ id: OverlayId; ok: boolean } | null>(null)
@@ -176,6 +177,7 @@ export default function App() {
             <SimulatorPicker
               value={config.simulator}
               connected={connection.connected}
+              needsSetup={connection.needsSetup}
               onChange={handleSimulatorChange}
             />
           </section>
@@ -192,7 +194,7 @@ export default function App() {
           <section>
             <h2>{m.overlaysHeading}</h2>
             <ul className="overlay-list">
-              {config.overlays.map((overlay) => (
+              {config.overlays.filter((overlay) => isOverlaySupported(config.simulator, overlay.id)).map((overlay) => (
 
                 <li key={overlay.id}>
                   <div className="overlay-item-header">

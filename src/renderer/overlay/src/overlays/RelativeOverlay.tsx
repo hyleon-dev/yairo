@@ -1,4 +1,4 @@
-import type { RelativeData, RelativeDriver, RelativeOverlaySettings } from '../../../../shared/types'
+import { SIM_FEATURES, type RelativeData, type RelativeDriver, type RelativeOverlaySettings } from '../../../../shared/types'
 import { messages } from '../../../../shared/messages'
 import { classPositionGradient, licBadgeStyle } from '../sdkColors'
 import './RelativeOverlay.css'
@@ -67,7 +67,7 @@ function DriverRow({
       <span className="col-name">{driver.driverName}</span>
       {settings.showIRating && iRating({ driver, settings })}
       {settings.showSafetyRating && (
-        <span className="col-sr" style={licBadgeStyle(driver.licColorHex)}>
+        <span className="col-sr" style={driver.licColorHex ? licBadgeStyle(driver.licColorHex) : undefined}>
           {driver.licString || '-'}
         </span>
       )}
@@ -100,7 +100,10 @@ function PlaceholderRow({ settings, template }: { settings: RelativeOverlaySetti
   )
 }
 
-export function RelativeOverlay({ data, settings }: { data: RelativeData; settings: RelativeOverlaySettings }) {
+export function RelativeOverlay({ data, settings: userSettings }: { data: RelativeData; settings: RelativeOverlaySettings }) {
+  const settings = SIM_FEATURES[data.sim].driverRatings
+    ? userSettings
+    : { ...userSettings, showIRating: false, showIRatingChange: false, showSafetyRating: false }
   const template = gridTemplate(settings)
 
   const playerIndex = data.drivers.findIndex((d) => d.isPlayer)

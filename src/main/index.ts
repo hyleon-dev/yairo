@@ -12,6 +12,7 @@ import {
   IPC,
   overlaySettingsChannel,
   SIMULATOR_IDS,
+  isOverlaySupported,
   type AnyOverlaySettings,
   type ColorCorrectionMode,
   type ConnectionStatus,
@@ -31,7 +32,7 @@ const overlayServer = new OverlayServer()
 const overlaySettingsStore = new OverlaySettingsStore()
 const driverStatsStore = new DriverStatsStore()
 
-let connectionStatus: ConnectionStatus = {connected: false}
+let connectionStatus: ConnectionStatus = {connected: false, needsSetup: false}
 let updateStatus: UpdateStatus = {available: false, currentVersion: app.getVersion()}
 
 // Shows the per-overlay screenshot button in the Control Center (when enabled).
@@ -104,11 +105,14 @@ function createControlWindow(): void {
   })
 }
 
-function createOverlaysFromConfig(): void {
-  const {overlays} = configStore.get()
+// Opens enabled overlays and closes those that are disabled or not supported by the active sim.
+function syncOverlayWindows(): void {
+  const {overlays, simulator} = configStore.get()
   for (const overlay of overlays) {
-    if (overlay.enabled) {
+    if (overlay.enabled && isOverlaySupported(simulator, overlay.id)) {
       windowManager.createOverlayWindow(overlay, onOverlayBoundsChanged)
+    } else {
+      windowManager.closeOverlayWindow(overlay.id)
     }
   }
 }
@@ -119,16 +123,7 @@ function registerIpcHandlers(): void {
   // Control Center toggles an overlay on/off or changes settings
   ipcMain.handle(IPC.CONFIG_SET_OVERLAY, (_evt, id: OverlayId, patch) => {
     const updated = configStore.setOverlay(id, patch)
-    const overlayConfig = updated.overlays.find((o) => o.id === id)
-
-    if (overlayConfig) {
-      if (overlayConfig.enabled) {
-        windowManager.createOverlayWindow(overlayConfig, onOverlayBoundsChanged)
-      } else {
-        windowManager.closeOverlayWindow(id)
-      }
-    }
-
+    syncOverlayWindows()
     broadcastToAll(IPC.CONFIG_UPDATED, updated)
     return updated
   })
@@ -168,6 +163,7 @@ function registerIpcHandlers(): void {
 
     const updated = configStore.setSimulator(simulator)
     void sim.switchSimulator(simulator)
+    syncOverlayWindows()
     broadcastToAll(IPC.CONFIG_UPDATED, updated)
     return updated
   })
@@ -293,11 +289,15 @@ function registerSimEvents(): void {
   })
   sim.on('connected', () => {
     driverStatsStore.expireIfStale()
-    connectionStatus = {connected: true}
+    connectionStatus = {...connectionStatus, connected: true}
     broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
   })
   sim.on('disconnected', () => {
-    connectionStatus = {connected: false}
+    connectionStatus = {...connectionStatus, connected: false}
+    broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
+  })
+  sim.on('needsSetup', (needsSetup) => {
+    connectionStatus = {...connectionStatus, needsSetup}
     broadcastToAll(IPC.CONNECTION_STATUS, connectionStatus)
   })
   sim.on('lapCompleted', (events) => {
@@ -315,7 +315,7 @@ app.whenReady().then(() => {
   registerSimEvents()
 
   createControlWindow()
-  createOverlaysFromConfig()
+  syncOverlayWindows()
   sim.start(configStore.get().simulator)
   overlayServer.start()
   seedOverlaySettings()
