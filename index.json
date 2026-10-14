@@ -1,0 +1,10 @@
+[
+  {
+    "id": "2026-10-test",
+    "date": "2026-10-15",
+    "title": "Test news",
+    "file": "2026-10-test.md",
+    "priority": "high",
+    "expires": "2026-10-16"
+  }
+]
