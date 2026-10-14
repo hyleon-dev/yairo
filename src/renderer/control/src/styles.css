@@ -229,6 +229,10 @@ body.control-window {
 
 .news-modal-entries {
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+  scrollbar-gutter: stable;
+  padding-right: 8px;
   display: flex;
   flex-direction: column;
   gap: 20px;
