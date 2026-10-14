@@ -16,8 +16,7 @@
     "build-trackmaps": "node scripts/build-trackmap-registry.js",
     "build-manufacturer-logos": "node scripts/build-manufacturer-logos.js",
     "build": "electron-vite build",
-    "build:win": "electron-vite build && electron-builder --win --publish never",
-    "postinstall": "electron-builder install-app-deps"
+    "build:win": "electron-vite build && electron-builder --win --publish never"
   },
   "dependencies": {
     "flag-icons": "^7.5.0",
@@ -43,7 +42,8 @@
   },
   "build": {
     "appId": "de.hyleon.yairo",
-    "productName": "Yet Another iRacing Overlay",
+    "productName": "YAiRO",
+    "npmRebuild": false,
     "files": [
       "out/**/*",
       "resources/icon.png"
@@ -54,6 +54,9 @@
     "win": {
       "target": "nsis",
       "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "artifactName": "yairo-${version}.${ext}"
     }
   }
 }

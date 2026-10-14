@@ -12,7 +12,7 @@ const stintLapsHint = 'The sim does not provide this info. It is calculated inte
 
 export const messages = {
   control: {
-    appTitle: 'Yet Another iRacing Overlay',
+    appTitle: 'YAiRO',
     loading: 'Loading configuration…',
     connected: (simName: string) => `● ${simName} connected`,
     disconnected: (simName: string) => `○ ${simName} not active`,
