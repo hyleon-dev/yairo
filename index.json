@@ -1,3 +1,11 @@
 [
-
+  {
+    "id": "2026-10-lmu-support",
+    "date": "2026-10-15",
+    "title": "Le Mans Ultimate support!",
+    "file": "2026-10-lmu.md",
+    "priority": "high",
+    "showUpdate": "v1.0.0-pre4",
+    "maxVersion": "1.0.0-pre4"
+  }
 ]
