@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a report to help improve the app
 title: "[BUG] ..."
 labels: bug
 assignees: hyleon-dev
@@ -23,8 +23,11 @@ A clear and concise description of what you expected to happen.
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
 
-**Version:**
- - e.g. v0.0.2
+**Version:**  
+e.g. v0.0.2
+
+**Game**
+iRacing or Le Mans Ultimate
 
 **Additional context**
-Add any other context about the problem here.
+Add any other context about the problem here. E.g. Series, Session type, car...
