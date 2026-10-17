@@ -33,6 +33,7 @@ export interface OverlayBridgeState {
   targetLapTimeSec: number
   // Selected sim from the config. Payloads carry their own sim, this covers the time without data.
   simulator: SimulatorId
+  connected: boolean
 }
 
 // Applied directly here, not returned as state. This way every overlay
@@ -69,18 +70,19 @@ export function useOverlayBridge(overlayId: OverlayId): OverlayBridgeState {
   const [settings, setSettings] = useState<AnyOverlaySettings>(DEFAULT_OVERLAY_SETTINGS[overlayId])
   const [targetLapTimeSec, setTargetLapTimeSec] = useState(0)
   const [simulator, setSimulator] = useState<SimulatorId>(DEFAULT_SIMULATOR)
+  const [connected, setConnected] = useState(false)
 
   useEffect(() => {
     const setters = {
       setTelemetry, setStandings, setRelative, setTrackMap, setTrackShape, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
-      setSimulator
+      setSimulator, setConnected
     }
     return window.overlayApi
       ? subscribeViaElectron(overlayId, setters)
       : subscribeViaWebSocket(overlayId, setters)
   }, [overlayId])
 
-  return { telemetry, standings, relative, trackMap, trackShape, flags, editMode, settings, targetLapTimeSec, simulator }
+  return { telemetry, standings, relative, trackMap, trackShape, flags, editMode, settings, targetLapTimeSec, simulator, connected }
 }
 
 interface Setters {
@@ -94,13 +96,14 @@ interface Setters {
   setSettings: (s: AnyOverlaySettings) => void
   setTargetLapTimeSec: (v: number) => void
   setSimulator: (v: SimulatorId) => void
+  setConnected: (v: boolean) => void
 }
 
 function subscribeViaElectron(
   overlayId: OverlayId,
   {
     setTelemetry, setStandings, setRelative, setTrackMap, setTrackShape, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
-    setSimulator
+    setSimulator, setConnected
   }: Setters
 ): () => void {
   const unsubTelemetry = window.overlayApi.onTelemetry(setTelemetry)
@@ -118,6 +121,7 @@ function subscribeViaElectron(
   })
   const unsubSettings = window.overlayApi.onOverlaySettings(overlayId, setSettings)
   const unsubConnection = window.overlayApi.onConnectionStatus((status: ConnectionStatus) => {
+    setConnected(status.connected)
     if (!status.connected) {
       setTelemetry(null)
       setStandings(null)
@@ -136,6 +140,7 @@ function subscribeViaElectron(
   })
   window.overlayApi.getOverlaySettings(overlayId).then(setSettings)
   window.overlayApi.getTrackShape().then(setTrackShape)
+  window.overlayApi.getConnectionStatus().then((status) => setConnected(status.connected))
 
   return () => {
     unsubTelemetry()
@@ -154,7 +159,7 @@ function subscribeViaWebSocket(
     overlayId: OverlayId,
     {
       setTelemetry, setStandings, setRelative, setTrackMap, setTrackShape, setFlags, setEditMode, setSettings, setTargetLapTimeSec,
-      setSimulator
+      setSimulator, setConnected
     }: Setters
 ): () => void {
   // No edit mode/dragging in the browser
@@ -185,6 +190,7 @@ function subscribeViaWebSocket(
         setFlags(payload as FlagsData)
         break
       case IPC.CONNECTION_STATUS:
+        setConnected((payload as ConnectionStatus).connected)
         if (!(payload as ConnectionStatus).connected) {
           setTelemetry(null)
           setStandings(null)

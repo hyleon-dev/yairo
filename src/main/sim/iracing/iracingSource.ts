@@ -1,13 +1,6 @@
-import {
-  IRacingSDK,
-  type DriverInfo,
-  type SessionInfo,
-  type SessionList,
-  type SessionResultsPosition,
-  type TelemetryVarList,
-  type WeekendInfo
-} from 'irsdk-node'
 import { FakeIRacingSDK } from './irsdkFake'
+import { IrsdkClient } from './irsdkClient'
+import type { DriverInfo, SessionInfo, SessionList, SessionResultsPosition, TelemetryVarList, WeekendInfo } from './irsdkTypes'
 import { flairNameToIsoCode } from '../../nationFlags'
 import { FLAG_BITS, type TireWheelData, type TiresData, type TrackSurfaceStatus } from '../../../shared/types'
 import type { SimCar, SimPlayerCar, SimSession, SimSnapshot, SimSource } from '../snapshot'
@@ -27,7 +20,7 @@ export function createIrsdk(): IrsdkLike {
     console.log('[iracing] IRSDK_MOCK=1 - using FakeIRacingSDK instead of the real iRacing connection')
     return new FakeIRacingSDK()
   }
-  return new IRacingSDK({ autoEnableTelemetry: true })
+  return new IrsdkClient()
 }
 
 export class IracingSource implements SimSource {
@@ -162,8 +155,9 @@ function buildPlayerCar(raw: TelemetryVarList, driver: DriverInfo | null): SimPl
     lapCurrentTime: raw.LapCurrentLapTime?.value?.[0] ?? -1,
     lapLastTime: raw.LapLastLapTime?.value?.[0] ?? -1,
     lapBestTime: raw.LapBestLapTime?.value?.[0] ?? -1,
-    lapDeltaToBest: raw.LapDeltaToBestLap?.value?.[0] ?? 0,
-    lapDeltaToBestValid: raw.LapDeltaToBestLap_OK?.value?.[0] ?? false,
+    // Not LapDeltaToBestLap. Live, its reference did not follow a new best lap in the session.
+    lapDeltaToBest: raw.LapDeltaToSessionBestLap?.value?.[0] ?? 0,
+    lapDeltaToBestValid: raw.LapDeltaToSessionBestLap_OK?.value?.[0] ?? false,
     isOnPitRoad: raw.OnPitRoad?.value?.[0] ?? false,
     pitLimiterActive: (engineWarnings & ENGINE_WARNING_PIT_SPEED_LIMITER) !== 0,
     incidentCount: raw.PlayerCarMyIncidentCount?.value?.[0] ?? 0,
@@ -238,7 +232,7 @@ function buildCars(
       iRating: driver?.IRating ?? 0,
       licString: driver?.LicString ?? '',
       licColorHex: licenseColorHex(driver?.LicString),
-      flagIsoCode: flairNameToIsoCode((driver as { FlairName?: string } | undefined)?.FlairName),
+      flagIsoCode: flairNameToIsoCode(driver?.FlairName),
       // iRacing reports CurDriverIncidentCount as -1 for other drivers. Pass -1
       // through rather than normalizing to 0.
       // This lets the UI tell "unavailable" apart from "0 incidents".
@@ -268,7 +262,7 @@ function buildCars(
   })
 }
 
-// Maps irsdk_TrkLoc (see @irsdk-node/types defines.d.ts) to internal states.
+// Maps irsdk_TrkLoc (see irsdk_defines.h) to internal states.
 function trackSurfaceStatus(raw: number): TrackSurfaceStatus | null {
   switch (raw) {
     case 0:

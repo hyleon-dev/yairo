@@ -1,4 +1,4 @@
-import type { Driver, DriverInfo, SessionList, TelemetryVariable, TelemetryVarList, WeekendInfo } from 'irsdk-node'
+import type { Driver, DriverInfo, SessionList, TelemetryVariable, TelemetryVarList, WeekendInfo } from './irsdkTypes'
 import { FLAG_BITS } from '../../../shared/types'
 
 // Simulated race session for local dev without iRacing running (see
@@ -153,11 +153,11 @@ function createDrivers(): FakeDriverState[] {
   })
 }
 
-function scalarVar<T>(value: T, unit = ''): TelemetryVariable<T[]> {
+function scalarVar<T extends number | boolean>(value: T, unit = ''): TelemetryVariable<T> {
   return { name: '', description: '', unit, countAsTime: false, length: 1, varType: 4, value: [value] }
 }
 
-function arrayVar<T>(value: T[], unit = ''): TelemetryVariable<T[]> {
+function arrayVar<T extends number | boolean>(value: T[], unit = ''): TelemetryVariable<T> {
   return { name: '', description: '', unit, countAsTime: false, length: value.length, varType: 4, value }
 }
 
@@ -252,7 +252,7 @@ export class FakeIRacingSDK {
     // position, just for visual variety.
     const baseTireTemp = 75 + 15 * Math.sin(player.lapDistPct * Math.PI * 4)
 
-    const raw: Record<string, TelemetryVariable<unknown>> = {
+    return {
       SessionTime: scalarVar(this.simTimeSec, 's'),
       SessionTimeRemain: scalarVar(Math.max(0, SESSION_DURATION_SEC - this.simTimeSec), 's'),
       SessionNum: scalarVar(0),
@@ -286,11 +286,11 @@ export class FakeIRacingSDK {
       LapCurrentLapTime: scalarVar(currentLapTime),
       LapLastLapTime: scalarVar(player.lastLapTime),
       LapBestLapTime: scalarVar(player.bestLapTime),
-      LapDeltaToBestLap: scalarVar(player.bestLapTime > 0 ? player.lastLapTime - player.bestLapTime : 0),
+      LapDeltaToSessionBestLap: scalarVar(player.bestLapTime > 0 ? player.lastLapTime - player.bestLapTime : 0),
       // Real iRacing only flags this valid once a reference lap exists AND
       // at least one lap has been driven against it.
       // Mocked here as "a best lap exists and this isn't the lap that just set it".
-      LapDeltaToBestLap_OK: scalarVar(player.bestLapTime > 0 && player.lapsCompleted > 0),
+      LapDeltaToSessionBestLap_OK: scalarVar(player.bestLapTime > 0 && player.lapsCompleted > 0),
 
       CarIdxLapDistPct: arrayVar(this.drivers.map((d) => d.lapDistPct)),
       CarIdxLap: arrayVar(this.drivers.map((d) => d.lapsCompleted + 1)),
@@ -335,17 +335,14 @@ export class FakeIRacingSDK {
       RRtempCM: scalarVar(baseTireTemp - 1),
       RRtempCR: scalarVar(baseTireTemp - 2)
     }
-
-    return raw as unknown as TelemetryVarList
   }
 
   getDriverInfo(): DriverInfo | null {
-    // FlairName isn't in @irsdk-node/types' Driver interface (see
-    // nationFlags.ts). Widened here so the fake SDK can still supply it.
-    const drivers: (Partial<Driver> & { FlairName?: string })[] = this.drivers.map((d) => ({
+    const drivers: Driver[] = this.drivers.map((d) => ({
       CarIdx: d.carIdx,
       UserName: d.name,
       UserID: d.custId,
+      TeamName: d.name,
       CarNumber: d.carNumber,
       FlairName: d.flairName,
       CarClassID: 1,
@@ -372,7 +369,7 @@ export class FakeIRacingSDK {
       DriverCarFuelMaxLtr: this.fuelTankMaxL,
       DriverCarMaxFuelPct: 0, // unrestricted, matches "no event fuel-load rule"
       Drivers: drivers
-    } as unknown as DriverInfo
+    }
   }
 
   getWeekendInfo(): WeekendInfo | null {
@@ -380,7 +377,7 @@ export class FakeIRacingSDK {
       TrackID: TRACK_ID,
       TrackDisplayName: 'Autodromo Nazionale Monza (Fake)',
       TrackLength: `${(TRACK_LENGTH_M / 1000).toFixed(2)} km`
-    } as unknown as WeekendInfo
+    }
   }
 
   getSessionInfo(): SessionList | null {
@@ -393,6 +390,6 @@ export class FakeIRacingSDK {
           ResultsPositions: []
         }
       ]
-    } as unknown as SessionList
+    }
   }
 }

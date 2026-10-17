@@ -27,7 +27,7 @@
 // drift backwards, and pit lane cars would be misplaced. Prefer customTrackPath
 // whenever it is present.
 //
-// Usage: npm run build-trackmaps
+// Usage: npm run iracing:build-trackmaps
 const fs = require('node:fs')
 const path = require('node:path')
 

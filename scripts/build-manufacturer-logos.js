@@ -24,7 +24,7 @@
 // fallback. These keys are local-only. They are only bundled if a matching file shows up
 // in resources/manufacturer-logos/.
 //
-// Usage: npm run build-manufacturer-logos
+// Usage: npm run general:build-manufacturer-logos
 const fs = require('node:fs')
 const path = require('node:path')
 

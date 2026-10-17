@@ -3,7 +3,7 @@
 // Also samples a few seconds to measure update rates of scoring and telemetry.
 // Track maps from the REST API go to resources/lmu-trackmap-assets/ (not committed).
 // LMU must run with "Settings > Gameplay > Enable Plugins" on.
-// Usage: npm run dump-lmu
+// Usage: npm run dump:lmu
 const fs = require('node:fs')
 const path = require('node:path')
 const koffi = require('koffi')

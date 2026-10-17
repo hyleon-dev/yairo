@@ -10,17 +10,18 @@
     "dev:mock": "cross-env IRSDK_MOCK=1 electron-vite dev",
     "dev:document": "cross-env ANONYMIZE_DRIVER_NAMES=1 OVERLAY_SCREENSHOTS=1 electron-vite dev",
     "dev:debug": "electron-vite dev --inspect --sourcemap",
-    "dump-iracing": "cross-env ELECTRON_RUN_AS_NODE=1 electron scripts/dump-iracing-data.js",
-    "dump-lmu": "node scripts/dump-lmu-data.js",
-    "gen-lmu-offsets": "scripts\\lmu-offsets\\gen-lmu-offsets.bat",
-    "build-trackmaps": "node scripts/build-trackmap-registry.js",
-    "build-manufacturer-logos": "node scripts/build-manufacturer-logos.js",
+    "dump:iracing": "tsx scripts/dump-iracing-data.js",
+    "dump:iracing-raw": "node scripts/dump-iracing-raw.js",
+    "dump:lmu": "node scripts/dump-lmu-data.js",
+    "lmu:gen-offsets": "scripts\\lmu-offsets\\gen-lmu-offsets.bat",
+    "iracing:build-trackmaps": "node scripts/build-trackmap-registry.js",
+    "general:build-manufacturer-logos": "node scripts/build-manufacturer-logos.js",
     "build": "electron-vite build",
     "build:win": "electron-vite build && electron-builder --win --publish never"
   },
   "dependencies": {
     "flag-icons": "^7.5.0",
-    "irsdk-node": "^4.4.0",
+    "js-yaml": "^4.3.2",
     "koffi": "^3.3.2",
     "lucide-react": "^1.31.0",
     "react": "^18.3.1",
@@ -30,6 +31,7 @@
     "ws": "^8.21.1"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@types/ws": "^8.18.1",
@@ -38,6 +40,7 @@
     "electron": "44.7.2",
     "electron-builder": "^26.15.3",
     "electron-vite": "^2.3.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.5.4"
   },
   "build": {

@@ -14,6 +14,8 @@ import type { SimWorkerCommand, SimWorkerMessage } from './simWorkerMessages'
 
 const POLL_INTERVAL_MS = 1000 / 30 // 30 Hz
 const RECONNECT_INTERVAL_MS = 2000
+// The sim pauses its ticks while it loads a session. That is not a disconnect.
+const DISCONNECT_GRACE_MS = 2000
 const SESSION_HEARTBEAT_INTERVAL_MS = 10_000 // enough to keep the driver-history expiry date fresh
 
 let stopRequested = false
@@ -55,6 +57,7 @@ const source = createSource((workerData as { simulator?: SimulatorId } | undefin
 const log = (text: string): void => console.log(`[${source.name}] ${text}`)
 
 let wasConnected = false
+let lastFrameAt = 0
 let lastAttachAttempt = Date.now()
 let loggedFirstAttempt = false
 let lastSessionHeartbeatAt = 0
@@ -72,6 +75,7 @@ function loop(): void {
   const hasData = source.waitForFrame(POLL_INTERVAL_MS)
 
   if (hasData) {
+    lastFrameAt = Date.now()
     if (!wasConnected) {
       wasConnected = true
       log('connected, receiving telemetry')
@@ -79,7 +83,7 @@ function loop(): void {
     }
     publishFrame()
   } else {
-    if (wasConnected) {
+    if (wasConnected && Date.now() - lastFrameAt > DISCONNECT_GRACE_MS) {
       wasConnected = false
       log('connection lost')
       post({ type: 'disconnected' })

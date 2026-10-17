@@ -100,12 +100,14 @@ function useOverlayId(): OverlayId {
 
 export default function App() {
   const overlayId = useOverlayId()
-  const { telemetry, standings, relative, trackMap, trackShape, flags, editMode, settings, targetLapTimeSec, simulator } =
+  const { telemetry, standings, relative, trackMap, trackShape, flags, editMode, settings, targetLapTimeSec, simulator, connected } =
     useOverlayBridge(overlayId)
   const contentRef = useReportContentSize(overlayId, editMode, settings.scale)
-  // LMU sends no data outside a session (main menu). Hidden then, but keeps its size for edit mode.
-  const isLmuIdle =
-    simulator === 'lmu' && !editMode && !hasOverlayData(overlayId, telemetry, standings, relative, trackShape, flags)
+  // Hidden outside a session but keeps its size for edit mode. LMU sends no data in the main menu.
+  // iRacing runs the sim as its own process, so the connection status is the signal there.
+  const isIdle =
+    !editMode &&
+    (simulator === 'lmu' ? !hasOverlayData(overlayId, telemetry, standings, relative, trackShape, flags) : !connected)
 
   // Sets both panel-background variants (--panel-bg for most overlays,
   // --panel-bg-light for trackmap) to the same alpha. This way it works
@@ -126,7 +128,7 @@ export default function App() {
       }
       <div
         ref={contentRef}
-        className={`overlay-content ${isLmuIdle ? 'overlay-content--idle' : ''}`}
+        className={`overlay-content ${isIdle ? 'overlay-content--idle' : ''}`}
         style={{ zoom: settings.scale }}
       >
         {renderOverlayContent(overlayId, telemetry, standings, relative, trackMap, trackShape, flags, settings, targetLapTimeSec, simulator)}

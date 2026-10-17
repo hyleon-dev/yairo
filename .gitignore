@@ -36,6 +36,7 @@ resources/trackmap-assets/
 resources/lmu-trackmap-assets/
 resources/manufacturer-logos/
 dump_iracing.json
+dump_iracing_raw*.bin
 dump_lmu.json
 lmu-swagger.json
 media/*/
@@ -43,3 +44,4 @@ media/*/
 # Helper
 .claude
 CLAUDE.md
+/dev-docs/

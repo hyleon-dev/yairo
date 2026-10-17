@@ -32,7 +32,7 @@ export interface TelemetryData {
   lapLastTime: number // s, -1 if no lap driven yet
   lapBestTime: number // s, -1 if no valid best yet
   lapDeltaToBest: number // s, positive = slower than best lap
-  // Mirrors the SDK's LapDeltaToBestLap_OK. It is false right after a new best lap,
+  // Mirrors the SDK's LapDeltaToSessionBestLap_OK. It is false right after a new best lap,
   // or while spectating. Reason: iRacing needs a completed reference lap to compare
   // live splits against. It can't show a delta for the very lap that just set the
   // record. When this is false, lapDeltaToBest is meaningless (usually just 0).
@@ -358,7 +358,7 @@ export interface TrackMapData {
 // --- Flags ------------------------------------------------------------
 
 // Mirrors the relevant bits of irsdk_Flags
-// (see @irsdk-node/types/dist/types/defines.d.ts, GlobalFlags enum)
+// (see irsdk_defines.h, irsdk_Flags)
 export const FLAG_BITS = {
   checkered: 0x00000001,
   white: 0x00000002,

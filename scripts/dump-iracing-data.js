@@ -1,28 +1,23 @@
 // One-off local tool. Not part of the running app.
 // Connects to the live iRacing SDK and waits for a session. Then it writes a full
-// snapshot of all raw SDK data (telemetry + driver/weekend/session info) to
+// snapshot of all decoded SDK data (telemetry + driver/weekend/session info) to
 // dump_iracing.json in the project root. Use this to explore which fields the local
 // iRacing SDK provides, without attaching a debugger. Overwrites any existing
 // dump_iracing.json from a previous run.
 //
-// Runs via Electron's own Node runtime (ELECTRON_RUN_AS_NODE=1, see the "dump-sdk"
-// script in package.json) instead of plain "node". Reason: irsdk-node is a native
-// addon, rebuilt against Electron's Node ABI by the "postinstall" step
-// (electron-builder install-app-deps). Running it under system Node would fail with
-// a NODE_MODULE_VERSION mismatch. No Electron window/app module is involved here,
-// this just uses Electron's binary as a Node runtime.
+// Runs with tsx, so it can use the app's own TypeScript reader (IrsdkClient).
 //
-// Usage: npm run dump-sdk (iRacing must be running with an active session)
+// Usage: npm run dump:iracing (iRacing must be running with an active session)
 const fs = require('node:fs')
 const path = require('node:path')
-const { IRacingSDK } = require('irsdk-node')
+const { IrsdkClient } = require('../src/main/sim/iracing/irsdkClient')
 
 const POLL_INTERVAL_MS = 1000 / 30
 const RECONNECT_INTERVAL_MS = 2000
 const TIMEOUT_MS = 15_000
 const outPath = path.join(__dirname, '..', 'dump_iracing.json')
 
-const sdk = new IRacingSDK({ autoEnableTelemetry: true })
+const sdk = new IrsdkClient()
 sdk.startSDK()
 
 const deadline = Date.now() + TIMEOUT_MS
@@ -31,9 +26,7 @@ let lastStartAttempt = Date.now()
 console.log('[dump-iracing] waiting for iRacing...')
 
 function tick() {
-  const hasData = sdk.waitForData(POLL_INTERVAL_MS)
-
-  if (hasData) {
+  if (sdk.waitForData(POLL_INTERVAL_MS) && sdk.getDriverInfo()) {
     const dump = {
       telemetry: sdk.getTelemetry(),
       driverInfo: sdk.getDriverInfo(),
@@ -42,16 +35,15 @@ function tick() {
     }
     fs.writeFileSync(outPath, JSON.stringify(dump, null, 2), 'utf-8')
     console.log(`[dump-iracing] wrote ${outPath}`)
-    process.exit(0)
+    sdk.stopSDK()
+    return
   }
 
   if (Date.now() > deadline) {
-    console.error('[dump-iracing] timed out waiting for iRacing - is it running with an active session?')
+    console.error('[dump-iracing] timed out waiting for iRacing. Is it running with an active session?')
     process.exit(1)
   }
 
-  // The first attach attempt can fail if iRacing was already running before this
-  // script started. Keep retrying while disconnected (same pattern as irsdkWorker.ts).
   if (Date.now() - lastStartAttempt > RECONNECT_INTERVAL_MS) {
     lastStartAttempt = Date.now()
     sdk.startSDK()
