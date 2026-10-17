@@ -1,5 +1,14 @@
 [
   {
+    "id": "2026-10-v1-release",
+    "date": "2026-10-17",
+    "title": "YAiRO 1.0 is released!",
+    "file": "2026-10-v1-release.md",
+    "priority": "high",
+    "showUpdate": "v1.0.0",
+    "maxVersion": "1.0.0"
+  },
+  {
     "id": "2026-10-lmu-support",
     "date": "2026-10-15",
     "title": "Le Mans Ultimate support!",
